@@ -194,6 +194,8 @@ class IntakeRequest(BaseModel):
     assets: str = ""
     family: str = ""
 
+PROMPT_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompt-library", "prompts", "california")
+TEMPLATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "california")
 contacts: List[Dict[str, Any]] = []
 
 @app.post("/contact")
@@ -212,35 +214,35 @@ def list_contacts():
 @app.get("/prompts")
 def list_prompts():
     out = []
-    if _os.path.isdir(PROMPT_ROOT):
-        for root,_,files in _os.walk(PROMPT_ROOT):
+    if os.path.isdir(PROMPT_ROOT):
+        for root,_,files in os.walk(PROMPT_ROOT):
             for fn in files:
                 if fn.endswith(".md"):
-                    rel = _os.path.relpath(_os.path.join(root,fn), PROMPT_ROOT)
-                    out.append({"name": rel, "path": _os.path.join(root,fn)})
+                    rel = os.path.relpath(os.path.join(root,fn), PROMPT_ROOT)
+                    out.append({"name": rel, "path": os.path.join(root,fn)})
     return out
 
 @app.get("/prompts/{name:path}")
 def get_prompt(name: str):
-    path = _os.path.join(PROMPT_ROOT, name)
-    if not _os.path.isfile(path):
+    path = os.path.join(PROMPT_ROOT, name)
+    if not os.path.isfile(path):
         raise HTTPException(404, "prompt not found")
     return {"name": name, "content": open(path).read()}
 
 @app.get("/templates")
 def list_templates():
     out = []
-    if _os.path.isdir(TEMPLATE_ROOT):
-        for root,_,files in _os.walk(TEMPLATE_ROOT):
+    if os.path.isdir(TEMPLATE_ROOT):
+        for root,_,files in os.walk(TEMPLATE_ROOT):
             for fn in files:
-                rel = _os.path.relpath(_os.path.join(root,fn), TEMPLATE_ROOT)
-                out.append({"name": rel, "path": _os.path.join(root,fn)})
+                rel = os.path.relpath(os.path.join(root,fn), TEMPLATE_ROOT)
+                out.append({"name": rel, "path": os.path.join(root,fn)})
     return out
 
 @app.get("/templates/{name:path}")
 def get_template(name: str):
-    path = _os.path.join(TEMPLATE_ROOT, name)
-    if not _os.path.isfile(path):
+    path = os.path.join(TEMPLATE_ROOT, name)
+    if not os.path.isfile(path):
         raise HTTPException(404, "template not found")
     return {"name": name, "content": open(path).read()}
 
