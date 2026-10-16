@@ -39,7 +39,8 @@ document.getElementById("intakeBtn")?.addEventListener("click", async () => {
     family: document.getElementById("clientFamily").value
   };
   const result = await request("/intake","POST",body);
-  document.getElementById("intakeOut").innerHTML = "<p>" + result.message + "</p><p><a class='btn' href='signup.html'>Create your account</a></p>";
+  const link = result.signup_link || "signup.html";
+  document.getElementById("intakeOut").innerHTML = "<p>" + result.message + "</p><p><a class='btn' href='" + link + "'>Create your account</a></p>";
 });
 </script>
 </body></html>
