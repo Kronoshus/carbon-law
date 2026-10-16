@@ -1,17 +1,43 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Carbon Law Attorney Dashboard</title><link rel="stylesheet" href="styles.css"></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Attorney Dashboard</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header><h1>Attorney and Staff Backend</h1><p>Manage matters, reviews, change requests, appointments, and reports.</p></header>
+<header><div><h1>Attorney and Staff Dashboard</h1><p>Manage matters, reviews, change requests, appointments, documents, and reports.</p></div><nav><a href="index.html">Dashboard</a><a href="portal.html">Client Portal</a></nav></header>
 <main>
-<section><h2>Create Matter</h2>
-<form id="matterForm">
+<section class="section">
+<h2>Create Matter</h2>
+<form id="matterForm" class="grid2">
 <input id="newId" placeholder="Matter ID" required>
 <input id="newClient" placeholder="Client name" required>
 <input id="newOwner" placeholder="Owner">
-<button type="submit">Create Matter</button></form></section>
-<section><h2>Matters</h2><table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th></tr></thead><tbody id="adminMatterRows"></tbody></table></section>
-<section><h2>Friday Report</h2><pre id="report"></pre></section>
+<input id="newAttorney" placeholder="Attorney reviewer">
+<select id="newRisk"><option>Low</option><option>Medium</option><option>High</option></select>
+<select id="newPriority"><option>Normal</option><option>Urgent</option></select>
+<input id="newDue" type="date">
+<button type="submit">Create Matter</button>
+</form>
 <pre id="adminOut"></pre>
+</section>
+<section class="section">
+<h2>Matters</h2>
+<table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead><tbody id="adminMatterRows"></tbody></table>
+</section>
+<section class="section">
+<h2>Change Request Queue</h2>
+<table><thead><tr><th>ID</th><th>Matter</th><th>Type</th><th>By</th><th>Status</th><th>Impact</th></tr></thead><tbody id="crRows"></tbody></table>
+</section>
+<section class="section">
+<h2>Appointments</h2>
+<table><thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead><tbody id="apptRows"></tbody></table>
+</section>
+<section class="section">
+<h2>Documents</h2>
+<table><thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead><tbody id="docRows"></tbody></table>
+</section>
+<section class="section">
+<h2>Friday Report</h2>
+<pre id="report"></pre>
+<button id="seedBtn" class="secondary">Seed Demo Matters</button>
+</section>
 </main>
 <script src="api.js"></script><script src="admin.js"></script>
 </body></html>
