@@ -79,3 +79,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const seed = document.getElementById("seedBtn");
   if (seed) seed.addEventListener("click", async () => { await request("/seed","POST"); await load(); });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("genReport");
+  if (btn) btn.addEventListener("click", async () => {
+    try {
+      const report = await request("/reports/friday");
+      renderReportSummary(report);
+    } catch (e) { }
+  });
+});

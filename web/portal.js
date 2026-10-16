@@ -121,3 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadDocs();
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("genReport");
+  if (btn) btn.addEventListener("click", async () => {
+    try {
+      const report = await request("/reports/friday");
+      renderReportSummary(report);
+    } catch (e) { }
+  });
+});
