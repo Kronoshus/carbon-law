@@ -16,6 +16,8 @@ async function request(path, method="GET", body=null) {
 }
 
 async function load() {
+  const token = getToken();
+  if (!token) { window.location.href = "login.html"; return; }
   try { await request("/seed","POST").catch(()=>null); } catch(e){}
   await loadMatters();
   await loadChangeRequests();

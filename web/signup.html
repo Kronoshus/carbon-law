@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign Up - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header class="site">
+  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
+  <nav class="main"><a href="index.html">Home</a><a href="portal.html">Client Portal</a></nav>
+</header>
+<section class="section">
+<h2>Create Your Account</h2>
+<p>Use the email from your intake to access your client portal.</p>
+<div class="form">
+<input id="name" placeholder="Full name" required>
+<input id="email" type="email" placeholder="Email" required>
+<input id="password" type="password" placeholder="Password" required>
+<button id="signupBtn">Create Account</button>
+<pre id="out"></pre>
+</div>
+</section>
+<script src="auth.js"></script>
+<script>
+document.getElementById("signupBtn")?.addEventListener("click", async () => {
+  try {
+    const result = await api("/auth/signup","POST",{
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value,
+      role: "client"
+    });
+    setToken(result.token); setUser(result.user);
+    document.getElementById("out").textContent = "Account created. Redirecting to portal...";
+    setTimeout(() => window.location.href = "portal.html", 1000);
+  } catch (e) { document.getElementById("out").textContent = e.message; }
+});
+</script>
+</body></html>

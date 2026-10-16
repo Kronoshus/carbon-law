@@ -39,7 +39,7 @@ document.getElementById("intakeBtn")?.addEventListener("click", async () => {
     family: document.getElementById("clientFamily").value
   };
   const result = await request("/intake","POST",body);
-  document.getElementById("intakeOut").textContent = JSON.stringify(result, null, 2);
+  document.getElementById("intakeOut").innerHTML = "<p>" + result.message + "</p><p><a class='btn' href='signup.html'>Create your account</a></p>";
 });
 </script>
 </body></html>
