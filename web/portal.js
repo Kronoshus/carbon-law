@@ -20,7 +20,7 @@ let matters = [];
 async function load() {
   const token = getToken();
   if (!token) { window.location.href = "login.html"; return; }
-  try { matters = await api("/matters/mine","GET",null,token); } catch(e){ matters=[]; }
+  try { matters = await api("/my-matters","GET",null,token); } catch(e){ matters=[]; }
   renderMatterSelects();
   renderDetail();
   loadDocs();
