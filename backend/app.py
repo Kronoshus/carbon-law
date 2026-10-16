@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
@@ -364,7 +364,7 @@ def login(req: LoginRequest):
     return {"token": token, "user": u}
 
 @app.get("/auth/me")
-def me(authorization: str = ""):
+def me(authorization: str = Header(None)):
     token = authorization.replace("Bearer ", "").strip()
     u = get_user_from_token(token)
     if not u:
@@ -410,7 +410,7 @@ def create_intake_v2(i: IntakeRequestV2):
     return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal."}
 
 @app.get("/my-matters")
-def my_matters(authorization: str = ""):
+def my_matters(authorization: str = Header(None)):
     token = authorization.replace("Bearer ", "").strip()
     u = get_user_from_token(token)
     if not u:
