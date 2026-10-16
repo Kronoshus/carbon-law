@@ -409,7 +409,7 @@ def create_intake_v2(i: IntakeRequestV2):
     # create signup token stored in matter notes? Return friendly message only
     return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal."}
 
-@app.get("/matters/mine")
+@app.get("/my-matters")
 def my_matters(authorization: str = ""):
     token = authorization.replace("Bearer ", "").strip()
     u = get_user_from_token(token)
