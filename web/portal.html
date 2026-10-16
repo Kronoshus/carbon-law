@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Client Portal</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header><div><h1>Client Portal</h1><p>View matter status, submit changes, and manage appointments.</p></div><nav><a href="index.html">Dashboard</a><a href="admin.html">Attorney Dashboard</a></nav></header>
-<main>
+<header class="site">
+  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
+  <nav class="main">
+    <a href="index.html#services">Services</a>
+    <a href="estate-planning.html">Estate Planning</a>
+    <a href="portal.html">Client Portal</a>
+    <a href="admin.html">Attorney Login</a>
+    <a href="prompts.html">PromptLaw</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+</header>
 <section class="section">
-<h2>Your Matters</h2>
+<h2>Client Portal</h2>
+<p>View matter status, submit changes, and manage appointments.</p>
+<section class="section">
+<h3>Your Matters</h3>
 <select id="matterSelect"></select>
 <div id="matterDetail"></div>
 </section>
-<section class="grid2">
+<div class="grid2">
 <section class="section">
-<h2>Submit Change Request</h2>
+<h3>Submit Change Request</h3>
 <form id="changeForm">
 <select id="crMatter" required></select>
 <select id="changeType"><option>Beneficiary change</option><option>Fiduciary change</option><option>Asset change</option><option>Appointment change</option><option>Document change</option></select>
@@ -20,16 +32,16 @@
 <pre id="crOut"></pre>
 </section>
 <section class="section">
-<h2>Appointment Management</h2>
+<h3>Appointment Management</h3>
 <select id="apptMatter"></select>
 <input id="apptTime" type="datetime-local">
 <button id="bookAppt">Book / Reschedule</button>
 <button id="cancelAppt" class="secondary">Request Cancellation</button>
 <pre id="apptOut"></pre>
 </section>
-</section>
+</div>
 <section class="section">
-<h2>Documents</h2>
+<h3>Documents</h3>
 <select id="docMatter"></select>
 <input id="docName" placeholder="Document name">
 <select id="docStatus"><option>Draft</option><option>Final</option><option>Signed</option></select>
@@ -37,9 +49,10 @@
 <table><thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead><tbody id="docRows"></tbody></table>
 </section>
 <section class="section">
-<h2>Friday Report</h2>
+<h3>Friday Report</h3>
 <pre id="report"></pre>
 </section>
-</main>
+</section>
+<footer><p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p></footer>
 <script src="api.js"></script><script src="portal.js"></script>
 </body></html>
