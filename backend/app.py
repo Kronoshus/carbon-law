@@ -373,6 +373,42 @@ def me(authorization: str = Header(None)):
 
 # Update IntakeRequest to store client email and assign default paralegal
 # redefine intake endpoint by overwriting? We'll patch IntakeRequest usage via new endpoint /intake/v2
+
+def send_signup_email(to_email: str, client_name: str):
+    host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    user = os.environ.get("SMTP_USER")
+    password = os.environ.get("SMTP_PASS")
+    if not user or not password:
+        return False
+    from_addr = os.environ.get("SMTP_FROM", user)
+    link = f"https://carbon.bailment.tech/signup.html?email={to_email}"
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = to_email
+    msg["Subject"] = "Create your Carbon Law client portal account"
+    body = f"""Hello {client_name},
+
+Thank you for starting your estate planning matter with Carbon Law Group.
+
+Please create your client portal account here:
+{link}
+
+Once you sign up, you can review documents, schedule appointments, and message your attorney.
+
+Best,
+Carbon Law Group
+"""
+    msg.attach(MIMEText(body, "plain"))
+    try:
+        with smtplib.SMTP(host, port, timeout=20) as server:
+            server.starttls()
+            server.login(user, password)
+            server.send_message(msg)
+        return True
+    except Exception:
+        return False
+
 class IntakeRequestV2(BaseModel):
     client_name: str
     email: str
@@ -406,7 +442,7 @@ def create_intake_v2(i: IntakeRequestV2):
         "updated_at": datetime.utcnow().isoformat(),
     }
     matters[matter_id] = rec
-    # create signup token stored in matter notes? Return friendly message only
+    send_signup_email(i.email, i.client_name)
     return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal."}
 
 @app.get("/my-matters")
