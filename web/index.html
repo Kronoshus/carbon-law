@@ -1,31 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Dashboard</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Group | Estate Planning</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header>
-<div><h1>Carbon Law — Estate Planning Operations Dashboard</h1><p>Live matter status, deadlines, bottlenecks, and capacity view.</p></div>
-<nav><a href="portal.html">Client Portal</a><a href="admin.html">Attorney Dashboard</a></nav>
+<header class="site">
+  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
+  <nav class="main">
+    <a href="index.html#services">Services</a>
+    <a href="estate-planning.html">Estate Planning</a>
+    <a href="portal.html">Client Portal</a>
+    <a href="admin.html">Attorney Login</a>
+    <a href="prompts.html">PromptLaw</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
 </header>
-<main>
-<section class="cards">
-<div class="card"><h2 id="total">0</h2><p>Active Matters</p></div>
-<div class="card"><h2 id="highRisk">0</h2><p>High Risk</p></div>
-<div class="card"><h2 id="review">0</h2><p>Attorney Review</p></div>
-<div class="card"><h2 id="urgent">0</h2><p>Urgent</p></div>
+<section class="hero">
+  <h1>Counsel for Families, Founders, and Dealmakers</h1>
+  <p>Carbon Law Group provides practical estate planning and business counsel. Our Carbon Law platform automates matter intake, drafting, funding, and client communication so your plan stays current.</p>
+  <a class="btn" href="portal.html">Client Portal</a>
+  <a class="btn blue" href="intake.html">Start Intake</a>
+  <a class="btn outline" href="https://app.acuityscheduling.com/schedule/39dbfd0e/category/Initial%2520Consultations%2520%252B%2520Inquiries/appointment/85903703" target="_blank">Schedule a Call</a>
+</section>
+<section class="section" id="services">
+  <h2>Services</h2>
+  <div class="grid">
+    <div class="card"><h3>Estate Planning</h3><p>Revocable trusts, pour-over wills, powers of attorney, healthcare directives, and funding support.</p></div>
+    <div class="card"><h3>Business Counsel</h3><p>Contracts, corporate governance, commercial transactions, and outside general counsel.</p></div>
+    <div class="card"><h3>Intellectual Property</h3><p>Copyright, trademark, and licensing support for founders and creators.</p></div>
+  </div>
+</section>
+<section class="section" id="contact">
+  <h2>Contact Us</h2>
+  <div class="grid">
+    <div class="form">
+      <h3>Send a Message</h3>
+      <input id="contactName" placeholder="Name" required>
+      <input id="contactEmail" type="email" placeholder="Email" required>
+      <input id="contactPhone" placeholder="Phone">
+      <select id="contactService"><option>Estate Planning</option><option>Business Counsel</option><option>Intellectual Property</option><option>Other</option></select>
+      <textarea id="contactMessage" placeholder="How can we help?"></textarea>
+      <button id="contactBtn">Send Message</button>
+      <pre id="contactOut"></pre>
+    </div>
+    <div class="card">
+      <h3>Call or Text</h3>
+      <p>(323) 543-4453</p>
+      <h3>Schedule</h3>
+      <p><a href="https://app.acuityscheduling.com/schedule/39dbfd0e/category/Initial%2520Consultations%2520%252B%2520Inquiries/appointment/85903703" target="_blank">Book an initial consultation</a></p>
+      <h3>Client Portal</h3>
+      <p><a href="portal.html">Log in to your matter</a></p>
+    </div>
+  </div>
 </section>
 <section class="section">
-<h3>Matter Tracker</h3>
-<input id="search" placeholder="Search client or matter ID">
-<select id="stageFilter"><option value="">All stages</option></select>
-<select id="riskFilter"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select>
-<select id="ownerFilter"><option value="">All owners</option></select>
-<button id="seedBtn" class="secondary">Seed Demo Matters</button>
-<table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Due</th><th>Risk</th><th>Priority</th><th>Next Action</th></tr></thead><tbody id="rows"></tbody></table>
+  <h2>Operations Dashboard</h2>
+  <p>Internal matter tracker and reporting.</p>
+  <a class="btn blue" href="dashboard.html">Open Dashboard</a>
+  <a class="btn" href="admin.html">Attorney Login</a>
 </section>
-<section class="section">
-<h3>Friday Report</h3>
-<pre id="report"></pre>
-</section>
-</main>
-<script src="app.js"></script>
+<footer>
+  <p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p>
+</footer>
+<script src="api.js"></script>
+<script>
+const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
+async function request(path, method="GET", body=null) {
+  const opts = { method, headers: {"Content-Type":"application/json"} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+document.getElementById("contactBtn")?.addEventListener("click", async () => {
+  const body = {
+    name: document.getElementById("contactName").value,
+    email: document.getElementById("contactEmail").value,
+    phone: document.getElementById("contactPhone").value,
+    service: document.getElementById("contactService").value,
+    message: document.getElementById("contactMessage").value
+  };
+  const result = await request("/contact","POST",body);
+  document.getElementById("contactOut").textContent = "Message received: " + result.id;
+});
+</script>
 </body></html>

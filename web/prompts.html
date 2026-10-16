@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PromptLaw - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header class="site">
+  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
+  <nav class="main"><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="portal.html">Client Portal</a><a href="admin.html">Attorney Login</a></nav>
+</header>
+<section class="section">
+<h2>PromptLaw California Prompt Library</h2>
+<p>Browse the California estate planning prompt files and templates used for document drafting.</p>
+<div class="grid">
+  <div class="card"><h3>Prompts</h3><ul id="promptList"></ul></div>
+  <div class="card"><h3>Templates</h3><ul id="templateList"></ul></div>
+  <div class="card"><h3>Selected Content</h3><pre id="contentView"></pre></div>
+</div>
+</section>
+<script src="api.js"></script>
+<script>
+const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
+async function request(path){const res=await fetch(API+path); if(!res.ok) throw new Error(await res.text()); return res.json();}
+async function loadLists() {
+  try {
+    const prompts = await request("/prompts");
+    const pl = document.getElementById("promptList");
+    pl.innerHTML = prompts.map(p=>`<li><a href="#" data-type="prompt" data-name="${p.name}">${p.name}</a></li>`).join("");
+    const templates = await request("/templates");
+    const tl = document.getElementById("templateList");
+    tl.innerHTML = templates.map(t=>`<li><a href="#" data-type="template" data-name="${t.name}">${t.name}</a></li>`).join("");
+    document.querySelectorAll("a[data-name]").forEach(a => {
+      a.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const type = a.getAttribute("data-type");
+        const name = a.getAttribute("data-name");
+        const data = await request(`/${type}s/${encodeURIComponent(name)}`);
+        document.getElementById("contentView").textContent = data.content;
+      });
+    });
+  } catch(e) { document.getElementById("contentView").textContent = "Backend unavailable."; }
+}
+loadLists();
+</script>
+</body></html>
