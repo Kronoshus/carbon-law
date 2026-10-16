@@ -381,19 +381,13 @@ def me(authorization: str = Header(None)):
 # Update IntakeRequest to store client email and assign default paralegal
 # redefine intake endpoint by overwriting? We'll patch IntakeRequest usage via new endpoint /intake/v2
 
+import json as _json
+import urllib.request as _urlreq
+import urllib.error as _urlerr
+
 def send_signup_email(to_email: str, client_name: str):
-    host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    user = os.environ.get("SMTP_USER")
-    password = os.environ.get("SMTP_PASS")
-    if not user or not password:
-        return False
-    from_addr = os.environ.get("SMTP_FROM", user)
     link = f"https://carbon.bailment.tech/signup.html?email={to_email}"
-    msg = MIMEMultipart()
-    msg["From"] = from_addr
-    msg["To"] = to_email
-    msg["Subject"] = "Create your Carbon Law client portal account"
+    subject = "Create your Carbon Law client portal account"
     body = f"""Hello {client_name},
 
 Thank you for starting your estate planning matter with Carbon Law Group.
@@ -406,6 +400,38 @@ Once you sign up, you can review documents, schedule appointments, and message y
 Best,
 Carbon Law Group
 """
+    # 1) HTTP webhook (works on hosts that block SMTP, e.g. Render free tier)
+    webhook = os.environ.get("EMAIL_WEBHOOK_URL")
+    if webhook:
+        try:
+            payload = _json.dumps({
+                "to": to_email,
+                "subject": subject,
+                "body": body,
+                "from": os.environ.get("SMTP_FROM") or os.environ.get("SMTP_USER") or "bestfriendkevin@gmail.com",
+            }).encode()
+            req = _urlreq.Request(webhook, data=payload, headers={"Content-Type": "application/json"})
+            secret = os.environ.get("EMAIL_WEBHOOK_SECRET")
+            if secret:
+                req.add_header("X-Webhook-Secret", secret)
+            with _urlreq.urlopen(req, timeout=20) as resp:
+                print("EMAIL WEBHOOK OK:", resp.status, flush=True)
+                return True
+        except Exception as e:
+            print("EMAIL WEBHOOK ERROR:", repr(e), flush=True)
+    # 2) SMTP fallback (local/dev or hosts that allow outbound SMTP)
+    host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    user = os.environ.get("SMTP_USER")
+    password = os.environ.get("SMTP_PASS")
+    if not user or not password:
+        print("EMAIL: no SMTP credentials and no EMAIL_WEBHOOK_URL", flush=True)
+        return False
+    from_addr = os.environ.get("SMTP_FROM", user)
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = to_email
+    msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
     try:
         with smtplib.SMTP(host, port, timeout=20) as server:
@@ -450,8 +476,8 @@ def create_intake_v2(i: IntakeRequestV2):
         "updated_at": datetime.utcnow().isoformat(),
     }
     matters[matter_id] = rec
-    send_signup_email(i.email, i.client_name)
-    return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal."}
+    sent = send_signup_email(i.email, i.client_name)
+    return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal.", "email_sent": sent, "signup_url": f"https://carbon.bailment.tech/signup.html?email={i.email}"}
 
 @app.get("/my-matters")
 def my_matters(authorization: str = Header(None)):
