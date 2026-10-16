@@ -1,20 +1,45 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Carbon Law Client Portal</title><link rel="stylesheet" href="styles.css"></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Client Portal</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header><h1>Client Portal</h1><p>View matter status, submit changes, and manage appointments.</p></header>
+<header><div><h1>Client Portal</h1><p>View matter status, submit changes, and manage appointments.</p></div><nav><a href="index.html">Dashboard</a><a href="admin.html">Attorney Dashboard</a></nav></header>
 <main>
-<section><h2>Your Matters</h2><table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th><th>Next Action</th></tr></thead><tbody id="matterRows"></tbody></table><p id="matterCount"></p></section>
-<section><h2>Submit Change Request</h2>
+<section class="section">
+<h2>Your Matters</h2>
+<select id="matterSelect"></select>
+<div id="matterDetail"></div>
+</section>
+<section class="grid2">
+<section class="section">
+<h2>Submit Change Request</h2>
 <form id="changeForm">
-<input id="matter" placeholder="Matter ID" required>
-<select id="changeType"><option>Beneficiary change</option><option>Fiduciary change</option><option>Asset change</option><option>Appointment change</option></select>
+<select id="crMatter" required></select>
+<select id="changeType"><option>Beneficiary change</option><option>Fiduciary change</option><option>Asset change</option><option>Appointment change</option><option>Document change</option></select>
 <input id="docs" placeholder="Affected documents">
-<button type="submit">Submit</button></form></section>
-<section><h2>Appointment Management</h2>
-<button id="cancel">Request cancellation</button>
-<button id="reschedule">Request reschedule</button></section>
-<section><h2>Backend Report</h2><pre id="report"></pre></section>
-<pre id="out"></pre>
+<textarea id="crImpact" placeholder="Impact / notes"></textarea>
+<button type="submit">Submit Change Request</button></form>
+<pre id="crOut"></pre>
+</section>
+<section class="section">
+<h2>Appointment Management</h2>
+<select id="apptMatter"></select>
+<input id="apptTime" type="datetime-local">
+<button id="bookAppt">Book / Reschedule</button>
+<button id="cancelAppt" class="secondary">Request Cancellation</button>
+<pre id="apptOut"></pre>
+</section>
+</section>
+<section class="section">
+<h2>Documents</h2>
+<select id="docMatter"></select>
+<input id="docName" placeholder="Document name">
+<select id="docStatus"><option>Draft</option><option>Final</option><option>Signed</option></select>
+<button id="addDoc">Add Document</button>
+<table><thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead><tbody id="docRows"></tbody></table>
+</section>
+<section class="section">
+<h2>Friday Report</h2>
+<pre id="report"></pre>
+</section>
 </main>
-<script src="app.js"></script><script src="api.js"></script><script src="portal.js"></script>
+<script src="api.js"></script><script src="portal.js"></script>
 </body></html>

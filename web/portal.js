@@ -1,6 +1,5 @@
 const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
 const el = (id) => document.getElementById(id);
-
 async function request(path, method="GET", body=null) {
   const opts = { method, headers: {"Content-Type":"application/json"} };
   if (body) opts.body = JSON.stringify(body);
@@ -10,77 +9,107 @@ async function request(path, method="GET", body=null) {
 }
 
 let matters = [];
-async function loadMatters() {
-  try {
-    matters = await request("/matters");
-  } catch (e) {
-    matters = [{id:"CL-0001", client_name:"Sample Client", stage:"6 Client Review", owner:"Paralegal A", appointment_status:"Booked", risk_level:"Low"}];
-  }
-  renderMatters();
+async function load() {
+  try { await request("/seed","POST").catch(()=>null); matters = await request("/matters"); } catch(e){ matters=[]; }
+  renderMatterSelects();
+  renderDetail();
+  loadDocs();
   loadReport();
 }
-
-function renderMatters() {
-  const body = el("matterRows");
-  if (!body) return;
-  body.innerHTML = "";
-  matters.forEach(m => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${m.id}</td><td>${m.client_name}</td><td>${m.stage}</td><td>${m.owner}</td><td>${m.risk_level}</td><td>${m.next_action || ""}</td>`;
-    body.appendChild(tr);
-  });
-  if (el("matterCount")) el("matterCount").textContent = matters.length;
+function matterOptions(selectId) {
+  const sel = el(selectId);
+  if (!sel) return;
+  sel.innerHTML = matters.map(m=>`<option value="${m.id}">${m.id} - ${m.client_name}</option>`).join("");
 }
-
+function renderMatterSelects() {
+  matterOptions("matterSelect");
+  matterOptions("crMatter");
+  matterOptions("apptMatter");
+  matterOptions("docMatter");
+}
+function renderDetail() {
+  const id = el("matterSelect")?.value;
+  const m = matters.find(x=>x.id===id);
+  const box = el("matterDetail");
+  if (!box) return;
+  if (!m) { box.innerHTML = "No matter selected."; return; }
+  box.innerHTML = `<div class="card"><h3>${m.id} — ${m.client_name}</h3>
+  <p><strong>Stage:</strong> ${m.stage}</p>
+  <p><strong>Owner:</strong> ${m.owner}</p>
+  <p><strong>Attorney Reviewer:</strong> ${m.attorney_reviewer||"Unassigned"}</p>
+  <p><strong>Due Date:</strong> ${m.due_date||"TBD"}</p>
+  <p><strong>Risk:</strong> ${m.risk_level} | <strong>Priority:</strong> ${m.priority}</p>
+  <p><strong>Document Status:</strong> ${m.document_status}</p>
+  <p><strong>Title Status:</strong> ${m.title_status}</p>
+  <p><strong>Funding Status:</strong> ${m.funding_status}</p>
+  <p><strong>Appointment Status:</strong> ${m.appointment_status}</p>
+  <p><strong>Next Action:</strong> ${m.next_action||""}</p>
+  <p><strong>Blocker:</strong> ${m.blocker||"None"}</p></div>`;
+}
+async function loadDocs() {
+  try {
+    const docs = await request("/documents");
+    const rows = el("docRows");
+    if (!rows) return;
+    rows.innerHTML = "";
+    docs.forEach(d => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${d.matter_id}</td><td>${d.name}</td><td>${d.version}</td><td>${d.status}</td>`;
+      rows.appendChild(tr);
+    });
+  } catch(e){}
+}
 async function loadReport() {
   try {
     const report = await request("/reports/friday");
     if (el("report")) el("report").textContent = JSON.stringify(report, null, 2);
-  } catch (e) {
-    if (el("report")) el("report").textContent = "Backend unavailable. Showing sample mode.";
-  }
+  } catch(e){ if (el("report")) el("report").textContent = "Backend unavailable."; }
 }
-
-async function submitChangeRequest(event) {
-  event.preventDefault();
-  const body = {
-    matter_id: el("matter").value,
-    requested_by: "client",
-    change_type: el("changeType").value,
-    affected_documents: el("docs").value,
-    status: "Open"
-  };
-  try {
-    const result = await request("/change-requests", "POST", body);
-    el("out").textContent = "Change request submitted: " + result.id;
-  } catch (e) {
-    el("out").textContent = "Change request recorded locally: " + JSON.stringify(body, null, 2);
-  }
-}
-
-async function requestAppointment(action) {
-  const matterId = el("matter").value || (matters.length ? matters[0].id : "");
-  const body = {
-    matter_id: matterId,
-    kind: "Signing",
-    scheduled_at: new Date(Date.now() + 86400000).toISOString(),
-    status: action === "cancel" ? "Cancelled" : "Rescheduled",
-    note: action === "cancel" ? "Client requested cancellation" : "Client requested reschedule"
-  };
-  try {
-    const result = await request("/appointments", "POST", body);
-    el("out").textContent = action + " request submitted: " + result.id;
-  } catch (e) {
-    el("out").textContent = action + " request recorded locally.";
-  }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  loadMatters();
-  const form = el("changeForm");
-  if (form) form.addEventListener("submit", submitChangeRequest);
-  const cancel = el("cancel");
-  if (cancel) cancel.addEventListener("click", () => requestAppointment("cancel"));
-  const resched = el("reschedule");
-  if (resched) resched.addEventListener("click", () => requestAppointment("reschedule"));
+  load();
+  el("matterSelect")?.addEventListener("change", renderDetail);
+  el("changeForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = {
+      matter_id: el("crMatter").value,
+      requested_by: "client",
+      change_type: el("changeType").value,
+      affected_documents: el("docs").value,
+      impact: el("crImpact").value,
+      status: "Open"
+    };
+    const result = await request("/change-requests","POST",body);
+    el("crOut").textContent = "Submitted: " + result.id;
+  });
+  el("bookAppt")?.addEventListener("click", async () => {
+    const body = {
+      matter_id: el("apptMatter").value,
+      kind: "Signing",
+      scheduled_at: el("apptTime").value || new Date().toISOString(),
+      status: "Rescheduled",
+      note: "Client requested reschedule"
+    };
+    const result = await request("/appointments","POST",body);
+    el("apptOut").textContent = "Appointment request submitted: " + result.id;
+  });
+  el("cancelAppt")?.addEventListener("click", async () => {
+    const body = {
+      matter_id: el("apptMatter").value,
+      kind: "Signing",
+      scheduled_at: new Date().toISOString(),
+      status: "Cancelled",
+      note: "Client requested cancellation"
+    };
+    const result = await request("/appointments","POST",body);
+    el("apptOut").textContent = "Cancellation request submitted: " + result.id;
+  });
+  el("addDoc")?.addEventListener("click", async () => {
+    const body = {
+      matter_id: el("docMatter").value,
+      name: el("docName").value,
+      status: el("docStatus").value
+    };
+    await request("/documents","POST",body);
+    await loadDocs();
+  });
 });
