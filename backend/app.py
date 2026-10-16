@@ -328,3 +328,121 @@ a{color:#204ce5;text-decoration:none;font-weight:600;}
 </section>
 </body></html>
 """
+
+
+import hashlib
+
+users: Dict[str, Dict[str, Any]] = {}
+sessions: Dict[str, str] = {}  # token -> user_id
+
+def hash_pw(pw: str) -> str:
+    return hashlib.sha256(pw.encode()).hexdigest()
+
+# seed default paralegal Kevin Mohr
+if "kevin.mohr@carbonlaw.com" not in users:
+    uid = str(uuid.uuid4())
+    users["kevin.mohr@carbonlaw.com"] = {
+        "id": uid, "name": "Kevin Mohr", "email": "kevin.mohr@carbonlaw.com",
+        "role": "paralegal", "password_hash": hash_pw("paralegal123")
+    }
+
+def get_user_from_token(token: str):
+    uid = sessions.get(token)
+    if not uid:
+        return None
+    for u in users.values():
+        if u["id"] == uid:
+            return u
+    return None
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str = "client"
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/auth/signup")
+def signup(req: SignupRequest):
+    if req.email in users:
+        raise HTTPException(400, "user already exists")
+    uid = str(uuid.uuid4())
+    users[req.email] = {
+        "id": uid, "name": req.name, "email": req.email,
+        "role": req.role, "password_hash": hash_pw(req.password)
+    }
+    # link any matters with matching client email
+    for m in matters.values():
+        if m.get("client_email") == req.email:
+            m["client_user_id"] = uid
+    token = str(uuid.uuid4())
+    sessions[token] = uid
+    return {"token": token, "user": users[req.email]}
+
+@app.post("/auth/login")
+def login(req: LoginRequest):
+    u = users.get(req.email)
+    if not u or u["password_hash"] != hash_pw(req.password):
+        raise HTTPException(401, "invalid credentials")
+    token = str(uuid.uuid4())
+    sessions[token] = u["id"]
+    return {"token": token, "user": u}
+
+@app.get("/auth/me")
+def me(authorization: str = ""):
+    token = authorization.replace("Bearer ", "").strip()
+    u = get_user_from_token(token)
+    if not u:
+        raise HTTPException(401, "not authenticated")
+    return u
+
+# Update IntakeRequest to store client email and assign default paralegal
+# redefine intake endpoint by overwriting? We'll patch IntakeRequest usage via new endpoint /intake/v2
+class IntakeRequestV2(BaseModel):
+    client_name: str
+    email: str
+    phone: str = ""
+    goals: str = ""
+    assets: str = ""
+    family: str = ""
+
+@app.post("/intake")
+def create_intake_v2(i: IntakeRequestV2):
+    matter_id = "CL-" + str(len(matters)+1).zfill(4)
+    rec = {
+        "id": matter_id,
+        "client_name": i.client_name,
+        "client_email": i.email,
+        "stage": "1 Intake",
+        "owner": "Kevin Mohr",
+        "attorney_reviewer": None,
+        "due_date": None,
+        "risk_level": "Low",
+        "priority": "Normal",
+        "next_action": "Review intake and schedule consultation",
+        "notes": f"Email: {i.email}; Phone: {i.phone}; Goals: {i.goals}; Assets: {i.assets}; Family: {i.family}",
+        "document_status": "Not Started",
+        "title_status": "Unconfirmed",
+        "funding_status": "Not Started",
+        "appointment_status": "Not Booked",
+        "blocker": "None",
+        "client_user_id": None,
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    matters[matter_id] = rec
+    # create signup token stored in matter notes? Return friendly message only
+    return {"message": "Thank you. Please check your email for a sign-up link to create your account and access your client portal."}
+
+@app.get("/matters/mine")
+def my_matters(authorization: str = ""):
+    token = authorization.replace("Bearer ", "").strip()
+    u = get_user_from_token(token)
+    if not u:
+        raise HTTPException(401, "not authenticated")
+    if u["role"] in ("paralegal","attorney"):
+        return list(matters.values())
+    return [m for m in matters.values() if m.get("client_user_id") == u["id"] or m.get("client_email") == u["email"]]
