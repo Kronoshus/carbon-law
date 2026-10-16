@@ -271,3 +271,27 @@ def get_template(name: str):
     if not _os.path.isfile(path):
         raise HTTPException(404, "template not found")
     return {"name": name, "content": open(path).read()}
+
+
+@app.patch("/change-requests/{request_id}")
+def update_change_request(request_id: str, status: str, note: str = ""):
+    for cr in changes:
+        if cr["id"] == request_id:
+            cr["status"] = status
+            cr["note"] = note
+            cr["updated_at"] = datetime.utcnow().isoformat()
+            return cr
+    raise HTTPException(404, "change request not found")
+
+@app.patch("/appointments/{appointment_id}/status")
+def update_appointment_status(appointment_id: str, status: str, note: str = ""):
+    if appointment_id not in appointments:
+        raise HTTPException(404, "appointment not found")
+    appointments[appointment_id]["status"] = status
+    appointments[appointment_id]["note"] = note
+    appointments[appointment_id]["updated_at"] = datetime.utcnow().isoformat()
+    return appointments[appointment_id]
+
+@app.get("/contacts")
+def list_contacts_endpoint():
+    return contacts
