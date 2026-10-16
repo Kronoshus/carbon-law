@@ -142,3 +142,38 @@ def friday_report():
         "urgent": [m["id"] for m in matters.values() if m.get("priority") == "Urgent"],
         "attorney_review_queue": [m["id"] for m in matters.values() if "Review" in m.get("stage", "")],
     }
+
+
+# Seed a few demo matters for simulator use
+DEMO_MATTERS = [
+  {"id":"CL-0001","client_name":"Avery Family Trust","stage":"6 Client Review","owner":"Paralegal A","attorney_reviewer":"Attorney 1","due_date":"2026-10-20","risk_level":"Low","priority":"Normal","next_action":"Client review of draft trust","document_status":"Draft","title_status":"Ordered","funding_status":"Instructions Sent","appointment_status":"Booked"},
+  {"id":"CL-0002","client_name":"Bennett Revocable Trust","stage":"4 Drafting","owner":"Paralegal B","attorney_reviewer":"Attorney 2","due_date":"2026-10-18","risk_level":"Medium","priority":"Urgent","next_action":"Attorney redline","document_status":"In Progress","title_status":"Unconfirmed","funding_status":"Not Started","appointment_status":"Not Booked"},
+  {"id":"CL-0003","client_name":"Carter Estate Plan","stage":"9 Funding","owner":"Paralegal C","attorney_reviewer":"Attorney 1","due_date":"2026-10-22","risk_level":"Low","priority":"Normal","next_action":"Funding follow-up","document_status":"Final","title_status":"Transfer Pending","funding_status":"In Progress","appointment_status":"Completed"},
+  {"id":"CL-0004","client_name":"Diaz Family Trust","stage":"10 Signing","owner":"Paralegal A","attorney_reviewer":"Attorney 3","due_date":"2026-10-17","risk_level":"High","priority":"Urgent","next_action":"Signing appointment","document_status":"Final","title_status":"Confirmed","funding_status":"Not Started","appointment_status":"Booked"},
+  {"id":"CL-0005","client_name":"Ellis Living Trust","stage":"1 Intake","owner":"Unassigned","attorney_reviewer":None,"due_date":"2026-10-25","risk_level":"Low","priority":"Normal","next_action":"Complete intake","document_status":"Not Started","title_status":"Unconfirmed","funding_status":"Not Started","appointment_status":"Not Booked"},
+]
+
+def seed_demo_matters():
+    if not matters:
+        for m in DEMO_MATTERS:
+            rec = dict(m)
+            rec.setdefault("blocker","None")
+            rec.setdefault("notes","Demo matter")
+            rec["created_at"]=datetime.utcnow().isoformat()
+            rec["updated_at"]=datetime.utcnow().isoformat()
+            matters[rec["id"]]=rec
+
+seed_demo_matters()
+
+@app.post("/seed")
+def seed():
+    seed_demo_matters()
+    return {"seeded": len(matters), "matters": list(matters.values())}
+
+@app.patch("/matters/{matter_id}")
+def patch_matter(matter_id: str, updates: dict):
+    if matter_id not in matters:
+        raise HTTPException(404, "matter not found")
+    matters[matter_id].update(updates)
+    matters[matter_id]["updated_at"]=datetime.utcnow().isoformat()
+    return matters[matter_id]
