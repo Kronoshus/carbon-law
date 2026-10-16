@@ -29,3 +29,12 @@ footer { background:var(--navy); color:#fff; padding:32px 24px; text-align:cente
 footer a { color:#fff; }
 @media(max-width:900px){ .grid{grid-template-columns:1fr;} .cards{grid-template-columns:1fr 1fr;} }
 nav.main { display:flex; gap:18px; }
+
+header.site { background:#112337; color:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+header.site a { color:#fff; text-decoration:none; margin-left:18px; font-weight:600; }
+header.site .logo { height:42px; }
+nav.main { display:flex; gap:18px; flex-wrap:wrap; }
+footer { background:#112337; color:#fff; padding:32px 24px; text-align:center; margin-top:40px; }
+footer a { color:#fff; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px){ .grid2{grid-template-columns:1fr;} }

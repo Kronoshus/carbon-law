@@ -4,7 +4,14 @@
 <body>
 <header class="site">
   <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
-  <nav class="main"><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="portal.html">Client Portal</a><a href="admin.html">Attorney Login</a></nav>
+  <nav class="main">
+    <a href="index.html#services">Services</a>
+    <a href="estate-planning.html">Estate Planning</a>
+    <a href="portal.html">Client Portal</a>
+    <a href="admin.html">Attorney Login</a>
+    <a href="prompts.html">PromptLaw</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
 </header>
 <section class="section">
 <h2>PromptLaw California Prompt Library</h2>
@@ -15,6 +22,7 @@
   <div class="card"><h3>Selected Content</h3><pre id="contentView"></pre></div>
 </div>
 </section>
+<footer><p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p></footer>
 <script src="api.js"></script>
 <script>
 const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
