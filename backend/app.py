@@ -427,6 +427,9 @@ Carbon Law Group
     if not user or not password:
         print("EMAIL: no SMTP credentials and no EMAIL_WEBHOOK_URL", flush=True)
         return False
+    if os.environ.get("RENDER") and not webhook:
+        print("EMAIL: running on Render without webhook; skipping blocked SMTP", flush=True)
+        return False
     from_addr = os.environ.get("SMTP_FROM", user)
     msg = MIMEMultipart()
     msg["From"] = from_addr
@@ -434,7 +437,7 @@ Carbon Law Group
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
     try:
-        with smtplib.SMTP(host, port, timeout=20) as server:
+        with smtplib.SMTP(host, port, timeout=8) as server:
             server.starttls()
             server.login(user, password)
             server.send_message(msg)
