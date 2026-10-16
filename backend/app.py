@@ -1,23 +1,37 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os, uuid
 
-app = FastAPI(title="Carbon Law Backend", version="0.1.0")
+app = FastAPI(title="Carbon Law Backend", version="0.2.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Matter(BaseModel):
     id: str
     client_name: str
-    stage: str
-    owner: str
+    stage: str = "1 Intake"
+    owner: str = "Unassigned"
     attorney_reviewer: Optional[str] = None
     due_date: Optional[str] = None
+    last_client_contact: Optional[str] = None
+    next_client_contact: Optional[str] = None
     next_action: str = ""
     blocker: str = "None"
+    document_status: Optional[str] = "Not Started"
+    title_status: Optional[str] = "Unconfirmed"
+    funding_status: Optional[str] = "Not Started"
+    appointment_status: Optional[str] = "Not Booked"
     risk_level: str = "Low"
-    appointment_status: Optional[str] = None
-    document_status: Optional[str] = None
+    priority: str = "Normal"
+    notes: str = ""
 
 class ChangeRequest(BaseModel):
     matter_id: str
@@ -26,14 +40,26 @@ class ChangeRequest(BaseModel):
     affected_documents: str = ""
     required_attorney_decision: bool = True
     impact: str = ""
+    status: str = "Open"
 
-class AppointmentAction(BaseModel):
-    status: str = Field(..., pattern="^(Booked|Completed|Cancelled|Rescheduled)$")
+class Appointment(BaseModel):
+    matter_id: str
+    kind: str = "Signing"
+    scheduled_at: str
+    status: str = "Booked"
     note: str = ""
+
+class PortalDocument(BaseModel):
+    matter_id: str
+    name: str
+    version: int = 1
+    status: str = "Draft"
+    storage_path: str = ""
 
 matters: Dict[str, Dict[str, Any]] = {}
 changes: List[Dict[str, Any]] = []
 appointments: Dict[str, Dict[str, Any]] = {}
+documents: Dict[str, Dict[str, Any]] = {}
 
 @app.get("/health")
 def health():
@@ -46,9 +72,10 @@ def list_matters():
 @app.post("/matters")
 def upsert_matter(m: Matter):
     data = m.model_dump()
-    data["updated_at"] = datetime.utcnow().isoformat()
+    now = datetime.utcnow().isoformat()
+    data["updated_at"] = now
     if m.id not in matters:
-        data["created_at"] = data["updated_at"]
+        data["created_at"] = now
     matters[m.id] = data
     return data
 
@@ -57,6 +84,51 @@ def get_matter(matter_id: str):
     if matter_id not in matters:
         raise HTTPException(404, "matter not found")
     return matters[matter_id]
+
+@app.post("/change-requests")
+def create_change_request(cr: ChangeRequest):
+    rec = cr.model_dump()
+    rec["id"] = str(uuid.uuid4())
+    rec["created_at"] = datetime.utcnow().isoformat()
+    changes.append(rec)
+    return rec
+
+@app.get("/change-requests")
+def list_change_requests():
+    return changes
+
+@app.post("/appointments")
+def create_appointment(appt: Appointment):
+    rec = appt.model_dump()
+    rec["id"] = str(uuid.uuid4())
+    rec["created_at"] = datetime.utcnow().isoformat()
+    appointments[rec["id"]] = rec
+    return rec
+
+@app.patch("/appointments/{appointment_id}")
+def update_appointment(appointment_id: str, status: str, note: str = ""):
+    if appointment_id not in appointments:
+        raise HTTPException(404, "appointment not found")
+    appointments[appointment_id]["status"] = status
+    appointments[appointment_id]["note"] = note
+    appointments[appointment_id]["updated_at"] = datetime.utcnow().isoformat()
+    return appointments[appointment_id]
+
+@app.get("/appointments")
+def list_appointments():
+    return list(appointments.values())
+
+@app.post("/documents")
+def create_document(doc: PortalDocument):
+    rec = doc.model_dump()
+    rec["id"] = str(uuid.uuid4())
+    rec["created_at"] = datetime.utcnow().isoformat()
+    documents[rec["id"]] = rec
+    return rec
+
+@app.get("/documents")
+def list_documents():
+    return list(documents.values())
 
 @app.get("/reports/friday")
 def friday_report():
@@ -67,26 +139,6 @@ def friday_report():
         "total": len(matters),
         "by_stage": by_stage,
         "high_risk": [m["id"] for m in matters.values() if m.get("risk_level") == "High"],
-        "overdue": [m["id"] for m in matters.values() if m.get("priority") == "Urgent"],
+        "urgent": [m["id"] for m in matters.values() if m.get("priority") == "Urgent"],
+        "attorney_review_queue": [m["id"] for m in matters.values() if "Review" in m.get("stage", "")],
     }
-
-@app.post("/change-requests")
-def create_change_request(cr: ChangeRequest):
-    rec = cr.model_dump()
-    rec["id"] = str(uuid.uuid4())
-    rec["status"] = "Open"
-    rec["created_at"] = datetime.utcnow().isoformat()
-    changes.append(rec)
-    return rec
-
-@app.get("/change-requests")
-def list_change_requests():
-    return changes
-
-@app.post("/appointments/{appointment_id}/status")
-def appointment_status(appointment_id: str, action: AppointmentAction):
-    if appointment_id not in appointments:
-        appointments[appointment_id] = {"id": appointment_id, "status": "Booked"}
-    appointments[appointment_id]["status"] = action.status
-    appointments[appointment_id]["reschedule_note"] = action.note
-    return appointments[appointment_id]
