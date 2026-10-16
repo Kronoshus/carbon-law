@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Carbon Law Client Portal</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><h1>Client Portal</h1><p>View status, submit changes, and manage appointments.</p></header>
+<main>
+<h3>My Matter Status</h3>
+<div id="status"></div>
+<h3>Submit Change Request</h3>
+<form id="changeForm">
+<input id="matter" placeholder="Matter ID" required>
+<select id="changeType"><option>Beneficiary change</option><option>Fiduciary change</option><option>Asset change</option><option>Appointment change</option></select>
+<input id="docs" placeholder="Affected documents">
+<button type="submit">Submit</button>
+</form>
+<h3>Appointment Management</h3>
+<p>Clients can request cancellation or rescheduling. The tracker and backend update the matter record.</p>
+<button id="cancel">Request cancellation</button>
+<button id="reschedule">Request reschedule</button>
+<pre id="out"></pre>
+</main>
+<script src="app.js"></script><script src="api.js"></script>
+<script src="portal.js"></script>
+</body></html>

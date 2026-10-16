@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Carbon Law Attorney Dashboard</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><h1>Attorney and Staff Backend</h1><p>Manage matters, review queue, change requests, and appointments.</p></header>
+<main>
+<h3>Backend API</h3>
+<p>Start with: <code>cd backend && uvicorn app:app --reload</code></p>
+<ul>
+<li>GET /health</li>
+<li>GET /matters</li>
+<li>POST /matters</li>
+<li>GET /reports/friday</li>
+<li>POST /change-requests</li>
+</ul>
+<h3>Change Request Intake</h3>
+<p>All client changes become tracked change requests that attorneys can approve, reject, or defer.</p>
+</main>
+<script src="admin.js"></script>
+</body></html>
