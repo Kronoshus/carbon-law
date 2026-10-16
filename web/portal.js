@@ -18,7 +18,9 @@ async function request(path, method="GET", body=null) {
 
 let matters = [];
 async function load() {
-  try { await request("/seed","POST").catch(()=>null); matters = await request("/matters"); } catch(e){ matters=[]; }
+  const token = getToken();
+  if (!token) { window.location.href = "login.html"; return; }
+  try { matters = await api("/matters/mine","GET",null,token); } catch(e){ matters=[]; }
   renderMatterSelects();
   renderDetail();
   loadDocs();
