@@ -1,0 +1,21 @@
+name: Weekly Status Report
+on:
+  schedule:
+    - cron: "0 22 * * 4"
+  workflow_dispatch:
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/generate_weekly_report.py
+      - name: Commit report
+        run: |
+          git config user.name "Carbon Law Bot"
+          git config user.email "bot@carbonlaw.local"
+          git add tracking/weekly-report.md
+          git commit -m "weekly: update status report" || exit 0
+          git push
