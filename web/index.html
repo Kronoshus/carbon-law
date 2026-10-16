@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carbon Law Matter Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+<h1>Carbon Law — Estate Planning Operations Dashboard</h1>
+<p>Live matter status, deadlines, bottlenecks, and capacity view.</p>
+</header>
+<main>
+<section class="cards">
+<div class="card"><h2 id="total">0</h2><p>Active Matters</p></div>
+<div class="card"><h2 id="overdue">0</h2><p>Overdue</p></div>
+<div class="card"><h2 id="review">0</h2><p>Attorney Review</p></div>
+<div class="card"><h2 id="signing">0</h2><p>Signing This Week</p></div>
+</section>
+<section>
+<h3>Matter Tracker</h3>
+<input id="search" placeholder="Search client or matter ID">
+<select id="stageFilter"><option value="">All stages</option></select>
+<select id="riskFilter"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select>
+<select id="ownerFilter"><option value="">All owners</option></select>
+<table>
+<thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Due</th><th>Risk</th><th>Next Action</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</section>
+<section>
+<h3>Friday Report</h3>
+<pre id="report"></pre>
+</section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
