@@ -413,7 +413,8 @@ Carbon Law Group
             server.login(user, password)
             server.send_message(msg)
         return True
-    except Exception:
+    except Exception as e:
+        print("SMTP ERROR:", repr(e), flush=True)
         return False
 
 class IntakeRequestV2(BaseModel):
