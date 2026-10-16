@@ -1,3 +1,11 @@
+
+function renderReportSummary(report, targetId="report") {
+  const el = document.getElementById(targetId);
+  if (!el || !report) return;
+  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${k}: ${v}</span>`).join(" | ");
+  el.innerHTML = `<div class="card"><strong>Total:</strong> ${report.total||0} &nbsp; <strong>High Risk:</strong> ${(report.high_risk||[]).length} &nbsp; <strong>Urgent:</strong> ${(report.urgent||[]).length} &nbsp; <strong>Review Queue:</strong> ${(report.attorney_review_queue||[]).length}</div><p>${stages}</p>`;
+}
+
 const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
 async function request(path, method="GET", body=null) {
   const opts = { method, headers: {"Content-Type":"application/json"} };
@@ -56,7 +64,7 @@ function render() {
 async function loadReport() {
   try {
     const report = await request("/reports/friday");
-    document.getElementById("report").textContent = JSON.stringify(report, null, 2);
+    renderReportSummary(report);
   } catch (e) {
     document.getElementById("report").textContent = "Backend unavailable.";
   }
