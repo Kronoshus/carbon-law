@@ -1,4 +1,4 @@
-const API = localStorage.getItem("carbon_api") || "http://localhost:8000";
+const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
 async function request(path, method="GET", body=null) {
   const opts = { method, headers: {"Content-Type":"application/json"} };
   if (body) opts.body = JSON.stringify(body);
