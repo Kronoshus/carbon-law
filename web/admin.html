@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Carbon Law Attorney Dashboard</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header><h1>Attorney and Staff Backend</h1><p>Manage matters, review queue, change requests, and appointments.</p></header>
+<header><h1>Attorney and Staff Backend</h1><p>Manage matters, reviews, change requests, appointments, and reports.</p></header>
 <main>
-<h3>Backend API</h3>
-<p>Start with: <code>cd backend && uvicorn app:app --reload</code></p>
-<ul>
-<li>GET /health</li>
-<li>GET /matters</li>
-<li>POST /matters</li>
-<li>GET /reports/friday</li>
-<li>POST /change-requests</li>
-</ul>
-<h3>Change Request Intake</h3>
-<p>All client changes become tracked change requests that attorneys can approve, reject, or defer.</p>
+<section><h2>Create Matter</h2>
+<form id="matterForm">
+<input id="newId" placeholder="Matter ID" required>
+<input id="newClient" placeholder="Client name" required>
+<input id="newOwner" placeholder="Owner">
+<button type="submit">Create Matter</button></form></section>
+<section><h2>Matters</h2><table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th></tr></thead><tbody id="adminMatterRows"></tbody></table></section>
+<section><h2>Friday Report</h2><pre id="report"></pre></section>
+<pre id="adminOut"></pre>
 </main>
-<script src="admin.js"></script>
+<script src="api.js"></script><script src="admin.js"></script>
 </body></html>
