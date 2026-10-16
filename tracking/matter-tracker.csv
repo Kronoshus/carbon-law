@@ -1,0 +1,101 @@
+Matter_ID,Client,Stage,Owner,Attorney_Reviewer,Due_Date,Last_Client_Contact,Next_Client_Contact,Next_Action,Blocker,Document_Status,Title_Status,Funding_Status,Appointment_Status,Risk_Level,Priority,Friday_Report_Flag,Notes
+CL-0001,Client 1,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-02,2026-10-02,2026-10-03,Draft review,None,Draft,Ordered,Instructions Sent,Not Booked,High,Urgent,No,Sample matter
+CL-0002,Client 2,2 Attorney Scope,Paralegal D,Attorney 1,2026-10-03,2026-10-03,2026-10-04,Draft review,None,Not Started,Unconfirmed,Not Started,Booked,Low,Urgent,No,Sample matter
+CL-0003,Client 3,9 Funding,Paralegal D,Attorney 1,2026-10-04,2026-10-04,2026-10-05,Draft review,None,Draft,Transfer Pending,In Progress,Not Booked,Low,Urgent,No,Sample matter
+CL-0004,Client 4,5 Review Queue,Paralegal B,Attorney 1,2026-10-05,2026-10-05,2026-10-06,Draft review,None,Attorney Review,Unconfirmed,Not Started,Cancelled/Rescheduled,Low,High,No,Sample matter
+CL-0005,Client 5,10 Closed,Paralegal A,Attorney 1,2026-10-06,2026-10-06,2026-10-07,Draft review,None,Client Review,Unconfirmed,Complete,Not Booked,High,High,No,Sample matter
+CL-0006,Client 6,10 Closed,Paralegal B,Attorney 1,2026-10-07,2026-10-07,2026-10-08,Draft review,None,Not Started,Unconfirmed,Instructions Sent,Completed,Low,Normal,No,Sample matter
+CL-0007,Client 7,7 Signing Prep,Paralegal D,Attorney 1,2026-10-08,2026-10-08,2026-10-09,Draft review,None,Attorney Review,Ordered,In Progress,Completed,Low,Urgent,No,Sample matter
+CL-0008,Client 8,2 Attorney Scope,Paralegal B,Attorney 1,2026-10-09,2026-10-09,2026-10-10,Draft review,None,Executed,Ordered,Instructions Sent,Cancelled/Rescheduled,Medium,High,No,Sample matter
+CL-0009,Client 9,9 Funding,Paralegal C,Attorney 1,2026-10-10,2026-10-10,2026-10-11,Draft review,None,Not Started,Ordered,Not Started,Completed,Medium,High,Yes,Sample matter
+CL-0010,Client 10,10 Closed,Paralegal B,Attorney 1,2026-10-11,2026-10-11,2026-10-12,Draft review,None,Client Review,Transfer Pending,Complete,Booked,Medium,Normal,No,Sample matter
+CL-0011,Client 11,9 Funding,Paralegal C,Attorney 1,2026-10-12,2026-10-12,2026-10-13,Draft review,None,Executed,Transfer Pending,Complete,Completed,Low,Normal,No,Sample matter
+CL-0012,Client 12,2 Attorney Scope,Paralegal A,Attorney 1,2026-10-13,2026-10-13,2026-10-14,Draft review,None,Draft,Ordered,Complete,Not Booked,Medium,High,No,Sample matter
+CL-0013,Client 13,8 Execution,Paralegal C,Attorney 1,2026-10-14,2026-10-14,2026-10-15,Draft review,None,Executed,Unconfirmed,Not Started,Completed,High,High,Yes,Sample matter
+CL-0014,Client 14,7 Signing Prep,Paralegal D,Attorney 1,2026-10-15,2026-10-15,2026-10-16,Draft review,None,Not Started,Confirmed,Instructions Sent,Not Booked,High,High,No,Sample matter
+CL-0015,Client 15,9 Funding,Paralegal B,Attorney 1,2026-10-16,2026-10-01,2026-10-17,Draft review,None,Draft,Confirmed,Instructions Sent,Not Booked,High,High,No,Sample matter
+CL-0016,Client 16,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-17,2026-10-02,2026-10-18,Draft review,None,Draft,Unconfirmed,Instructions Sent,Not Booked,Low,Urgent,No,Sample matter
+CL-0017,Client 17,2 Attorney Scope,Paralegal B,Attorney 1,2026-10-18,2026-10-03,2026-10-19,Draft review,None,Draft,Transfer Pending,Instructions Sent,Completed,High,Urgent,No,Sample matter
+CL-0018,Client 18,4 Drafting,Paralegal B,Attorney 1,2026-10-19,2026-10-04,2026-10-20,Draft review,None,Attorney Review,Transfer Pending,In Progress,Cancelled/Rescheduled,High,High,Yes,Sample matter
+CL-0019,Client 19,4 Drafting,Paralegal C,Attorney 1,2026-10-20,2026-10-05,2026-10-21,Draft review,None,Not Started,Ordered,Instructions Sent,Not Booked,Low,Urgent,No,Sample matter
+CL-0020,Client 20,4 Drafting,Paralegal A,Attorney 1,2026-10-01,2026-10-06,2026-10-02,Draft review,None,Attorney Review,Unconfirmed,Instructions Sent,Completed,High,High,No,Sample matter
+CL-0021,Client 21,3 Data Collection,Paralegal D,Attorney 1,2026-10-02,2026-10-07,2026-10-03,Draft review,None,Draft,Transfer Pending,Complete,Booked,Low,Normal,No,Sample matter
+CL-0022,Client 22,6 Client Review,Paralegal D,Attorney 1,2026-10-03,2026-10-08,2026-10-04,Draft review,None,Client Review,Unconfirmed,Not Started,Not Booked,Medium,Urgent,No,Sample matter
+CL-0023,Client 23,2 Attorney Scope,Paralegal B,Attorney 1,2026-10-04,2026-10-09,2026-10-05,Draft review,None,Draft,Transfer Pending,Instructions Sent,Cancelled/Rescheduled,Low,High,No,Sample matter
+CL-0024,Client 24,2 Attorney Scope,Paralegal A,Attorney 1,2026-10-05,2026-10-10,2026-10-06,Draft review,None,Not Started,Unconfirmed,Not Started,Booked,Low,High,No,Sample matter
+CL-0025,Client 25,4 Drafting,Paralegal A,Attorney 1,2026-10-06,2026-10-11,2026-10-07,Draft review,None,Draft,Transfer Pending,Not Started,Cancelled/Rescheduled,Medium,High,No,Sample matter
+CL-0026,Client 26,9 Funding,Paralegal B,Attorney 1,2026-10-07,2026-10-12,2026-10-08,Draft review,None,Draft,Confirmed,Instructions Sent,Not Booked,High,Urgent,No,Sample matter
+CL-0027,Client 27,6 Client Review,Paralegal A,Attorney 1,2026-10-08,2026-10-13,2026-10-09,Draft review,None,Executed,Transfer Pending,Instructions Sent,Not Booked,High,Normal,No,Sample matter
+CL-0028,Client 28,2 Attorney Scope,Paralegal A,Attorney 1,2026-10-09,2026-10-14,2026-10-10,Draft review,None,Draft,Transfer Pending,Not Started,Booked,High,Urgent,Yes,Sample matter
+CL-0029,Client 29,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-10,2026-10-15,2026-10-11,Draft review,None,Attorney Review,Ordered,In Progress,Booked,Medium,High,Yes,Sample matter
+CL-0030,Client 30,5 Review Queue,Paralegal C,Attorney 1,2026-10-11,2026-10-01,2026-10-12,Draft review,None,Not Started,Unconfirmed,Complete,Not Booked,Low,Urgent,No,Sample matter
+CL-0031,Client 31,5 Review Queue,Paralegal C,Attorney 1,2026-10-12,2026-10-02,2026-10-13,Draft review,None,Not Started,Ordered,In Progress,Completed,Low,High,No,Sample matter
+CL-0032,Client 32,5 Review Queue,Paralegal A,Attorney 1,2026-10-13,2026-10-03,2026-10-14,Draft review,None,Executed,Confirmed,Not Started,Booked,Medium,Normal,No,Sample matter
+CL-0033,Client 33,9 Funding,Paralegal C,Attorney 1,2026-10-14,2026-10-04,2026-10-15,Draft review,None,Attorney Review,Ordered,In Progress,Booked,High,Urgent,No,Sample matter
+CL-0034,Client 34,9 Funding,Paralegal C,Attorney 1,2026-10-15,2026-10-05,2026-10-16,Draft review,None,Not Started,Unconfirmed,Complete,Completed,Low,Normal,No,Sample matter
+CL-0035,Client 35,3 Data Collection,Paralegal B,Attorney 1,2026-10-16,2026-10-06,2026-10-17,Draft review,None,Client Review,Transfer Pending,Not Started,Not Booked,Low,Urgent,No,Sample matter
+CL-0036,Client 36,9 Funding,Paralegal C,Attorney 1,2026-10-17,2026-10-07,2026-10-18,Draft review,None,Executed,Ordered,Complete,Booked,Low,High,No,Sample matter
+CL-0037,Client 37,1 Intake,Paralegal B,Attorney 1,2026-10-18,2026-10-08,2026-10-19,Draft review,None,Draft,Unconfirmed,In Progress,Cancelled/Rescheduled,High,Urgent,No,Sample matter
+CL-0038,Client 38,4 Drafting,Paralegal B,Attorney 1,2026-10-19,2026-10-09,2026-10-20,Draft review,None,Client Review,Unconfirmed,Instructions Sent,Completed,Medium,Urgent,No,Sample matter
+CL-0039,Client 39,4 Drafting,Paralegal B,Attorney 1,2026-10-20,2026-10-10,2026-10-21,Draft review,None,Not Started,Transfer Pending,Not Started,Cancelled/Rescheduled,Low,Normal,No,Sample matter
+CL-0040,Client 40,8 Execution,Paralegal C,Attorney 1,2026-10-01,2026-10-11,2026-10-02,Draft review,None,Draft,Ordered,Not Started,Booked,Medium,High,No,Sample matter
+CL-0041,Client 41,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-02,2026-10-12,2026-10-03,Draft review,None,Executed,Transfer Pending,In Progress,Not Booked,Low,High,No,Sample matter
+CL-0042,Client 42,5 Review Queue,Paralegal A,Attorney 1,2026-10-03,2026-10-13,2026-10-04,Draft review,None,Executed,Transfer Pending,In Progress,Completed,Medium,Urgent,No,Sample matter
+CL-0043,Client 43,2 Attorney Scope,Paralegal B,Attorney 1,2026-10-04,2026-10-14,2026-10-05,Draft review,None,Attorney Review,Unconfirmed,Complete,Not Booked,High,Urgent,No,Sample matter
+CL-0044,Client 44,4 Drafting,Paralegal D,Attorney 1,2026-10-05,2026-10-15,2026-10-06,Draft review,None,Not Started,Confirmed,In Progress,Not Booked,High,High,No,Sample matter
+CL-0045,Client 45,7 Signing Prep,Paralegal D,Attorney 1,2026-10-06,2026-10-01,2026-10-07,Draft review,None,Attorney Review,Ordered,Instructions Sent,Cancelled/Rescheduled,High,High,No,Sample matter
+CL-0046,Client 46,3 Data Collection,Paralegal C,Attorney 1,2026-10-07,2026-10-02,2026-10-08,Draft review,None,Client Review,Unconfirmed,In Progress,Completed,Low,High,No,Sample matter
+CL-0047,Client 47,10 Closed,Paralegal D,Attorney 1,2026-10-08,2026-10-03,2026-10-09,Draft review,None,Client Review,Transfer Pending,Instructions Sent,Cancelled/Rescheduled,High,Normal,No,Sample matter
+CL-0048,Client 48,5 Review Queue,Paralegal C,Attorney 1,2026-10-09,2026-10-04,2026-10-10,Draft review,None,Not Started,Ordered,In Progress,Booked,Low,Normal,Yes,Sample matter
+CL-0049,Client 49,4 Drafting,Paralegal A,Attorney 1,2026-10-10,2026-10-05,2026-10-11,Draft review,None,Client Review,Transfer Pending,Instructions Sent,Cancelled/Rescheduled,Medium,High,No,Sample matter
+CL-0050,Client 50,1 Intake,Paralegal D,Attorney 1,2026-10-11,2026-10-06,2026-10-12,Draft review,None,Draft,Ordered,Complete,Not Booked,High,Normal,No,Sample matter
+CL-0051,Client 51,2 Attorney Scope,Paralegal B,Attorney 1,2026-10-12,2026-10-07,2026-10-13,Draft review,None,Client Review,Confirmed,Complete,Cancelled/Rescheduled,High,High,No,Sample matter
+CL-0052,Client 52,8 Execution,Paralegal C,Attorney 1,2026-10-13,2026-10-08,2026-10-14,Draft review,None,Draft,Confirmed,Complete,Booked,Medium,High,Yes,Sample matter
+CL-0053,Client 53,5 Review Queue,Paralegal C,Attorney 1,2026-10-14,2026-10-09,2026-10-15,Draft review,None,Attorney Review,Confirmed,Not Started,Booked,Low,Normal,No,Sample matter
+CL-0054,Client 54,3 Data Collection,Paralegal A,Attorney 1,2026-10-15,2026-10-10,2026-10-16,Draft review,None,Client Review,Transfer Pending,In Progress,Cancelled/Rescheduled,Medium,Normal,No,Sample matter
+CL-0055,Client 55,7 Signing Prep,Paralegal A,Attorney 1,2026-10-16,2026-10-11,2026-10-17,Draft review,None,Executed,Transfer Pending,Complete,Not Booked,Medium,High,No,Sample matter
+CL-0056,Client 56,7 Signing Prep,Paralegal B,Attorney 1,2026-10-17,2026-10-12,2026-10-18,Draft review,None,Client Review,Ordered,In Progress,Cancelled/Rescheduled,Medium,Normal,No,Sample matter
+CL-0057,Client 57,7 Signing Prep,Paralegal D,Attorney 1,2026-10-18,2026-10-13,2026-10-19,Draft review,None,Draft,Unconfirmed,Complete,Not Booked,Low,Urgent,No,Sample matter
+CL-0058,Client 58,8 Execution,Paralegal A,Attorney 1,2026-10-19,2026-10-14,2026-10-20,Draft review,None,Attorney Review,Transfer Pending,In Progress,Booked,Medium,High,No,Sample matter
+CL-0059,Client 59,7 Signing Prep,Paralegal D,Attorney 1,2026-10-20,2026-10-15,2026-10-21,Draft review,None,Attorney Review,Unconfirmed,Complete,Not Booked,High,Urgent,Yes,Sample matter
+CL-0060,Client 60,6 Client Review,Paralegal A,Attorney 1,2026-10-01,2026-10-01,2026-10-02,Draft review,None,Not Started,Unconfirmed,Instructions Sent,Booked,Low,Urgent,No,Sample matter
+CL-0061,Client 61,3 Data Collection,Paralegal A,Attorney 1,2026-10-02,2026-10-02,2026-10-03,Draft review,None,Executed,Ordered,Complete,Completed,Medium,Normal,No,Sample matter
+CL-0062,Client 62,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-03,2026-10-03,2026-10-04,Draft review,None,Not Started,Unconfirmed,In Progress,Cancelled/Rescheduled,Medium,Urgent,No,Sample matter
+CL-0063,Client 63,10 Closed,Paralegal A,Attorney 1,2026-10-04,2026-10-04,2026-10-05,Draft review,None,Attorney Review,Unconfirmed,Not Started,Completed,High,High,No,Sample matter
+CL-0064,Client 64,2 Attorney Scope,Paralegal C,Attorney 1,2026-10-05,2026-10-05,2026-10-06,Draft review,None,Not Started,Transfer Pending,Complete,Not Booked,Medium,High,No,Sample matter
+CL-0065,Client 65,8 Execution,Paralegal D,Attorney 1,2026-10-06,2026-10-06,2026-10-07,Draft review,None,Draft,Confirmed,Complete,Cancelled/Rescheduled,Medium,Urgent,No,Sample matter
+CL-0066,Client 66,6 Client Review,Paralegal A,Attorney 1,2026-10-07,2026-10-07,2026-10-08,Draft review,None,Attorney Review,Transfer Pending,Instructions Sent,Cancelled/Rescheduled,High,Urgent,No,Sample matter
+CL-0067,Client 67,6 Client Review,Paralegal D,Attorney 1,2026-10-08,2026-10-08,2026-10-09,Draft review,None,Attorney Review,Ordered,Complete,Booked,Medium,High,No,Sample matter
+CL-0068,Client 68,10 Closed,Paralegal A,Attorney 1,2026-10-09,2026-10-09,2026-10-10,Draft review,None,Executed,Ordered,Not Started,Booked,High,High,No,Sample matter
+CL-0069,Client 69,4 Drafting,Paralegal D,Attorney 1,2026-10-10,2026-10-10,2026-10-11,Draft review,None,Client Review,Unconfirmed,Not Started,Completed,Low,High,No,Sample matter
+CL-0070,Client 70,5 Review Queue,Paralegal C,Attorney 1,2026-10-11,2026-10-11,2026-10-12,Draft review,None,Client Review,Confirmed,Complete,Completed,Medium,Urgent,No,Sample matter
+CL-0071,Client 71,5 Review Queue,Paralegal B,Attorney 1,2026-10-12,2026-10-12,2026-10-13,Draft review,None,Not Started,Ordered,In Progress,Not Booked,High,Urgent,No,Sample matter
+CL-0072,Client 72,3 Data Collection,Paralegal B,Attorney 1,2026-10-13,2026-10-13,2026-10-14,Draft review,None,Client Review,Confirmed,In Progress,Not Booked,Low,High,No,Sample matter
+CL-0073,Client 73,3 Data Collection,Paralegal A,Attorney 1,2026-10-14,2026-10-14,2026-10-15,Draft review,None,Executed,Ordered,In Progress,Not Booked,Low,Urgent,No,Sample matter
+CL-0074,Client 74,3 Data Collection,Paralegal A,Attorney 1,2026-10-15,2026-10-15,2026-10-16,Draft review,None,Not Started,Confirmed,Complete,Cancelled/Rescheduled,Medium,High,No,Sample matter
+CL-0075,Client 75,1 Intake,Paralegal D,Attorney 1,2026-10-16,2026-10-01,2026-10-17,Draft review,None,Not Started,Unconfirmed,Complete,Cancelled/Rescheduled,Low,Urgent,No,Sample matter
+CL-0076,Client 76,1 Intake,Paralegal B,Attorney 1,2026-10-17,2026-10-02,2026-10-18,Draft review,None,Executed,Confirmed,Not Started,Booked,Low,Urgent,No,Sample matter
+CL-0077,Client 77,10 Closed,Paralegal B,Attorney 1,2026-10-18,2026-10-03,2026-10-19,Draft review,None,Executed,Transfer Pending,Complete,Cancelled/Rescheduled,Medium,Urgent,No,Sample matter
+CL-0078,Client 78,5 Review Queue,Paralegal A,Attorney 1,2026-10-19,2026-10-04,2026-10-20,Draft review,None,Executed,Unconfirmed,Instructions Sent,Booked,Medium,Urgent,Yes,Sample matter
+CL-0079,Client 79,4 Drafting,Paralegal A,Attorney 1,2026-10-20,2026-10-05,2026-10-21,Draft review,None,Draft,Unconfirmed,Complete,Cancelled/Rescheduled,High,Urgent,No,Sample matter
+CL-0080,Client 80,1 Intake,Paralegal C,Attorney 1,2026-10-01,2026-10-06,2026-10-02,Draft review,None,Attorney Review,Transfer Pending,Not Started,Booked,Medium,Urgent,No,Sample matter
+CL-0081,Client 81,4 Drafting,Paralegal A,Attorney 1,2026-10-02,2026-10-07,2026-10-03,Draft review,None,Executed,Ordered,Instructions Sent,Completed,Low,Normal,Yes,Sample matter
+CL-0082,Client 82,5 Review Queue,Paralegal C,Attorney 1,2026-10-03,2026-10-08,2026-10-04,Draft review,None,Client Review,Unconfirmed,Complete,Completed,High,High,No,Sample matter
+CL-0083,Client 83,9 Funding,Paralegal D,Attorney 1,2026-10-04,2026-10-09,2026-10-05,Draft review,None,Client Review,Unconfirmed,Not Started,Cancelled/Rescheduled,High,High,No,Sample matter
+CL-0084,Client 84,1 Intake,Paralegal B,Attorney 1,2026-10-05,2026-10-10,2026-10-06,Draft review,None,Executed,Unconfirmed,In Progress,Not Booked,Low,High,No,Sample matter
+CL-0085,Client 85,8 Execution,Paralegal B,Attorney 1,2026-10-06,2026-10-11,2026-10-07,Draft review,None,Executed,Transfer Pending,Complete,Not Booked,Medium,High,No,Sample matter
+CL-0086,Client 86,6 Client Review,Paralegal B,Attorney 1,2026-10-07,2026-10-12,2026-10-08,Draft review,None,Attorney Review,Transfer Pending,Complete,Completed,High,High,No,Sample matter
+CL-0087,Client 87,9 Funding,Paralegal D,Attorney 1,2026-10-08,2026-10-13,2026-10-09,Draft review,None,Not Started,Confirmed,In Progress,Completed,Low,High,No,Sample matter
+CL-0088,Client 88,1 Intake,Paralegal D,Attorney 1,2026-10-09,2026-10-14,2026-10-10,Draft review,None,Client Review,Unconfirmed,Instructions Sent,Completed,High,High,No,Sample matter
+CL-0089,Client 89,1 Intake,Paralegal C,Attorney 1,2026-10-10,2026-10-15,2026-10-11,Draft review,None,Executed,Ordered,In Progress,Cancelled/Rescheduled,High,High,Yes,Sample matter
+CL-0090,Client 90,10 Closed,Paralegal B,Attorney 1,2026-10-11,2026-10-01,2026-10-12,Draft review,None,Attorney Review,Unconfirmed,Complete,Not Booked,Low,Normal,No,Sample matter
+CL-0091,Client 91,2 Attorney Scope,Paralegal D,Attorney 1,2026-10-12,2026-10-02,2026-10-13,Draft review,None,Attorney Review,Confirmed,Complete,Cancelled/Rescheduled,Medium,Normal,No,Sample matter
+CL-0092,Client 92,3 Data Collection,Paralegal B,Attorney 1,2026-10-13,2026-10-03,2026-10-14,Draft review,None,Executed,Ordered,Not Started,Completed,Medium,High,No,Sample matter
+CL-0093,Client 93,9 Funding,Paralegal A,Attorney 1,2026-10-14,2026-10-04,2026-10-15,Draft review,None,Attorney Review,Confirmed,Complete,Booked,Medium,Urgent,No,Sample matter
+CL-0094,Client 94,6 Client Review,Paralegal D,Attorney 1,2026-10-15,2026-10-05,2026-10-16,Draft review,None,Client Review,Confirmed,Instructions Sent,Booked,High,High,No,Sample matter
+CL-0095,Client 95,7 Signing Prep,Paralegal C,Attorney 1,2026-10-16,2026-10-06,2026-10-17,Draft review,None,Client Review,Transfer Pending,Complete,Booked,Medium,Normal,Yes,Sample matter
+CL-0096,Client 96,10 Closed,Paralegal A,Attorney 1,2026-10-17,2026-10-07,2026-10-18,Draft review,None,Client Review,Unconfirmed,Complete,Not Booked,High,Normal,No,Sample matter
+CL-0097,Client 97,3 Data Collection,Paralegal D,Attorney 1,2026-10-18,2026-10-08,2026-10-19,Draft review,None,Attorney Review,Confirmed,Complete,Not Booked,Medium,Urgent,No,Sample matter
+CL-0098,Client 98,7 Signing Prep,Paralegal D,Attorney 1,2026-10-19,2026-10-09,2026-10-20,Draft review,None,Executed,Unconfirmed,Not Started,Booked,High,Urgent,No,Sample matter
+CL-0099,Client 99,4 Drafting,Paralegal D,Attorney 1,2026-10-20,2026-10-10,2026-10-21,Draft review,None,Not Started,Unconfirmed,Complete,Booked,High,High,No,Sample matter
+CL-0100,Client 100,1 Intake,Paralegal A,Attorney 1,2026-10-01,2026-10-11,2026-10-02,Draft review,None,Attorney Review,Confirmed,In Progress,Cancelled/Rescheduled,Low,Normal,No,Sample matter
