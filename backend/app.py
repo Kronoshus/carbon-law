@@ -224,8 +224,8 @@ def list_prompts():
 
 @app.get("/prompts/{name:path}")
 def get_prompt(name: str):
-    path = os.path.join(PROMPT_ROOT, name)
-    if not os.path.isfile(path):
+    path = os.path.realpath(os.path.join(PROMPT_ROOT, name))
+    if not path.startswith(os.path.realpath(PROMPT_ROOT) + os.sep) or not os.path.isfile(path):
         raise HTTPException(404, "prompt not found")
     return {"name": name, "content": open(path).read()}
 
@@ -241,8 +241,8 @@ def list_templates():
 
 @app.get("/templates/{name:path}")
 def get_template(name: str):
-    path = os.path.join(TEMPLATE_ROOT, name)
-    if not os.path.isfile(path):
+    path = os.path.realpath(os.path.join(TEMPLATE_ROOT, name))
+    if not path.startswith(os.path.realpath(TEMPLATE_ROOT) + os.sep) or not os.path.isfile(path):
         raise HTTPException(404, "template not found")
     return {"name": name, "content": open(path).read()}
 
@@ -346,7 +346,7 @@ def signup(req: SignupRequest):
     uid = str(uuid.uuid4())
     users[req.email] = {
         "id": uid, "name": req.name, "email": req.email,
-        "role": req.role, "password_hash": hash_pw(req.password)
+        "role": "client", "password_hash": hash_pw(req.password)
     }
     # link any matters with matching client email
     for m in matters.values():
@@ -367,6 +367,8 @@ def login(req: LoginRequest):
 
 @app.get("/auth/me")
 def me(authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(401, "not authenticated")
     token = authorization.replace("Bearer ", "").strip()
     u = get_user_from_token(token)
     if not u:
@@ -449,6 +451,8 @@ def create_intake_v2(i: IntakeRequestV2):
 
 @app.get("/my-matters")
 def my_matters(authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(401, "not authenticated")
     token = authorization.replace("Bearer ", "").strip()
     u = get_user_from_token(token)
     if not u:
