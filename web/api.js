@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://carbon-law.onrender.com";
 async function api(path, method="GET", body=null) {
   const opts = { method, headers: {"Content-Type":"application/json"} };
   if (body) opts.body = JSON.stringify(body);

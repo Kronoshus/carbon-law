@@ -1,4 +1,4 @@
-const API = window.location.origin.includes("localhost") ? "http://localhost:8000" : (localStorage.getItem("carbon_api") || "http://localhost:8000");
+const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
 const el = (id) => document.getElementById(id);
 
 async function request(path, method="GET", body=null) {
