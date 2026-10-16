@@ -208,34 +208,6 @@ def create_contact(c: ContactRequest):
 def list_contacts():
     return contacts
 
-@app.post("/intake")
-def create_intake(i: IntakeRequest):
-    matter_id = "CL-" + str(len(matters)+1).zfill(4)
-    rec = {
-        "id": matter_id,
-        "client_name": i.client_name,
-        "stage": "1 Intake",
-        "owner": "Unassigned",
-        "attorney_reviewer": None,
-        "due_date": None,
-        "risk_level": "Low",
-        "priority": "Normal",
-        "next_action": "Review intake and schedule consultation",
-        "notes": f"Email: {i.email}; Phone: {i.phone}; Goals: {i.goals}; Assets: {i.assets}; Family: {i.family}",
-        "document_status": "Not Started",
-        "title_status": "Unconfirmed",
-        "funding_status": "Not Started",
-        "appointment_status": "Not Booked",
-        "blocker": "None",
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat(),
-    }
-    matters[matter_id] = rec
-    return {"matter": rec, "message": "Intake received. A consultation will be scheduled."}
-
-import os as _os
-PROMPT_ROOT = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "prompt-library", "prompts", "california")
-TEMPLATE_ROOT = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "templates")
 
 @app.get("/prompts")
 def list_prompts():
