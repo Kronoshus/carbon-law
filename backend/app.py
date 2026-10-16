@@ -177,3 +177,97 @@ def patch_matter(matter_id: str, updates: dict):
     matters[matter_id].update(updates)
     matters[matter_id]["updated_at"]=datetime.utcnow().isoformat()
     return matters[matter_id]
+
+
+class ContactRequest(BaseModel):
+    name: str
+    email: str
+    phone: str = ""
+    message: str = ""
+    service: str = "Estate Planning"
+
+class IntakeRequest(BaseModel):
+    client_name: str
+    email: str
+    phone: str = ""
+    goals: str = ""
+    assets: str = ""
+    family: str = ""
+
+contacts: List[Dict[str, Any]] = []
+
+@app.post("/contact")
+def create_contact(c: ContactRequest):
+    rec = c.model_dump()
+    rec["id"] = str(uuid.uuid4())
+    rec["created_at"] = datetime.utcnow().isoformat()
+    contacts.append(rec)
+    return rec
+
+@app.get("/contact")
+def list_contacts():
+    return contacts
+
+@app.post("/intake")
+def create_intake(i: IntakeRequest):
+    matter_id = "CL-" + str(len(matters)+1).zfill(4)
+    rec = {
+        "id": matter_id,
+        "client_name": i.client_name,
+        "stage": "1 Intake",
+        "owner": "Unassigned",
+        "attorney_reviewer": None,
+        "due_date": None,
+        "risk_level": "Low",
+        "priority": "Normal",
+        "next_action": "Review intake and schedule consultation",
+        "notes": f"Email: {i.email}; Phone: {i.phone}; Goals: {i.goals}; Assets: {i.assets}; Family: {i.family}",
+        "document_status": "Not Started",
+        "title_status": "Unconfirmed",
+        "funding_status": "Not Started",
+        "appointment_status": "Not Booked",
+        "blocker": "None",
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    matters[matter_id] = rec
+    return {"matter": rec, "message": "Intake received. A consultation will be scheduled."}
+
+import os as _os
+PROMPT_ROOT = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "prompt-library", "prompts", "california")
+TEMPLATE_ROOT = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "templates")
+
+@app.get("/prompts")
+def list_prompts():
+    out = []
+    if _os.path.isdir(PROMPT_ROOT):
+        for root,_,files in _os.walk(PROMPT_ROOT):
+            for fn in files:
+                if fn.endswith(".md"):
+                    rel = _os.path.relpath(_os.path.join(root,fn), PROMPT_ROOT)
+                    out.append({"name": rel, "path": _os.path.join(root,fn)})
+    return out
+
+@app.get("/prompts/{name:path}")
+def get_prompt(name: str):
+    path = _os.path.join(PROMPT_ROOT, name)
+    if not _os.path.isfile(path):
+        raise HTTPException(404, "prompt not found")
+    return {"name": name, "content": open(path).read()}
+
+@app.get("/templates")
+def list_templates():
+    out = []
+    if _os.path.isdir(TEMPLATE_ROOT):
+        for root,_,files in _os.walk(TEMPLATE_ROOT):
+            for fn in files:
+                rel = _os.path.relpath(_os.path.join(root,fn), TEMPLATE_ROOT)
+                out.append({"name": rel, "path": _os.path.join(root,fn)})
+    return out
+
+@app.get("/templates/{name:path}")
+def get_template(name: str):
+    path = _os.path.join(TEMPLATE_ROOT, name)
+    if not _os.path.isfile(path):
+        raise HTTPException(404, "template not found")
+    return {"name": name, "content": open(path).read()}
