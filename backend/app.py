@@ -296,6 +296,7 @@ def update_appointment_status(appointment_id: str, status: str, note: str = ""):
 def list_contacts_endpoint():
     return contacts
 
+
 from fastapi.responses import HTMLResponse
 
 @app.get("/", response_class=HTMLResponse)
@@ -303,15 +304,27 @@ def root():
     return """
 <!DOCTYPE html>
 <html><head><meta charset='utf-8'><title>Carbon Law Backend</title>
-<style>body{font-family:Arial,sans-serif;background:#f4f6f8;color:#112337;padding:40px;}a{color:#204ce5;}</style>
-</head><body>
-<h1>Carbon Law Backend</h1>
-<p>API service for the Carbon Law estate planning platform.</p>
-<ul>
-<li><a href='/health'>Health</a></li>
-<li><a href='/docs'>API Documentation</a></li>
-<li><a href='https://carbon.bailment.tech'>Frontend</a></li>
-<li><a href='https://carbon.bailment.tech/admin.html'>Attorney Dashboard</a></li>
-</ul>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#112337;}
+header{background:#112337;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
+header img{height:40px;}
+a{color:#204ce5;text-decoration:none;font-weight:600;}
+.hero{background:linear-gradient(120deg,#112337,#1b3a6b);color:#fff;padding:60px 24px;text-align:center;}
+.hero h1{font-size:40px;margin:0 0 12px;}
+.section{max-width:900px;margin:40px auto;padding:0 24px;}
+.card{background:#fff;border-radius:10px;padding:24px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:16px;}
+.btn{display:inline-block;background:#E87722;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;margin:6px;}
+</style></head><body>
+<header>
+  <a href='https://carbon.bailment.tech'><img src='https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png' alt='Carbon Law Group'></a>
+  <nav><a style='color:#fff;margin-left:18px;' href='https://carbon.bailment.tech'>Frontend</a><a style='color:#fff;margin-left:18px;' href='/docs'>API Docs</a><a style='color:#fff;margin-left:18px;' href='/health'>Health</a></nav>
+</header>
+<section class='hero'><h1>Carbon Law Backend</h1><p>API service for the Carbon Law estate planning platform.</p>
+<a class='btn' href='https://carbon.bailment.tech'>Open Frontend</a>
+<a class='btn' style='background:#204ce5;' href='/docs'>API Documentation</a></section>
+<section class='section'>
+<div class='card'><h2>Endpoints</h2><p>Health, matters, change requests, appointments, documents, contacts, intake, prompts, templates, and reports.</p></div>
+<div class='card'><h2>Status</h2><p><a href='/health'>Check health</a></p></div>
+</section>
 </body></html>
 """
