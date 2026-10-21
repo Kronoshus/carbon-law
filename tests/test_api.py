@@ -176,3 +176,23 @@ def test_workflow_attorney_consultation_and_signing_gates():
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==200
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=h).status_code==200
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=ah).json()["stage"]=="complete"
+
+
+def test_demo_conflict_review_is_explicit_and_delayed():
+    from app import workflows
+    client=c.post("/auth/signup",json={"name":"Demo Client","email":"demo-flow@example.com","password":"long-secure-password"}).json()
+    h={"Authorization":"Bearer "+client["token"]}
+    pending=c.post("/workflows",json={"related_names":["Demo Person"]},headers=h).json()
+    assert pending["demo_mode"] is False
+    assert c.post(f"/workflows/{pending['id']}/demo-conflict-review",headers=h).status_code==403
+    assert c.post(f"/workflows/{pending['id']}/enable-demo-review",headers=h).status_code==200
+    demo_client=c.post("/auth/signup",json={"name":"Demo Client","email":"demo-mode@example.com","password":"long-secure-password"}).json()
+    demo_headers={"Authorization":"Bearer "+demo_client["token"]}
+    demo=c.post("/workflows",json={"related_names":["Demo Person"],"demo_mode":True},headers=demo_headers).json()
+    assert c.post(f"/workflows/{demo['id']}/demo-conflict-review",headers=demo_headers).status_code==429
+    workflows[demo["id"]]["created_at"]="2000-01-01T00:00:00"
+    cleared=c.post(f"/workflows/{demo['id']}/demo-conflict-review",headers=demo_headers)
+    assert cleared.status_code==200
+    assert cleared.json()["conflict_status"]=="demo_cleared"
+    assert cleared.json()["stage"]=="document_selection"
+    assert c.patch(f"/workflows/{demo['id']}/documents",json={"documents_requested":["Pour-over will"]},headers=demo_headers).status_code==200

@@ -213,6 +213,7 @@ class IntakeRequest(BaseModel):
 class WorkflowStart(BaseModel):
     phone: str = Field(default="", max_length=40)
     related_names: List[str] = Field(default_factory=list, max_length=20)
+    demo_mode: bool = False
 
 class WorkflowDocuments(BaseModel):
     documents_requested: List[str] = Field(min_length=1, max_length=4)
@@ -581,11 +582,40 @@ def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)
     now = now_iso()
     workflow = {"id":str(uuid.uuid4()), "client_user_id":user["id"], "client_name":user["name"],
         "client_email":user["email"], "phone":req.phone, "related_names":[name.strip()[:120] for name in req.related_names if name.strip()], "documents_requested":[],
-        "stage":"conflict_review", "conflict_status":"pending", "intake":{}, "drafts":{},
+        "stage":"conflict_review", "conflict_status":"pending", "demo_mode":req.demo_mode, "intake":{}, "drafts":{},
         "client_approved":False, "attorney_approved":False, "appointments":{},
         "created_at":now, "updated_at":now}
     workflows[workflow["id"]] = workflow
     log_audit(user["email"], "create", "workflow", workflow["id"], "conflict review requested")
+    save_data()
+    return workflow
+
+
+@app.post("/workflows/{workflow_id}/enable-demo-review")
+def enable_demo_review(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict review is not pending")
+    workflow["demo_mode"] = True
+    workflow["updated_at"] = now_iso()
+    save_data()
+    return workflow
+
+
+@app.post("/workflows/{workflow_id}/demo-conflict-review")
+def demo_conflict_review(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if not workflow.get("demo_mode"): raise HTTPException(403, "Demo review is not enabled for this request")
+    if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict review is not pending")
+    created = datetime.datetime.fromisoformat(workflow["created_at"])
+    if (datetime.datetime.utcnow() - created).total_seconds() < 5: raise HTTPException(429, "Please wait for the demo review simulation to finish")
+    workflow["conflict_status"] = "demo_cleared"
+    workflow["stage"] = "document_selection"
+    workflow["updated_at"] = now_iso()
+    log_audit(user["email"], "demo_review", "workflow", workflow_id, "simulated conflict review; not a real clearance")
     save_data()
     return workflow
 
@@ -606,7 +636,7 @@ def save_workflow_intake(workflow_id: str, req: WorkflowIntake, authorization: O
     user,_ = require_auth(authorization, {"client"})
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
-    if workflow["conflict_status"] != "cleared": raise HTTPException(409, "Complete conflict review before detailed intake")
+    if workflow["conflict_status"] not in {"cleared", "demo_cleared"}: raise HTTPException(409, "Complete conflict review before detailed intake")
     if workflow["stage"] not in {"intake", "draft_ready"}: raise HTTPException(409, "Intake is not open")
     workflow["intake"] = {"general": req.general, "documents": {k:v for k,v in req.documents.items() if k in workflow["documents_requested"]}}
     workflow["stage"] = "draft_ready"; workflow["updated_at"] = now_iso(); save_data()
