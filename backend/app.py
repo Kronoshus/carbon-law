@@ -1,4 +1,4 @@
-import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io
+import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io, asyncio
 from fastapi import FastAPI, HTTPException, Header, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -28,6 +28,17 @@ app.add_middleware(CORSMiddleware,
                    allow_origins=["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"],
                    allow_credentials=False, allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type"])
+
+# Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
+# /health touches no shared state and must answer Render's health check even while a slow request runs.
+_request_lock = asyncio.Lock()
+
+@app.middleware("http")
+async def serialize_requests(request, call_next):
+    if request.url.path == "/health":
+        return await call_next(request)
+    async with _request_lock:
+        return await call_next(request)
 
 # ---------- in-memory stores (persisted to data.json) ----------
 matters: Dict[str, Dict[str, Any]] = {}
