@@ -731,7 +731,8 @@ def list_comms(matter_id: Optional[str]=None, authorization: Optional[str]=Heade
 def signup(req: SignupRequest):
     if len(req.password) < 12:
         raise HTTPException(400,"password must be at least 12 characters")
-    if req.email in users: raise HTTPException(400,"user already exists")
+    req.email = req.email.strip().lower()
+    if any(email.strip().lower() == req.email for email in users): raise HTTPException(400,"user already exists")
     if req.role not in ROLES: req.role="client"
     # clients always client role
     role = req.role if req.role in ("paralegal","attorney","admin") else "client"
@@ -748,7 +749,8 @@ def signup(req: SignupRequest):
 
 @app.post("/auth/login")
 def login(req: LoginRequest):
-    u = users.get(req.email)
+    email = req.email.strip().lower()
+    u = users.get(email) or next((user for stored_email, user in users.items() if stored_email.strip().lower() == email), None)
     if not u or not verify_pw(req.password, u["password_hash"]):
         raise HTTPException(401,"invalid credentials")
     if not u["password_hash"].startswith("scrypt$"):

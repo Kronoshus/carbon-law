@@ -11,7 +11,7 @@
     <p>Sign in to continue your estate-planning request.</p>
     <div class="form-group"><label>Email (your username)</label><input id="email" type="email" placeholder="you@example.com" autocomplete="username" required></div>
     <div class="form-group"><label>Password</label><input id="password" type="password" placeholder="Password" autocomplete="current-password" required></div>
-    <button class="btn" style="width:100%;" id="loginBtn" type="submit">Login</button>
+    <button class="btn" style="width:100%;" id="loginBtn" type="submit">Sign in</button>
     <pre id="out" style="margin-top:12px;font-size:13px;"></pre>
     <p style="margin-top:16px;font-size:13px;">Don’t have an account? <a href="signup.html">Create an account</a></p>
   </form>
@@ -32,7 +32,12 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
     document.getElementById("out").textContent = "Logged in. Redirecting...";
     const u = result.user;
     setTimeout(() => window.location.href = (u.role==="client" ? "intake.html" : "admin.html"), 800);
-  } catch (e) { document.getElementById("out").textContent = e.message; button.disabled = false; button.textContent = "Login"; }
+  } catch (e) {
+    document.getElementById("out").textContent = e.message.includes("invalid credentials")
+      ? "We couldn’t find an account with that email and password. Check both, or create an account below."
+      : e.message;
+    button.disabled = false; button.textContent = "Sign in";
+  }
 });
 </script>
 </body>
