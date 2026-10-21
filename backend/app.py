@@ -41,12 +41,13 @@ tasks: Dict[str, Dict[str, Any]] = {}
 audit: List[Dict[str, Any]] = []
 comms: List[Dict[str, Any]] = {}
 stage_history: Dict[str, List[Dict[str, Any]]] = {}
+workflows: Dict[str, Dict[str, Any]] = {}
 
 def now_iso():
     return datetime.datetime.utcnow().isoformat()
 
 def load_data():
-    global matters, changes, appointments, documents, users, sessions, contacts, tasks, audit, comms, stage_history
+    global matters, changes, appointments, documents, users, sessions, contacts, tasks, audit, comms, stage_history, workflows
     matters = _db.load_collection("matters", {})
     changes = _db.load_collection("changes", [])
     appointments = _db.load_collection("appointments", {})
@@ -58,6 +59,7 @@ def load_data():
     audit = _db.load_collection("audit", [])
     comms = _db.load_collection("comms", [])
     stage_history = _db.load_collection("stage_history", {})
+    workflows = _db.load_collection("workflows", {})
     # migrate from legacy JSON if DB empty
     if not matters and os.path.exists(DATA_FILE) and os.environ.get("IMPORT_LEGACY_JSON") == "1":
         try:
@@ -90,6 +92,7 @@ def save_data():
         _db.save_collection("audit", audit)
         _db.save_collection("comms", comms)
         _db.save_collection("stage_history", stage_history)
+        _db.save_collection("workflows", workflows)
     except Exception:
         raise
 
@@ -206,6 +209,25 @@ class IntakeRequest(BaseModel):
     goals: str = Field(default="", max_length=500)
     assets: str = Field(default="", max_length=0)
     family: str = Field(default="", max_length=0)
+
+class WorkflowStart(BaseModel):
+    phone: str = Field(default="", max_length=40)
+    related_names: List[str] = Field(default_factory=list, max_length=20)
+
+class WorkflowDocuments(BaseModel):
+    documents_requested: List[str] = Field(min_length=1, max_length=4)
+
+class WorkflowIntake(BaseModel):
+    general: Dict[str, Any] = Field(default_factory=dict)
+    documents: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+
+class WorkflowDecision(BaseModel):
+    decision: str
+    note: str = Field(default="", max_length=1000)
+
+class WorkflowAppointment(BaseModel):
+    kind: str
+    scheduled_at: str = Field(min_length=1, max_length=40)
 
 class SignupRequest(BaseModel):
     name: str
@@ -533,6 +555,132 @@ def create_intake(i: IntakeRequest, authorization: Optional[str]=Header(None)):
     log_audit(u["email"],"create","consultation_request",rec["id"],"document types only")
     save_data()
     return {"message":"Request received. This is not an engagement or legal advice. The firm will contact you about conflicts and next steps before asking for detailed information.","request_id":rec["id"]}
+
+WORKFLOW_DOCUMENTS = {"Revocable living trust", "Pour-over will", "Advance health care directive", "Financial power of attorney"}
+
+
+def client_workflow(user):
+    matches = [w for w in workflows.values() if w["client_user_id"] == user["id"]]
+    return max(matches, key=lambda w: w["updated_at"]) if matches else None
+
+
+@app.get("/my-workflow")
+def my_workflow(authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization)
+    if user["role"] in ("paralegal", "attorney", "admin"):
+        return list(workflows.values())
+    return client_workflow(user)
+
+
+@app.post("/workflows")
+def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    current = client_workflow(user)
+    if current and current["stage"] != "closed":
+        raise HTTPException(409, "You already have a request in progress")
+    now = now_iso()
+    workflow = {"id":str(uuid.uuid4()), "client_user_id":user["id"], "client_name":user["name"],
+        "client_email":user["email"], "phone":req.phone, "related_names":[name.strip()[:120] for name in req.related_names if name.strip()], "documents_requested":[],
+        "stage":"conflict_review", "conflict_status":"pending", "intake":{}, "drafts":{},
+        "client_approved":False, "attorney_approved":False, "appointments":{},
+        "created_at":now, "updated_at":now}
+    workflows[workflow["id"]] = workflow
+    log_audit(user["email"], "create", "workflow", workflow["id"], "conflict review requested")
+    save_data()
+    return workflow
+
+
+@app.patch("/workflows/{workflow_id}/documents")
+def select_workflow_documents(workflow_id: str, req: WorkflowDocuments, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["stage"] != "document_selection": raise HTTPException(409, "Conflict review must be cleared first")
+    if not req.documents_requested or not set(req.documents_requested) <= WORKFLOW_DOCUMENTS: raise HTTPException(400, "Select at least one supported document")
+    workflow["documents_requested"] = req.documents_requested; workflow["stage"] = "intake"; workflow["updated_at"] = now_iso(); save_data()
+    return workflow
+
+
+@app.patch("/workflows/{workflow_id}/intake")
+def save_workflow_intake(workflow_id: str, req: WorkflowIntake, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["conflict_status"] != "cleared": raise HTTPException(409, "Complete conflict review before detailed intake")
+    if workflow["stage"] not in {"intake", "draft_ready"}: raise HTTPException(409, "Intake is not open")
+    workflow["intake"] = {"general": req.general, "documents": {k:v for k,v in req.documents.items() if k in workflow["documents_requested"]}}
+    workflow["stage"] = "draft_ready"; workflow["updated_at"] = now_iso(); save_data()
+    return workflow
+
+
+@app.post("/workflows/{workflow_id}/drafts")
+def generate_workflow_drafts(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["conflict_status"] != "cleared" or workflow["stage"] != "draft_ready": raise HTTPException(409, "Conflict clearance and completed intake are required")
+    workflow["drafts"] = {name:{"status":"Review draft","content":"DRAFT FOR ATTORNEY REVIEW — NOT FOR SIGNING\n\n" + json.dumps({"document":name,"intake":workflow["intake"]},indent=2)} for name in workflow["documents_requested"]}
+    workflow["stage"] = "client_review"; workflow["updated_at"] = now_iso(); save_data()
+    return workflow
+
+
+@app.patch("/workflows/{workflow_id}/client-review")
+def client_review_workflow(workflow_id: str, req: WorkflowDecision, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["stage"] != "client_review": raise HTTPException(409, "Drafts are not ready for review")
+    if req.decision not in {"changes_requested", "approved"}: raise HTTPException(400, "Choose approved or changes requested")
+    workflow["client_review_note"] = req.note
+    workflow["client_approved"] = req.decision == "approved"
+    workflow["stage"] = "attorney_review" if workflow["client_approved"] else "draft_ready"
+    workflow["updated_at"] = now_iso(); save_data(); return workflow
+
+
+@app.patch("/workflows/{workflow_id}/staff-review")
+def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"paralegal", "attorney", "admin"})
+    workflow = workflows.get(workflow_id)
+    if not workflow: raise HTTPException(404, "request not found")
+    if req.decision == "conflict_cleared":
+        if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict review is not pending")
+        workflow["conflict_status"] = "cleared"; workflow["stage"] = "document_selection"
+    elif req.decision == "conflict_flagged":
+        workflow["conflict_status"] = "flagged"; workflow["stage"] = "conflict_hold"
+    elif req.decision == "attorney_approved":
+        if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney approval required")
+        if workflow["stage"] != "attorney_review": raise HTTPException(409, "Client approval is required first")
+        workflow["attorney_approved"] = True; workflow["stage"] = "consultation"
+    elif req.decision == "attorney_changes":
+        if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney review required")
+        workflow["attorney_approved"] = False; workflow["stage"] = "draft_ready"
+    elif req.decision == "consultation_completed":
+        if user["role"] not in {"paralegal", "attorney", "admin"}: raise HTTPException(403, "Staff access required")
+        if workflow["stage"] != "consultation" or "consultation" not in workflow["appointments"]: raise HTTPException(409, "Consultation must be scheduled first")
+        workflow["appointments"]["consultation"]["status"] = "completed"; workflow["stage"] = "signing"
+    else: raise HTTPException(400, "Unsupported review decision")
+    workflow["staff_review_note"] = req.note; workflow["updated_at"] = now_iso()
+    log_audit(user["email"], "review", "workflow", workflow_id, req.decision); save_data(); return workflow
+
+
+@app.patch("/workflows/{workflow_id}/appointment")
+def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization)
+    workflow = workflows.get(workflow_id)
+    if not workflow: raise HTTPException(404, "request not found")
+    kind, at = req.kind, req.scheduled_at
+    if kind not in {"consultation", "signing"} or not at: raise HTTPException(400, "Specify consultation/signing and a date/time")
+    if kind == "consultation" and workflow["stage"] != "consultation": raise HTTPException(409, "Attorney approval must precede consultation")
+    if kind == "signing" and workflow["stage"] != "signing": raise HTTPException(409, "Consultation must be completed before signing")
+    if user["role"] == "client":
+        if workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+        workflow["appointments"][kind] = {"requested_at":at,"status":"requested"}
+    elif user["role"] in {"paralegal", "attorney", "admin"}:
+        workflow["appointments"][kind] = {"scheduled_at":at,"status":"scheduled"}
+        if kind == "signing": workflow["stage"] = "complete"
+    else: raise HTTPException(403, "Staff access required")
+    workflow["updated_at"] = now_iso(); save_data(); return workflow
+
 
 # tasks
 @app.post("/tasks")
