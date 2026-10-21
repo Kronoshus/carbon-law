@@ -3,8 +3,14 @@ async function api(path, method="GET", body=null, token=null) {
   const opts = { method, headers: {"Content-Type":"application/json"} };
   if (token) opts.headers.Authorization = "Bearer " + token;
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(CARBON_API_BASE + path, opts);
-  if (!res.ok) throw new Error(await res.text());
+  let res;
+  try { res = await fetch(CARBON_API_BASE + path, opts); }
+  catch (_) { throw new Error("We can’t reach the account service right now. Please try again later or call Carbon Law Group at (323) 543-4453."); }
+  if (!res.ok) {
+    if (res.status >= 500) throw new Error("The account service is temporarily unavailable. Please try again later or call (323) 543-4453.");
+    const detail = await res.text();
+    throw new Error(detail || `Request failed (${res.status}).`);
+  }
   return res.json();
 }
 function getToken() { return localStorage.getItem("carbon_token"); }
