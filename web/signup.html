@@ -2,22 +2,28 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign Up - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<div class="auth-wrap">
-  <div class="auth-card">
+<div class="auth-shell">
+  <a class="auth-home" href="index.html">← Back to Carbon Law</a>
+  <div class="auth-wrap">
+  <form class="auth-card" id="authForm">
     <img src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group" style="height:40px;margin-bottom:16px;">
     <h2>Create Your Account</h2>
-    <p>Create a private account before sharing your planning details. We will review your intake before preparing any documents.</p>
-    <div class="form-group"><label>Full Name</label><input id="name" placeholder="Full name" required></div>
-    <div class="form-group"><label>Email</label><input id="email" type="email" placeholder="Email" required></div>
-    <div class="form-group"><label>Password</label><input id="password" type="password" placeholder="Password" required></div>
-    <button class="btn" style="width:100%;" id="signupBtn">Create Account</button>
+    <p>Start with an account, then send a brief consultation request. You can share detailed planning information later, after the firm contacts you.</p>
+    <div class="form-group"><label>Full Name</label><input id="name" placeholder="Your full name" maxlength="120" autocomplete="name" required></div>
+    <div class="form-group"><label>Email</label><input id="email" type="email" placeholder="you@example.com" maxlength="254" autocomplete="email" required></div>
+    <div class="form-group"><label>Password</label><input id="password" type="password" placeholder="At least 12 characters" minlength="12" autocomplete="new-password" required></div>
+    <button class="btn" style="width:100%;" id="signupBtn" type="submit">Create Account</button>
     <pre id="out" style="margin-top:12px;font-size:13px;"></pre>
     <p style="margin-top:16px;font-size:13px;"><a href="login.html">Already have an account?</a></p>
+  </form>
   </div>
 </div>
 <script src="auth.js"></script>
 <script>
-document.getElementById("signupBtn")?.addEventListener("click", async () => {
+document.getElementById("authForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("signupBtn");
+  button.disabled = true; button.textContent = "Creating account…";
   try {
     const result = await api("/auth/signup","POST",{
       name: document.getElementById("name").value,
@@ -28,7 +34,7 @@ document.getElementById("signupBtn")?.addEventListener("click", async () => {
     setToken(result.token); setUser(result.user);
     document.getElementById("out").textContent = "Account created. Redirecting to your private intake...";
     setTimeout(() => window.location.href = "intake.html", 1000);
-  } catch (e) { document.getElementById("out").textContent = e.message; }
+  } catch (e) { document.getElementById("out").textContent = e.message; button.disabled = false; button.textContent = "Create Account"; }
 });
 </script>
 </body>
