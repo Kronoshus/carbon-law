@@ -104,6 +104,9 @@ def log_audit(actor, action, entity, entity_id, detail=""):
 
 # Staff users must be provisioned out-of-band before deployment.
 
+def public_user(user):
+    return {key: user[key] for key in ("id", "name", "email", "role", "created_at") if key in user}
+
 def hash_pw(pw):
     salt = os.urandom(16)
     digest = hashlib.scrypt(pw.encode(), salt=salt, n=2**14, r=8, p=1)
@@ -593,7 +596,7 @@ def signup(req: SignupRequest):
     sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+datetime.timedelta(hours=24)).isoformat()}
     log_audit(req.email,"signup","user",uid)
     save_data()
-    return {"token":token,"user":{k:v for k,v in users[req.email].items() if k != "password_hash"}}
+    return {"token":token,"user":public_user(users[req.email])}
 
 @app.post("/auth/login")
 def login(req: LoginRequest):
@@ -605,12 +608,12 @@ def login(req: LoginRequest):
     token = str(uuid.uuid4())
     sessions[token] = {"user_id":u["id"],"expires":(datetime.datetime.utcnow()+datetime.timedelta(hours=24)).isoformat()}
     save_data()
-    return {"token":token,"user":{k:v for k,v in u.items() if k != "password_hash"}}
+    return {"token":token,"user":public_user(u)}
 
 @app.get("/auth/me")
 def me(authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    return {k:v for k,v in u.items() if k != "password_hash"}
+    return public_user(u)
 
 @app.post("/auth/logout")
 def logout(authorization: Optional[str]=Header(None)):
