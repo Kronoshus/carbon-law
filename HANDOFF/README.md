@@ -2,8 +2,8 @@
 
 **Updated:** 2026-10-21  
 **Repository:** `Kronoshus/carbon-law`  
-**Current commit:** `64d2ac0` — `Improve intake help and allow demo draft progression`  
-**Git state:** `main` matches `origin/main`; worktree clean at handoff.
+**Current commit:** `46176e8` — `Reuse one DB connection, skip unchanged writes, and serialize requests (#1)`  
+**Git state:** `main` matches `origin/main`.
 
 ## Live links
 
@@ -22,9 +22,13 @@
 - Drafts are placeholders marked **NOT FOR SIGNING**, not legal documents or legal advice. Attorney review and California signing formalities remain necessary.
 - The intake UI has a progress bar, high-contrast buttons, and explanatory help icons.
 
-## Important limitation: account persistence
+## Account persistence
 
-The live Render service is on its free plan and is configured with SQLite at the app’s local path. Render has no persistent disk configured for this service, and the service environment lists no database URL. **Accounts and demo workflow data may disappear after a restart or redeploy.** This explains why the demo account disappeared. Create a fresh disposable account when needed; do not rely on test data persisting. A durable fix requires provisioning persistent storage (for example, a managed database or a persistent disk) and migrating the app to use it. No hosting upgrade was made.
+Since 2026-10-21 the Render backend stores data in Neon Postgres (database `carbon_law`, US West). The connection string is set as `DATABASE_URL` in the Render service environment and is not in this repo. **Accounts and demo workflow data now survive restarts and redeploys.**
+
+Demo accounts created before this switch lived in the old ephemeral SQLite file and were not migrated. Create a fresh disposable account once.
+
+The backend must run as a single process (one uvicorn worker). Requests are handled one at a time because data is held in memory and saved as JSON per collection.
 
 ## Safety / demo boundaries
 
@@ -34,10 +38,10 @@ The live Render service is on its free plan and is configured with SQLite at the
 
 ## Repo and verification
 
-- Working release checkout: `/tmp/carbon-law-release` (may be temporary); the repo is `Kronoshus/carbon-law`.
-- Recent relevant commits: `64d2ac0`, `1940a74`, `2624851`, `a37619f`.
-- Automated backend tests: **17 passed** at the current commit.
-- GitHub Actions for the current commit completed successfully. Render reports deploy `64d2ac0` live. The static and backend releases are current.
+- Local checkout: `~/carbon-law-gh` (`main`); the repo is `Kronoshus/carbon-law`.
+- Recent relevant commits: `46176e8` (storage: Postgres connection reuse and request serialization, PR #1), `60adccc` (this handoff), `64d2ac0`, `1940a74`.
+- Automated backend tests: **19 passed** at the current commit (SQLite). The same suite also passed against a throwaway Postgres and a scratch Neon database.
+- Render reports deploy `46176e8` live. Live check on 2026-10-21: `/health` 200; signup, login, and workflow writes returned 200 in roughly 0.1–0.5 s and were stored in Neon.
 
 Run tests from the repo root:
 
