@@ -116,3 +116,55 @@ def test_public_contact_and_intake_reject_oversized_fields():
     assert c.post("/contact", json={"name":"n","email":"e@example.com","message":oversized}).status_code == 422
     token = c.post("/auth/signup", json={"name":"Intake","email":"intake@example.com","password":"long-secure-password"}).json()["token"]
     assert c.post("/intake", json={"client_name":"Intake","email":"intake@example.com","goals":oversized}, headers={"Authorization":"Bearer "+token}).status_code == 422
+
+
+def test_workflow_requires_staff_conflict_clearance_and_gates_order():
+    client = c.post("/auth/signup", json={"name":"Workflow Client","email":"flow@example.com","password":"long-secure-password"}).json()
+    headers = {"Authorization":"Bearer "+client["token"]}
+    started = c.post("/workflows", json={"phone":"555","related_names":["Example Person"]}, headers=headers)
+    assert started.status_code == 200
+    wid = started.json()["id"]
+    payload = {"general":{"marital_status":"single"},"documents":{"Pour-over will":{"executor":"Example Person"}}}
+    assert c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=headers).status_code == 409
+    assert c.patch(f"/workflows/{wid}/intake",json=payload,headers=headers).status_code == 409
+    assert c.post(f"/workflows/{wid}/drafts",headers=headers).status_code == 409
+    staff = c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
+    staff_headers = {"Authorization":"Bearer "+staff["token"]}
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=staff_headers).status_code == 200
+    assert c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=headers).status_code == 200
+    assert c.patch(f"/workflows/{wid}/intake",json=payload,headers=headers).status_code == 200
+    draft = c.post(f"/workflows/{wid}/drafts",headers=headers)
+    assert draft.status_code == 200
+    assert "NOT FOR SIGNING" in draft.json()["drafts"]["Pour-over will"]["content"]
+    assert c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=headers).status_code == 200
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=staff_headers).status_code == 403
+
+
+def test_client_workflow_isolation_and_staff_queue_authorization():
+    one = c.post("/auth/signup",json={"name":"One","email":"oneflow@example.com","password":"long-secure-password"}).json()
+    two = c.post("/auth/signup",json={"name":"Two","email":"twoflow@example.com","password":"long-secure-password"}).json()
+    h1={"Authorization":"Bearer "+one["token"]};h2={"Authorization":"Bearer "+two["token"]}
+    w=c.post("/workflows",json={"related_names":["A Person"]},headers=h1).json()
+    assert c.get("/my-workflow",headers=h1).json()["id"] == w["id"]
+    assert c.get("/my-workflow",headers=h2).json() is None
+    assert c.patch(f"/workflows/{w['id']}/staff-review",json={"decision":"conflict_cleared"},headers=h2).status_code == 403
+    assert c.get("/my-workflow",headers={"Authorization":"Bearer "+c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()["token"]}).status_code == 200
+
+
+def test_workflow_attorney_consultation_and_signing_gates():
+    from app import users, hash_pw
+    users["attorney@example.com"]={"id":str(uuid.uuid4()),"name":"Test Attorney","email":"attorney@example.com","role":"attorney","password_hash":hash_pw("attorney-test-password"),"created_at":datetime.datetime.utcnow().isoformat()}
+    client=c.post("/auth/signup",json={"name":"Gate Client","email":"gate@example.com","password":"long-secure-password"}).json(); h={"Authorization":"Bearer "+client["token"]}
+    wid=c.post("/workflows",json={},headers=h).json()["id"]
+    staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json(); sh={"Authorization":"Bearer "+staff["token"]}
+    c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=sh)
+    c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=h)
+    c.patch(f"/workflows/{wid}/intake",json={"general":{},"documents":{}},headers=h)
+    c.post(f"/workflows/{wid}/drafts",headers=h)
+    c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=h)
+    attorney=c.post("/auth/login",json={"email":"attorney@example.com","password":"attorney-test-password"}).json(); ah={"Authorization":"Bearer "+attorney["token"]}
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h).status_code==200
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=h).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=ah).json()["stage"]=="complete"

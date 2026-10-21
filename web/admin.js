@@ -18,10 +18,19 @@ async function request(path, method="GET", body=null) {
   return res.json();
 }
 
+async function loadWorkflows() {
+  const rows = document.getElementById("workflowRows"); if (!rows) return;
+  const workflows = await request("/my-workflow");
+  rows.innerHTML = workflows.map(w => `<tr><td>${esc(w.client_name)}<br><small>${esc((w.related_names||[]).join(", "))}</small></td><td>${esc(w.stage)}</td><td>${esc((w.documents_requested||[]).join(", ")||"Conflict review")}${w.drafts&&Object.keys(w.drafts).length?`<details><summary>Review drafts</summary>${Object.entries(w.drafts).map(([name,d])=>`<h4>${esc(name)}</h4><pre>${esc(d.content)}</pre>`).join("")}</details>`:""}</td><td>${w.stage==="conflict_review"?`<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="conflict_cleared">Clear</button> <button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="conflict_flagged">Flag</button>`:w.stage==="attorney_review"?`<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="attorney_approved">Attorney approve</button> <button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="attorney_changes">Request changes</button>`:w.stage==="consultation"?((w.appointments||{}).consultation?.status==="scheduled"?`<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="consultation_completed">Mark consultation complete</button>`:`<input type="datetime-local" data-time="${esc(w.id)}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="consultation">Schedule consultation</button>`):w.stage==="signing"?`<input type="datetime-local" data-time="${esc(w.id)}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="signing">Schedule signing</button>`:w.stage==="consultation"?`<input type="datetime-local" data-time="${esc(w.id)}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="consultation">Schedule consultation</button>`:"—"}</td></tr>`).join("");
+  rows.querySelectorAll("button[data-schedule]").forEach(button => button.addEventListener("click", async () => { const input=rows.querySelector(`[data-time="${button.dataset.workflow}"]`); await request(`/workflows/${button.dataset.workflow}/appointment`,"PATCH",{kind:button.dataset.kind,scheduled_at:input.value}); await loadWorkflows(); }));
+  rows.querySelectorAll("button[data-workflow]").forEach(button => button.addEventListener("click", async () => { await request(`/workflows/${button.dataset.workflow}/staff-review`, "PATCH", {decision:button.dataset.decision}); await loadWorkflows(); }));
+}
+
 async function load() {
   const token = getToken();
   if (!token) { window.location.href = "login.html"; return; }
   await loadMatters();
+  await loadWorkflows();
   await loadChangeRequests();
   await loadAppointments();
   await loadDocuments();
@@ -46,6 +55,7 @@ async function loadMatters() {
           const id = e.target.getAttribute("data-id");
           await request(`/matters/${id}`, "PATCH", {stage: e.target.value});
           await loadMatters();
+  await loadWorkflows();
         });
       });
     }
@@ -119,9 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await request("/matters","POST",body);
     document.getElementById("adminOut").textContent = "Matter created: " + result.id;
     await loadMatters();
+  await loadWorkflows();
   });
-  const seed = document.getElementById("seedBtn");
-  if (seed) seed.addEventListener("click", async () => { await request("/seed","POST"); await load(); });
 });
 
 document.addEventListener("DOMContentLoaded", () => {
