@@ -648,7 +648,7 @@ def generate_workflow_drafts(workflow_id: str, authorization: Optional[str]=Head
     user,_ = require_auth(authorization, {"client"})
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
-    if workflow["conflict_status"] != "cleared" or workflow["stage"] != "draft_ready": raise HTTPException(409, "Conflict clearance and completed intake are required")
+    if workflow["conflict_status"] not in {"cleared", "demo_cleared"} or workflow["stage"] != "draft_ready": raise HTTPException(409, "Conflict review and completed intake are required")
     workflow["drafts"] = {name:{"status":"Review draft","content":"DRAFT FOR ATTORNEY REVIEW — NOT FOR SIGNING\n\n" + json.dumps({"document":name,"intake":workflow["intake"]},indent=2)} for name in workflow["documents_requested"]}
     workflow["stage"] = "client_review"; workflow["updated_at"] = now_iso(); save_data()
     return workflow
@@ -759,8 +759,8 @@ def list_comms(matter_id: Optional[str]=None, authorization: Optional[str]=Heade
 # auth
 @app.post("/auth/signup")
 def signup(req: SignupRequest):
-    if len(req.password) < 12:
-        raise HTTPException(400,"password must be at least 12 characters")
+    if len(req.password) < 6:
+        raise HTTPException(400,"password must be at least 6 characters")
     req.email = req.email.strip().lower()
     if any(email.strip().lower() == req.email for email in users): raise HTTPException(400,"user already exists")
     if req.role not in ROLES: req.role="client"

@@ -196,3 +196,15 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert cleared.json()["conflict_status"]=="demo_cleared"
     assert cleared.json()["stage"]=="document_selection"
     assert c.patch(f"/workflows/{demo['id']}/documents",json={"documents_requested":["Pour-over will"]},headers=demo_headers).status_code==200
+    assert c.patch(f"/workflows/{demo['id']}/intake",json={"general":{},"documents":{}},headers=demo_headers).status_code==200
+    draft=c.post(f"/workflows/{demo['id']}/drafts",headers=demo_headers)
+    assert draft.status_code==200
+    assert draft.json()["stage"]=="client_review"
+
+
+def test_signup_accepts_six_character_password_and_rejects_five():
+    short=c.post("/auth/signup",json={"name":"Short","email":"short-pass@example.com","password":"12345"})
+    assert short.status_code==400
+    valid=c.post("/auth/signup",json={"name":"Six","email":"six-pass@example.com","password":"123456"})
+    assert valid.status_code==200
+    assert c.post("/auth/login",json={"email":"six-pass@example.com","password":"123456"}).status_code==200
