@@ -1,4 +1,4 @@
-import sys, os, tempfile; sys.path.insert(0, "backend")
+import sys, os, tempfile, subprocess; sys.path.insert(0, "backend")
 os.environ["DATABASE_URL"] = ""
 os.environ["CARBON_DB_PATH"] = tempfile.mktemp(suffix=".db")
 from fastapi.testclient import TestClient
@@ -208,3 +208,24 @@ def test_signup_accepts_six_character_password_and_rejects_five():
     valid=c.post("/auth/signup",json={"name":"Six","email":"six-pass@example.com","password":"123456"})
     assert valid.status_code==200
     assert c.post("/auth/login",json={"email":"six-pass@example.com","password":"123456"}).status_code==200
+
+
+def stored_users_after_restart():
+    code = "import sys; sys.path.insert(0, 'backend'); import app; print(sorted(app.users))"
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True,
+                         cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    return out.stdout
+
+
+def test_saved_data_survives_restart():
+    assert c.post("/auth/signup", json={"name":"Restart","email":"restart@example.com","password":"long-secure-password"}).status_code == 200
+    assert "restart@example.com" in stored_users_after_restart()
+
+
+def test_concurrent_signups_with_same_email_create_one_account():
+    from concurrent.futures import ThreadPoolExecutor
+    with TestClient(app) as shared, ThreadPoolExecutor(16) as pool:
+        signup = lambda _: shared.post("/auth/signup", json={"name":"Race","email":"race@example.com","password":"long-secure-password"})
+        codes = [r.status_code for r in pool.map(signup, range(16))]
+    assert codes.count(200) == 1
+    assert codes.count(400) == 15
