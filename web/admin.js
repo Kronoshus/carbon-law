@@ -1,16 +1,19 @@
+function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch])); }
 
+const STAGES = ["1 Intake","2 Attorney Scope","3 Client Data Collection","4 Drafting","5 Review Queue","6 Client Review","7 Signing Preparation","8 Execution","9 Funding Follow-Up","10 Closed"];
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
   if (!el || !report) return;
-  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${k}: ${v}</span>`).join(" | ");
+  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${esc(k)}: ${v}</span>`).join(" | ");
   el.innerHTML = `<div class="card"><strong>Total:</strong> ${report.total||0} &nbsp; <strong>High Risk:</strong> ${(report.high_risk||[]).length} &nbsp; <strong>Urgent:</strong> ${(report.urgent||[]).length} &nbsp; <strong>Review Queue:</strong> ${(report.attorney_review_queue||[]).length}</div><p>${stages}</p>`;
 }
 
-const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
+const ADMIN_API = "https://carbon-law.onrender.com";
+function authHeaders() { const t = getToken(); const h = {"Content-Type":"application/json"}; if (t) h.Authorization = "Bearer "+t; return h; }
 async function request(path, method="GET", body=null) {
-  const opts = { method, headers: {"Content-Type":"application/json"} };
+  const opts = { method, headers: authHeaders() };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API + path, opts);
+  const res = await fetch(ADMIN_API + path, opts);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -18,7 +21,6 @@ async function request(path, method="GET", body=null) {
 async function load() {
   const token = getToken();
   if (!token) { window.location.href = "login.html"; return; }
-  try { await request("/seed","POST").catch(()=>null); } catch(e){}
   await loadMatters();
   await loadChangeRequests();
   await loadAppointments();
@@ -33,9 +35,9 @@ async function loadMatters() {
       rows.innerHTML = "";
       matters.forEach(m => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${m.id}</td><td>${m.client_name}</td><td>${m.stage}</td><td>${m.owner}</td><td>${m.risk_level}</td><td>${m.priority}</td><td>${m.due_date||""}</td>
-        <td><select data-id="${m.id}" class="stageSelect">
-        ${["1 Intake","2 Attorney Scope","3 Client Follow-up","4 Drafting","5 Internal Review","6 Client Review","7 Revisions","8 Final Review","9 Funding","10 Signing","11 Complete"].map(s=>`<option ${s===m.stage?"selected":""}>${s}</option>`).join("")}
+        tr.innerHTML = `<td>${esc(m.id)}</td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td>${esc(m.risk_level)}</td><td>${esc(m.priority)}</td><td>${esc(m.due_date||"")}</td>
+        <td><select data-id="${esc(m.id)}" class="stageSelect">
+        ${STAGES.map(s=>`<option ${s===m.stage?"selected":""}>${esc(s)}</option>`).join("")}
         </select></td>`;
         rows.appendChild(tr);
       });
@@ -57,7 +59,7 @@ async function loadChangeRequests() {
       rows.innerHTML = "";
       items.forEach(c => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${c.id.slice(0,8)}</td><td>${c.matter_id}</td><td>${c.change_type}</td><td>${c.requested_by}</td><td>${c.status}</td><td>${c.impact||""}</td>`;
+        tr.innerHTML = `<td>${c.id.slice(0,8)}</td><td>${esc(c.matter_id)}</td><td>${esc(c.change_type)}</td><td>${esc(c.requested_by)}</td><td>${esc(c.status)}</td><td>${esc(c.impact||"")}</td>`;
         rows.appendChild(tr);
       });
     }
@@ -71,7 +73,7 @@ async function loadAppointments() {
       rows.innerHTML = "";
       items.forEach(a => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${a.matter_id}</td><td>${a.kind}</td><td>${a.scheduled_at}</td><td>${a.status}</td><td>${a.note||""}</td>`;
+        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${esc(a.matter_id)}</td><td>${esc(a.kind)}</td><td>${esc(a.scheduled_at)}</td><td>${esc(a.status)}</td><td>${esc(a.note||"")}</td>`;
         rows.appendChild(tr);
       });
     }
@@ -85,7 +87,7 @@ async function loadDocuments() {
       rows.innerHTML = "";
       items.forEach(d => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${d.matter_id}</td><td>${d.name}</td><td>${d.version}</td><td>${d.status}</td>`;
+        tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}</td><td>${d.version}</td><td>${esc(d.status)}</td>`;
         rows.appendChild(tr);
       });
     }

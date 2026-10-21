@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.venv*/
+*.py[cod]
+backend/carbon.db*
+backend/data.json
+backend/app.py.bak
