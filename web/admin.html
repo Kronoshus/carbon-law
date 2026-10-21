@@ -1,54 +1,122 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carbon Law Attorney Dashboard</title><link rel="stylesheet" href="styles.css"></head>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Staff Dashboard - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-<header class="site">
-  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
-  <nav class="main">
-    <a href="index.html#services">Services</a>
-    <a href="portal.html">Client Portal</a>
-    <a href="index.html#contact">Contact</a>
-  </nav>
-</header>
-<section class="section">
-<h2>Attorney and Staff Dashboard</h2>
-<p>Manage matters, reviews, change requests, appointments, documents, and reports.</p>
-<section class="section">
-<h3>Create Matter</h3>
-<form id="matterForm" class="grid2">
-<input id="newId" placeholder="Matter ID" required>
-<input id="newClient" placeholder="Client name" required>
-<input id="newOwner" placeholder="Owner">
-<input id="newAttorney" placeholder="Attorney reviewer">
-<select id="newRisk"><option>Low</option><option>Medium</option><option>High</option></select>
-<select id="newPriority"><option>Normal</option><option>Urgent</option></select>
-<input id="newDue" type="date">
-<button type="submit">Create Matter</button>
-</form>
-<pre id="adminOut"></pre>
-</section>
-<section class="section">
-<h3>Matters</h3>
-<table><thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead><tbody id="adminMatterRows"></tbody></table>
-</section>
-<section class="section">
-<h3>Change Request Queue</h3>
-<table><thead><tr><th>ID</th><th>Matter</th><th>Type</th><th>By</th><th>Status</th><th>Impact</th></tr></thead><tbody id="crRows"></tbody></table>
-</section>
-<section class="section">
-<h3>Appointments</h3>
-<table><thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead><tbody id="apptRows"></tbody></table>
-</section>
-<section class="section">
-<h3>Documents</h3>
-<table><thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead><tbody id="docRows"></tbody></table>
-</section>
-<section class="section">
-<h3>Friday Report</h3>
-<button id="genReport" class="btn blue">Generate Friday Report</button>
-<div id="report" class="report-summary"></div>
-<button id="seedBtn" class="secondary">Seed Demo Matters</button>
-</section>
-</section>
-<footer><p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p></footer>
-<script src="auth.js"></script><script src="api.js"></script><script src="admin.js"></script>
-</body></html>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <span class="brand-name">Carbon Law</span>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="dashboard.html">Matter Dashboard</a>
+      <a href="admin.html" class="active">Staff Dashboard</a>
+      <a href="portal.html">Client Portal</a>
+      <a href="prompts.html">Prompt Library</a>
+    </nav>
+    <div class="user-box" id="userBox"></div>
+  </aside>
+  <main class="main-content">
+    <div class="topbar"><h1>Staff Dashboard</h1>
+      <div class="actions">
+        <button class="btn secondary sm" id="seedBtn">Seed Demo Matters</button>
+        <button class="btn sm" onclick="openModal('matterModal')">+ New Matter</button>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="matterModal" style="display:none;">
+      <div class="modal">
+        <h2>Create Matter</h2>
+        <form id="matterForm">
+          <div class="form-row">
+            <div class="form-group"><label>Matter ID</label><input id="newId" required></div>
+            <div class="form-group"><label>Client Name</label><input id="newClient" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Owner</label><input id="newOwner" placeholder="Paralegal A"></div>
+            <div class="form-group"><label>Attorney Reviewer</label><input id="newAttorney" placeholder="Attorney 1"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Risk</label><select id="newRisk"><option>Low</option><option>Medium</option><option>High</option></select></div>
+            <div class="form-group"><label>Priority</label><select id="newPriority"><option>Normal</option><option>Urgent</option></select></div>
+          </div>
+          <div class="form-group"><label>Due Date</label><input id="newDue" type="date"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" onclick="closeModal('matterModal')">Cancel</button>
+            <button type="submit" class="btn">Create</button>
+          </div>
+        </form>
+        <pre id="adminOut" style="margin-top:12px;font-size:13px;"></pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Matters</h2>
+      <div class="card" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead>
+            <tbody id="adminMatterRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="section">
+        <h2>Change Request Queue</h2>
+        <div class="card" style="padding:0;">
+          <div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Matter</th><th>Type</th><th>By</th><th>Status</th><th>Impact</th></tr></thead>
+            <tbody id="crRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Appointments</h2>
+        <div class="card" style="padding:0;">
+          <div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody id="apptRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Documents</h2>
+      <div class="card" style="padding:0;">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead>
+          <tbody id="docRows"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Friday Report</h2>
+      <button class="btn" id="genReport">Generate Friday Report</button>
+      <div id="report" style="margin-top:12px;"></div>
+    </div>
+  </main>
+</div>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+<script>
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+const u = getUser();
+if (!u || !getToken()) { window.location.href = "login.html"; }
+else {
+  const box = document.getElementById("userBox");
+  const name = document.createElement("p"); name.textContent = u.name;
+  const role = document.createElement("p"); role.textContent = u.role;
+  const link = document.createElement("a"); link.href = "#"; link.textContent = "Logout"; link.onclick = () => { logout(); return false; };
+  box.replaceChildren(name, role, link);
+}
+</script>
+</body>
+</html>
+CSS

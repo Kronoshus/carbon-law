@@ -6,7 +6,7 @@
   <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
   <nav class="main">
     <a href="index.html#services">Services</a>
-    <a href="portal.html">Client Portal</a>
+    <a href="login.html">Staff sign in</a>
     <a href="index.html#contact">Contact</a>
   </nav>
 </header>
@@ -20,18 +20,20 @@
 </div>
 </section>
 <footer><p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p></footer>
+<script src="auth.js"></script>
 <script src="api.js"></script>
 <script>
-const API = localStorage.getItem("carbon_api") || "https://carbon-law.onrender.com";
-async function request(path){const res=await fetch(API+path); if(!res.ok) throw new Error(await res.text()); return res.json();}
+const PROMPTS_API = "https://carbon-law.onrender.com";
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+async function request(path){const headers={}; if(getToken()) headers.Authorization="Bearer "+getToken(); const res=await fetch(PROMPTS_API+path,{headers}); if(!res.ok) throw new Error(await res.text()); return res.json();}
 async function loadLists() {
   try {
     const prompts = await request("/prompts");
     const pl = document.getElementById("promptList");
-    pl.innerHTML = prompts.map(p=>`<li><a href="#" data-type="prompt" data-name="${p.name}">${p.name}</a></li>`).join("");
+    pl.innerHTML = prompts.map(p=>`<li><a href="#" data-type="prompt" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)}</a></li>`).join("");
     const templates = await request("/templates");
     const tl = document.getElementById("templateList");
-    tl.innerHTML = templates.map(t=>`<li><a href="#" data-type="template" data-name="${t.name}">${t.name}</a></li>`).join("");
+    tl.innerHTML = templates.map(t=>`<li><a href="#" data-type="template" data-name="${escapeHtml(t.name)}">${escapeHtml(t.name)}</a></li>`).join("");
     document.querySelectorAll("a[data-name]").forEach(a => {
       a.addEventListener("click", async (e) => {
         e.preventDefault();
