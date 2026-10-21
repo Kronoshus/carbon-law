@@ -26,6 +26,14 @@ def test_auth_flow():
     r = c.post("/auth/login", json={"email":"t2@example.com","password":"long-secure-password"})
     assert r.status_code == 200
 
+def test_email_case_whitespace_normalization():
+    r = c.post("/auth/signup", json={"name":"Mixed","email":"Mixed.Case@example.com","password":"long-secure-password"})
+    assert r.status_code == 200
+    assert r.json()["user"]["email"] == "mixed.case@example.com"
+    login = c.post("/auth/login", json={"email":"  MIXED.CASE@EXAMPLE.COM ","password":"long-secure-password"})
+    assert login.status_code == 200
+
+
 def test_matter_crud_rbac():
     # login as paralegal
     r = c.post("/auth/login", json={"email":"staff@example.com","password":"staff-test-password"})
