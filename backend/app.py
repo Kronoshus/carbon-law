@@ -491,6 +491,15 @@ def update_appointment(appointment_id: str, status: Optional[str]=None, note: Op
     mid = appointments[appointment_id]["matter_id"]
     if mid in matters and status:
         matters[mid]["appointment_status"]=status; matters[mid]["updated_at"]=now_iso()
+    if appointment.get("workflow_id") in workflows:
+        workflow = workflows[appointment["workflow_id"]]
+        kind = appointment.get("kind")
+        if status == "Cancelled" and kind in workflow.get("appointments", {}):
+            workflow["appointments"][kind]["status"] = "cancelled"
+        elif status == "Scheduled" and kind in workflow.get("appointments", {}):
+            workflow["appointments"][kind]["status"] = "scheduled"
+            workflow["appointments"][kind]["scheduled_at"] = appointment.get("scheduled_at")
+        workflow["updated_at"] = now_iso()
     log_audit("user","update","appointment",appointment_id,status or "")
     save_data()
     return appointments[appointment_id]
@@ -742,6 +751,10 @@ def cancel_workflow_appointment(workflow_id: str, req: WorkflowDecision, authori
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
     if kind not in {"consultation", "signing"} or kind not in workflow.get("appointments", {}): raise HTTPException(404, "appointment not found")
     workflow["appointments"][kind]["status"] = "cancelled"
+    for appointment in appointments.values():
+        if appointment.get("workflow_id") == workflow_id and appointment.get("kind") == kind:
+            appointment["status"] = "Cancelled"
+            appointment["updated_at"] = now_iso()
     workflow["updated_at"] = now_iso()
     if workflow.get("demo_mode") and kind == "consultation": workflow["stage"] = "consultation"
     if workflow.get("demo_mode") and kind == "signing": workflow["stage"] = "signing"
@@ -784,7 +797,7 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
         workflow["attorney_approved"] = False; workflow["stage"] = "draft_ready"
     elif req.decision == "consultation_completed":
         if user["role"] not in {"paralegal", "attorney", "admin"}: raise HTTPException(403, "Staff access required")
-        if workflow["stage"] != "consultation" or "consultation" not in workflow["appointments"]: raise HTTPException(409, "Consultation must be scheduled first")
+        if workflow["stage"] != "consultation" or workflow.get("appointments", {}).get("consultation", {}).get("status") != "scheduled": raise HTTPException(409, "Consultation must be approved first")
         workflow["appointments"]["consultation"]["status"] = "completed"; workflow["stage"] = "signing"
     else: raise HTTPException(400, "Unsupported review decision")
     workflow["staff_review_note"] = req.note; workflow["updated_at"] = now_iso()
@@ -802,13 +815,27 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
     if kind == "signing" and workflow["stage"] != "signing": raise HTTPException(409, "Consultation must be completed before signing")
     if user["role"] == "client":
         if workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+        matter = ensure_workflow_matter(workflow)
         workflow["appointments"][kind] = {"requested_at":at,"status":"requested"}
-        if workflow.get("demo_mode"):
-            workflow["appointments"][kind]["status"] = "scheduled"
-            if kind == "consultation": workflow["stage"] = "signing"
-            else: workflow["stage"] = "complete"
+        appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow_id and a.get("kind") == kind and a.get("status") != "Cancelled"), None)
+        if not appointment:
+            appointment = {"id":str(uuid.uuid4()),"matter_id":matter["id"],"kind":kind,"workflow_id":workflow_id,"created_at":now_iso()}
+            appointments[appointment["id"]] = appointment
+        appointment.update(scheduled_at=at,status="Requested",note=f"Client requested {kind} appointment")
+        matter["appointment_status"] = "Requested"
+        matter["updated_at"] = now_iso()
     elif user["role"] in {"paralegal", "attorney", "admin"}:
+        matter = ensure_workflow_matter(workflow)
         workflow["appointments"][kind] = {"scheduled_at":at,"status":"scheduled"}
+        appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow_id and a.get("kind") == kind), None)
+        if appointment:
+            appointment.update(scheduled_at=at,status="Scheduled",note=f"{kind.title()} approved by staff",updated_at=now_iso())
+        else:
+            appointment = {"id":str(uuid.uuid4()),"matter_id":matter["id"],"kind":kind,"scheduled_at":at,"status":"Scheduled",
+                "note":f"{kind.title()} approved by staff","workflow_id":workflow_id,"created_at":now_iso()}
+            appointments[appointment["id"]] = appointment
+        matter["appointment_status"] = "Scheduled"
+        matter["updated_at"] = now_iso()
         if kind == "signing": workflow["stage"] = "complete"
     else: raise HTTPException(403, "Staff access required")
     workflow["updated_at"] = now_iso(); save_data(); return workflow

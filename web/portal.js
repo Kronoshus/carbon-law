@@ -30,6 +30,7 @@ async function load() {
   try { matters = await request("/my-matters"); } catch(e){ matters=[]; if (el("matterDetail")) el("matterDetail").textContent = "Could not load matters: " + e.message; showToast("Backend unavailable"); }
   renderMatterSelects();
   await loadPlanningRequest();
+  await loadWorkflowAppointments();
   loadDocs();
   if (currentUser && currentUser.role !== "client") loadReport();
 }
@@ -58,6 +59,20 @@ async function loadPlanningRequest() {
       catch (error) { showToast("Could not edit request: " + error.message); }
     };
   } catch (error) { box.textContent = "Could not load your planning request: " + error.message; }
+}
+
+async function loadWorkflowAppointments() {
+  const box = el("workflowAppointments");
+  if (!box) return;
+  try {
+    const items = await request("/appointments");
+    const pending = items.filter(item => item.workflow_id && item.status === "Requested");
+    box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(item.scheduled_at)} <span class="badge">Pending approval</span> <button class="btn secondary" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
+    box.querySelectorAll("[data-cancel-appt]").forEach(button => button.onclick = async () => {
+      try { await request(`/appointments/${button.dataset.cancelAppt}?status=Cancelled`, "PATCH"); await loadWorkflowAppointments(); await loadPlanningRequest(); }
+      catch (error) { showToast("Could not cancel appointment: " + error.message); }
+    });
+  } catch (error) { box.textContent = "Could not load appointment requests: " + error.message; }
 }
 
 function renderMatterSelects() {
@@ -92,8 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el("changeType").value === "New will") {
       try {
         const workflow = await request("/workflows", "POST", {related_names:[], demo_mode:false});
-        el("crOut").textContent = `New matter ${workflow.matter_id} created. Opening the planning request…`;
-        window.location.href = "intake.html";
+        el("crMatter").value = workflow.matter_id;
+        el("crMatter").disabled = true;
+        el("crOut").innerHTML = `New matter <strong>${esc(workflow.matter_id)}</strong> created. <a href="intake.html">Continue the new planning request →</a>`;
       } catch (error) { el("crOut").textContent = error.message; }
       return;
     }

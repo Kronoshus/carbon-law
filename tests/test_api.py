@@ -174,6 +174,8 @@ def test_workflow_attorney_consultation_and_signing_gates():
     attorney=c.post("/auth/login",json={"email":"attorney@example.com","password":"attorney-test-password"}).json(); ah={"Authorization":"Bearer "+attorney["token"]}
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah).status_code==200
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h).status_code==200
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==409
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=ah).status_code==200
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==200
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=h).status_code==200
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=ah).json()["stage"]=="complete"
@@ -205,8 +207,19 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert c.post(f"/workflows/{demo['id']}/demo-attorney-review",headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["stage"]=="consultation"
     consultation=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=demo_headers)
-    assert consultation.status_code==200 and consultation.json()["stage"]=="signing"
+    assert consultation.status_code==200 and consultation.json()["stage"]=="consultation"
+    assert consultation.json()["appointments"]["consultation"]["status"]=="requested"
+    pending_appts=c.get("/appointments",headers=demo_headers).json()
+    assert any(a["kind"]=="consultation" and a["status"]=="Requested" and a["matter_id"]==demo["matter_id"] for a in pending_appts)
+    staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
+    sh={"Authorization":"Bearer "+staff["token"]}
+    approved=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=sh)
+    assert approved.status_code==200 and approved.json()["appointments"]["consultation"]["status"]=="scheduled"
+    assert any(a["kind"]=="consultation" and a["status"]=="Scheduled" for a in c.get("/appointments",headers=sh).json())
+    assert c.patch(f"/workflows/{demo['id']}/staff-review",json={"decision":"consultation_completed"},headers=sh).json()["stage"]=="signing"
     signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
+    assert signing.status_code==200 and signing.json()["stage"]=="signing"
+    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=sh)
     assert signing.status_code==200 and signing.json()["stage"]=="complete"
     assert c.post(f"/workflows/{demo['id']}/edit",headers=demo_headers).status_code==200
     assert c.patch(f"/workflows/{demo['id']}/intake",json={"general":{"family":"Updated"},"documents":{}},headers=demo_headers).status_code==200
