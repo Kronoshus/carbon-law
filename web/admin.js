@@ -36,7 +36,7 @@ async function load() {
   await loadAppointments();
   await loadDocuments();
   await loadReport();
-  await Promise.all([loadContacts(),loadOperationsReports(),loadAudit(),loadPracticeFiles("prompts"),loadPracticeFiles("templates")]);
+  await Promise.all([loadTasks(),loadContacts(),loadOperationsReports(),loadAudit(),loadPracticeFiles("prompt"),loadPracticeFiles("template")]);
 }
 async function loadMatters() {
   try {
@@ -89,7 +89,7 @@ async function loadAppointments() {
       items.forEach(a => {
         const tr = document.createElement("tr");
         const dt = a.scheduled_at ? new Date(a.scheduled_at) : null; const local = dt && !Number.isNaN(dt.getTime()) ? new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16) : "";
-        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${esc(a.matter_id)}</td><td>${esc(a.kind)}</td><td><input data-appt="time" type="datetime-local" value="${esc(local)}"></td><td><select data-appt="status">${["Requested","Scheduled","Cancelled","Completed"].map(status=>`<option ${a.status===status?"selected":""}>${status}</option>`).join("")}</select></td><td><input data-appt="note" value="${esc(a.note||"")}"><button class="btn secondary sm" data-save-appointment="${esc(a.id)}">Save</button></td>`;
+        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${esc(a.matter_id)}</td><td>${esc(a.kind)}</td><td><input data-appt="time" type="datetime-local" value="${esc(local)}" data-original="${esc(local)}"></td><td><select data-appt="status">${[...new Set(["Requested","Scheduled","Cancelled","Completed","Booked","Rescheduled",a.status])].map(status=>`<option ${a.status===status?"selected":""}>${status}</option>`).join("")}</select></td><td><input data-appt="note" value="${esc(a.note||"")}"><button class="btn secondary sm" data-save-appointment="${esc(a.id)}">Save</button></td>`;
         rows.appendChild(tr);
       });
       rows.querySelectorAll("[data-save-appointment]").forEach(button=>button.onclick=()=>saveAppointment(button));
@@ -192,14 +192,15 @@ async function loadAudit() {
 }
 async function loadPracticeFiles(kind) {
   const select=q(kind+"Select"), content=q(kind+"Content");
-  try { const files=await request(`/${kind}s`); select.innerHTML='<option value="">Select a '+kind.slice(0,-1)+'</option>'+files.map(f=>`<option value="${esc(f.name)}">${esc(f.name)}</option>`).join(""); select.onchange=async()=>{if(!select.value){content.textContent="";return}try{const data=await request(`/${kind}s/${encodeURIComponent(select.value)}`);content.textContent=data.content}catch(e){content.textContent=e.message}}; }
+  try { const files=await request(`/${kind}s`); select.innerHTML='<option value="">Select a '+kind+'</option>'+files.map(f=>`<option value="${esc(f.name)}">${esc(f.name)}</option>`).join(""); select.onchange=async()=>{if(!select.value){content.textContent="";return}try{const data=await request(`/${kind}s/${encodeURIComponent(select.value)}`);content.textContent=data.content}catch(e){content.textContent=e.message}}; }
   catch(e){content.textContent=e.message}
 }
 async function loadMatterHistory(matterId) {
   try {const h=await request(`/matters/${encodeURIComponent(matterId)}/history`);const entries=[...(h.stages||[]).map(x=>({...x,type:"Stage",detail:x.stage})),...(h.tasks||[]).map(x=>({...x,time:x.updated_at||x.created_at,type:"Task",detail:x.title})),...(h.changes||[]).map(x=>({...x,time:x.updated_at||x.created_at,type:"Change request",detail:x.change_type+" — "+x.status})),...(h.comms||[]).map(x=>({...x,time:x.created_at,type:"Communication",detail:x.summary}))].sort((a,b)=>String(a.time||"").localeCompare(String(b.time||"")));q("historyTitle").textContent=`${matterId} history`;q("historyContent").innerHTML=entries.map(x=>`<p><strong>${esc(x.time||"")} · ${esc(x.type)}</strong> — ${esc(x.detail||"")}</p>`).join("")||"No history recorded.";q("historyDialog").showModal()}catch(e){showError(e)}
 }
 async function saveAppointment(button) {
-  const row=button.closest("tr"),id=button.dataset.saveAppointment,payload={status:row.querySelector('[data-appt="status"]').value,scheduled_at:row.querySelector('[data-appt="time"]').value,note:row.querySelector('[data-appt="note"]').value};
+  const row=button.closest("tr"),id=button.dataset.saveAppointment,time=row.querySelector('[data-appt="time"]'),payload={status:row.querySelector('[data-appt="status"]').value,note:row.querySelector('[data-appt="note"]').value};
+  if(time.value!==time.dataset.original) payload.scheduled_at=time.value?new Date(time.value).toISOString():"";
   try {await request(`/appointments/${id}?${query(payload)}`,"PATCH");showMessage("appointmentMessage","Appointment updated and client record synced.");await Promise.all([loadAppointments(),loadWorkflows(),loadAudit()])}catch(e){showError(e,"appointmentMessage")}
 }
 document.addEventListener("DOMContentLoaded",()=>{

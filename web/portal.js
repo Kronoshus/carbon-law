@@ -104,7 +104,7 @@ function renderMatterSelects() {
 }
 async function loadChangeRequests() {
   const box=el("changeRequestStatus"); if(!box)return;
-  try {const items=await request("/change-requests");box.innerHTML=items.length?items.map(c=>`<article><p><strong>${esc(c.change_type)}</strong> · ${esc(c.status)}</p><p>Matter: ${esc(c.matter_id)} · Documents: ${esc(c.affected_documents||"Not specified")}</p><p>${esc(c.resolution||c.note||c.impact||"The firm will update this request as it is reviewed.")}</p></article>`).join("<hr>"):"No change requests yet."}catch(e){box.textContent="Could not load your change requests: "+e.message}
+  try {const items=await request("/change-requests");box.innerHTML=items.length?items.map(c=>`<article><p><strong>${esc(c.change_type)}</strong> · ${esc(c.status)}</p><p>Matter: ${esc(c.matter_id)} · Documents: ${esc(c.affected_documents||"Not specified")}</p><p>${esc(c.resolution||c.impact||"The firm will update this request as it is reviewed.")}</p></article>`).join("<hr>"):"No change requests yet."}catch(e){box.textContent="Could not load your change requests: "+e.message}
 }
 async function loadDocs() {
   try {

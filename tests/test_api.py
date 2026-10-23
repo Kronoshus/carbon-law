@@ -119,6 +119,16 @@ def test_api_schema_is_not_public():
     assert c.get("/openapi.json").status_code == 404
 
 
+def test_staff_can_update_contact_status_and_note():
+    login = c.post("/auth/login", json={"email":"staff@example.com", "password":"staff-test-password"})
+    h = {"Authorization":"Bearer "+login.json()["token"]}
+    contact = c.post("/contact", json={"name":"Client", "email":"client@example.com", "message":"Call me"}).json()
+    r = c.patch(f"/contacts/{contact['id']}", json={"status":"Contacted", "note":"Left voicemail"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["status"] == "Contacted"
+    assert r.json()["note"] == "Left voicemail"
+
+
 def test_public_contact_and_intake_reject_oversized_fields():
     oversized = "x" * 501
     assert c.post("/contact", json={"name":"n","email":"e@example.com","message":oversized}).status_code == 422
@@ -273,6 +283,19 @@ def test_client_can_cancel_only_own_workflow_appointment():
     assert cancelled.json()["appointments"]["consultation"]["status"]=="cancelled"
 
 
+def test_client_cannot_change_appointment_when_cancelling():
+    client=c.post("/auth/signup",json={"name":"Appt Client","email":"appt-client@example.com","password":"long-secure-password"}).json()
+    h={"Authorization":"Bearer "+client["token"]}
+    w=c.post("/workflows",json={"demo_mode":True},headers=h).json()
+    from app import workflows, appointments
+    workflows[w["id"]]["stage"]="consultation"
+    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h)
+    appt=next(a for a in appointments.values() if a.get("workflow_id")==w["id"])
+    result=c.patch(f"/appointments/{appt['id']}?status=Cancelled&note=leak&scheduled_at=2030-02-01T10:00",headers=h)
+    assert result.status_code==403
+    assert appointments[appt["id"]]["scheduled_at"]=="2030-01-01T10:00"
+
+
 def test_signup_accepts_six_character_password_and_rejects_five():
     short=c.post("/auth/signup",json={"name":"Short","email":"short-pass@example.com","password":"12345"})
     assert short.status_code==400
@@ -330,8 +353,16 @@ def test_staff_dashboard_operations_keep_client_views_in_sync_and_private():
     c.get("/appointments",headers=sh)
     assert workflows[wid]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
     assert c.get("/my-workflows",headers=ch).json()[0]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
+    assert c.patch(f"/appointments/{appt['id']}?status=Completed",headers=sh).status_code==200
+    assert workflows[wid]["appointments"]["consultation"]["status"]=="completed"
+    workflows[wid]["drafts"]={"will":"Attorney-approved draft"}
+    workflows[wid]["client_approved"]=True
+    workflows[wid]["attorney_approved"]=True
     assert c.patch(f"/matters/{mid}",json={"stage":"4 Drafting"},headers=sh).status_code==200
-    assert c.get("/my-workflows",headers=ch).json()[0]["stage"]=="draft_ready"
+    client_workflow=c.get("/my-workflows",headers=ch).json()[0]
+    assert client_workflow["stage"]=="draft_ready"
+    assert client_workflow["drafts"]=={"will":"Attorney-approved draft"}
+    assert client_workflow["client_approved"] and client_workflow["attorney_approved"]
     assert c.get("/my-matters",headers=ch).json()[0]["stage"] in __import__("app").STAGES
     # Sensitive internal task and comm details never leak to clients.
     task=c.post("/tasks",json={"matter_id":mid,"title":"Internal review"},headers=sh).json()
@@ -356,3 +387,9 @@ def test_change_request_status_updates_client_view_and_closes_linked_task():
     from app import tasks
     assert tasks[cr["task_id"]]["status"]=="Done"
     assert c.get("/change-requests",headers=h).json()[-1]["resolution"]=="Completed after attorney review"
+    client=c.post("/auth/signup",json={"name":"CR Client","email":"cr-client@example.com","password":"long-secure-password"}).json()
+    from app import matters
+    matters[matter["id"]]["client_user_id"]=__import__("app").users["cr-client@example.com"]["id"]
+    visible=c.get("/change-requests",headers={"Authorization":"Bearer "+client["token"]}).json()
+    assert visible[-1]["resolution"]=="Completed after attorney review"
+    assert "note" not in visible[-1] and "requested_by" not in visible[-1] and "task_id" not in visible[-1]

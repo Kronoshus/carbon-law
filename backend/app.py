@@ -402,8 +402,6 @@ def patch_matter(matter_id: str, updates: dict, authorization: Optional[str]=Hea
         for workflow in workflows.values():
             if workflow.get("matter_id") == matter_id and workflow_stage:
                 workflow["stage"] = workflow_stage; workflow["updated_at"] = now_iso()
-                if workflow_stage in {"conflict_review", "document_selection", "intake", "draft_ready"}:
-                    workflow["client_approved"] = False; workflow["attorney_approved"] = False; workflow["drafts"] = {}
     log_audit(u["email"],"update","matter",matter_id,str(updates))
     save_data()
     return matters[matter_id]
@@ -443,7 +441,11 @@ def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header
 @app.get("/change-requests")
 def list_change_requests(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = list(changes) if u["role"] in ("paralegal","attorney","admin") else [c for c in changes if matters.get(c["matter_id"],{}).get("client_user_id")==u["id"]]
+    if u["role"] in ("paralegal","attorney","admin"):
+        out = list(changes)
+    else:
+        out = [{k:v for k,v in c.items() if k not in {"note", "requested_by", "task_id"}}
+               for c in changes if matters.get(c["matter_id"],{}).get("client_user_id")==u["id"]]
     if matter_id: out=[c for c in out if c["matter_id"]==matter_id]
     if status: out=[c for c in out if c["status"]==status]
     return out
@@ -505,6 +507,7 @@ def update_appointment(appointment_id: str, status: Optional[str]=None, note: Op
     if user["role"] == "client":
         if not matter or matter.get("client_user_id") != user["id"]: raise HTTPException(404,"appointment not found")
         if status != "Cancelled": raise HTTPException(403,"Clients may only cancel appointments")
+        if note is not None or scheduled_at is not None: raise HTTPException(403,"Clients may only cancel appointments")
     elif user["role"] not in {"paralegal","attorney","admin"}:
         raise HTTPException(403,"Staff access required")
     allowed_statuses = {"Requested", "Scheduled", "Cancelled", "Completed", "Booked", "Rescheduled"}
@@ -523,12 +526,17 @@ def update_appointment(appointment_id: str, status: Optional[str]=None, note: Op
         if kind in workflow.get("appointments", {}):
             detail = workflow["appointments"][kind]
             if status == "Cancelled": detail["status"] = "cancelled"
+            elif status == "Completed": detail["status"] = "completed"
             elif status in {"Scheduled", "Booked", "Rescheduled"}: detail["status"] = "scheduled"
             if scheduled_at: detail["scheduled_at"] = scheduled_at
             elif status in {"Scheduled", "Booked", "Rescheduled"}: detail["scheduled_at"] = appointment.get("scheduled_at")
             workflow["updated_at"] = now_iso()
             if status in {"Scheduled", "Booked", "Rescheduled"} and workflow["stage"] in {"consultation", "signing"}:
                 workflow["stage"] = "complete" if kind == "signing" and workflow.get("appointments", {}).get("consultation", {}).get("status") == "completed" else workflow["stage"]
+            if status == "Completed" and workflow["stage"] in {"consultation", "signing"}:
+                consultation_done = workflow.get("appointments", {}).get("consultation", {}).get("status") == "completed"
+                signing_scheduled = workflow.get("appointments", {}).get("signing", {}).get("status") == "scheduled"
+                if (kind == "consultation" and signing_scheduled) or (kind == "signing" and consultation_done): workflow["stage"] = "complete"
     actor = user["email"]
     log_audit(actor,"update","appointment",appointment_id,status or ("rescheduled" if scheduled_at else "updated"))
     save_data()
@@ -588,7 +596,7 @@ def list_contacts(status: Optional[str]=None, authorization: Optional[str]=Heade
 @app.patch("/contacts/{contact_id}")
 def update_contact(contact_id: str, payload: Dict[str, Any] = Body(default={}),
                    authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     for c in contacts:
         if c["id"]==contact_id:
             if payload.get("status") is not None:
