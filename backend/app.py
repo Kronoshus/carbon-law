@@ -818,7 +818,8 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
     elif req.decision == "consultation_completed":
         if user["role"] not in {"paralegal", "attorney", "admin"}: raise HTTPException(403, "Staff access required")
         if workflow["stage"] != "consultation" or workflow.get("appointments", {}).get("consultation", {}).get("status") != "scheduled": raise HTTPException(409, "Consultation must be approved first")
-        workflow["appointments"]["consultation"]["status"] = "completed"; workflow["stage"] = "signing"
+        workflow["appointments"]["consultation"]["status"] = "completed"
+        workflow["stage"] = "complete" if workflow.get("appointments", {}).get("signing", {}).get("status") == "scheduled" else "signing"
     else: raise HTTPException(400, "Unsupported review decision")
     workflow["staff_review_note"] = req.note; workflow["updated_at"] = now_iso()
     log_audit(user["email"], "review", "workflow", workflow_id, req.decision); save_data(); return workflow
@@ -832,7 +833,8 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
     kind, at = req.kind, req.scheduled_at
     if kind not in {"consultation", "signing"} or not at: raise HTTPException(400, "Specify consultation/signing and a date/time")
     if kind == "consultation" and workflow["stage"] != "consultation": raise HTTPException(409, "Attorney approval must precede consultation")
-    if kind == "signing" and workflow["stage"] != "signing": raise HTTPException(409, "Consultation must be completed before signing")
+    if kind == "signing" and workflow.get("appointments", {}).get("consultation", {}).get("status") not in {"requested", "scheduled", "completed"}: raise HTTPException(409, "Request a consultation before signing")
+    if kind == "signing" and workflow["stage"] not in {"consultation", "signing"}: raise HTTPException(409, "Consultation review must be complete before signing")
     if user["role"] == "client":
         if workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
         matter = ensure_workflow_matter(workflow)
@@ -856,7 +858,7 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
             appointments[appointment["id"]] = appointment
         matter["appointment_status"] = "Scheduled"
         matter["updated_at"] = now_iso()
-        if kind == "signing": workflow["stage"] = "complete"
+        if kind == "signing" and workflow.get("appointments", {}).get("consultation", {}).get("status") == "completed": workflow["stage"] = "complete"
     else: raise HTTPException(403, "Staff access required")
     workflow["updated_at"] = now_iso(); save_data(); return workflow
 

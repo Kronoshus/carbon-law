@@ -209,6 +209,9 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     consultation=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=demo_headers)
     assert consultation.status_code==200 and consultation.json()["stage"]=="consultation"
     assert consultation.json()["appointments"]["consultation"]["status"]=="requested"
+    signing_request=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
+    assert signing_request.status_code==200 and signing_request.json()["stage"]=="consultation"
+    assert signing_request.json()["appointments"]["signing"]["status"]=="requested"
     pending_appts=c.get("/appointments",headers=demo_headers).json()
     assert any(a["kind"]=="consultation" and a["status"]=="Requested" and a["matter_id"]==demo["matter_id"] for a in pending_appts)
     from app import appointments
