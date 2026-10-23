@@ -163,6 +163,16 @@ def test_public_contact_and_intake_reject_oversized_fields():
     assert c.post("/intake", json={"client_name":"Intake","email":"intake@example.com","goals":oversized}, headers={"Authorization":"Bearer "+token}).status_code == 422
 
 
+def test_all_estate_workflow_outputs_are_attorney_review_summaries():
+    from app import render_workflow_document, WORKFLOW_TEMPLATES
+    workflow = {"client_name": "Test Client", "intake": {"general": {}, "documents": {}}, "demo_mode": False}
+    assert set(WORKFLOW_TEMPLATES) == {"Revocable living trust", "Pour-over will", "Advance health care directive", "Financial power of attorney"}
+    for name in WORKFLOW_TEMPLATES:
+        content = render_workflow_document(workflow, name)
+        assert content.startswith("DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\n")
+        assert "not an executed or execution-ready legal instrument" in content
+
+
 def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     client = c.post("/auth/signup", json={"name":"Workflow Client","email":"flow@example.com","password":"long-secure-password"}).json()
     headers = {"Authorization":"Bearer "+client["token"]}
