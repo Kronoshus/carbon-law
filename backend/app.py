@@ -362,6 +362,11 @@ def list_stages(authorization: Optional[str]=Header(None)):
     require_auth(authorization, {"paralegal","attorney","admin"})
     return STAGES
 
+@app.get("/staff")
+def list_staff(authorization: Optional[str]=Header(None)):
+    require_auth(authorization, {"paralegal", "attorney", "admin"})
+    return [public_user(user) for user in users.values() if user.get("role") in {"paralegal", "attorney", "admin"}]
+
 @app.get("/matters")
 def list_matters(stage: Optional[str]=None, owner: Optional[str]=None,
                  risk: Optional[str]=None, q: Optional[str]=None,
@@ -392,6 +397,9 @@ def upsert_matter(m: Matter, authorization: Optional[str]=Header(None)):
         raise HTTPException(400, "invalid risk_level")
     if m.priority not in PRIORITIES:
         raise HTTPException(400, "invalid priority")
+    eligible_attorneys = {user["id"] for user in users.values() if user.get("role") == "attorney"}
+    if m.attorney_reviewer is not None and m.attorney_reviewer not in eligible_attorneys:
+        raise HTTPException(400, "attorney_reviewer must identify an eligible attorney")
     data = m.model_dump(); data["id"]=matter_id; data["created_at"]=now_iso(); data["updated_at"]=now_iso()
     matters[matter_id]=data
     stage_history[matter_id]=[{"stage":m.stage,"time":now_iso(),"by":"system"}]
@@ -419,6 +427,11 @@ def patch_matter(matter_id: str, updates: dict, authorization: Optional[str]=Hea
         raise HTTPException(400,"invalid stage")
     if "risk_level" in updates and updates["risk_level"] not in RISK_LEVELS:
         raise HTTPException(400,"invalid risk_level")
+    if "attorney_reviewer" in updates:
+        reviewer = updates["attorney_reviewer"]
+        eligible = {user["id"] for user in users.values() if user.get("role") == "attorney"}
+        if reviewer is not None and reviewer not in eligible:
+            raise HTTPException(400, "attorney_reviewer must identify an eligible attorney")
     old_stage = matters[matter_id].get("stage")
     matters[matter_id].update(updates)
     matters[matter_id]["updated_at"]=now_iso()
@@ -602,6 +615,8 @@ def update_document(doc_id: str, payload: DocumentUpdate,
     if doc_id not in documents: raise HTTPException(404,"document not found")
     if documents[doc_id].get("attorney_only") and user["role"] not in {"attorney", "admin"}:
         raise HTTPException(403, "Attorney access required")
+    if payload.status == "Attorney Approved":
+        raise HTTPException(403, "Approve drafts through the matter review workflow")
     status,version=payload.status,payload.version
     if status is not None: documents[doc_id]["status"]=status
     if version is not None: documents[doc_id]["version"]=version
@@ -975,8 +990,10 @@ def generate_attorney_demo_drafts(workflow_id: str, authorization: Optional[str]
         generated[name] = {"status": "Attorney Review", "content": content, "document_id": record["id"], "version": version}
     for record, existing in records:
         for prior in existing:
+            prior["replaced_by_version"] = record["version"]
             if prior.get("status") in {"Client Review", "Attorney Review"}: prior["status"] = "Superseded"
         documents[record["id"]] = record
+    workflow["drafts"] = generated
     workflow["updated_at"] = now_iso()
     log_audit(user["email"], "generate_attorney_demo_drafts", "workflow", workflow_id, ", ".join(requested))
     save_data()
@@ -994,12 +1011,12 @@ def generate_workflow_drafts(workflow_id: str, authorization: Optional[str]=Head
     generated = {}
     for name, content in rendered.items():
         existing = [d for d in documents.values() if d.get("matter_id") == matter["id"] and d.get("name") == name]
-        for prior in existing:
-            if prior.get("status") in {"Client Review", "Attorney Review"}:
-                prior["status"] = "Superseded"
         record = {"id": str(uuid.uuid4()), "matter_id": matter["id"], "workflow_id": workflow_id,
                   "name": name, "version": max((d.get("version", 0) for d in existing), default=0) + 1,
                   "status": "Client Review", "content": content, "created_at": now_iso()}
+        for prior in existing:
+            prior["replaced_by_version"] = record["version"]
+            if prior.get("status") in {"Client Review", "Attorney Review"}: prior["status"] = "Superseded"
         documents[record["id"]] = record
         generated[name] = {"status": "Review draft", "content": content, "document_id": record["id"], "version": record["version"]}
     workflow["drafts"] = generated
@@ -1096,26 +1113,38 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
         workflow["conflict_status"] = "cleared"; workflow["conflict_reviewed_at"] = now_iso(); workflow["stage"] = "document_selection"
     elif req.decision == "conflict_flagged":
         workflow["conflict_status"] = "flagged"; workflow["stage"] = "conflict_hold"
-    elif req.decision == "attorney_approved":
-        if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney approval required")
-        if workflow["stage"] != "attorney_review": raise HTTPException(409, "Client approval is required first")
-        workflow["attorney_approved"] = True; workflow["stage"] = "consultation"
-        for draft in workflow.get("drafts", {}).values():
-            record = documents.get(draft.get("document_id"))
-            if record: record["status"] = "Attorney Approved"
-    elif req.decision == "attorney_changes":
+    elif req.decision in {"attorney_approved", "attorney_changes"}:
         if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney review required")
-        workflow["attorney_approved"] = False; workflow["stage"] = "draft_ready"
-        for draft in workflow.get("drafts", {}).values():
-            record = documents.get(draft.get("document_id"))
-            if record: record["status"] = "Superseded"
+        matter = ensure_workflow_matter(workflow)
+        if user["role"] == "attorney" and matter.get("attorney_reviewer") != user["id"]:
+            raise HTTPException(403, "Only the assigned attorney may review this matter")
+        if workflow["stage"] != "attorney_review": raise HTTPException(409, "Client approval is required first")
+        if req.decision == "attorney_changes" and not req.note.strip():
+            raise HTTPException(400, "A note is required when requesting changes")
+        drafts = [documents.get(draft.get("document_id")) for draft in workflow.get("drafts", {}).values()]
+        if req.decision == "attorney_approved":
+            if not drafts or any(record is None for record in drafts):
+                raise HTTPException(409, "Draft documents are unavailable for review")
+            if any("[ATTORNEY TO COMPLETE" in record.get("content", "") for record in drafts if record):
+                raise HTTPException(409, "Complete all required attorney placeholders before approval")
+            workflow["attorney_approved"] = True; workflow["approved_by"] = user["id"]
+            workflow["approved_at"] = now_iso(); workflow["stage"] = "consultation"
+            for record in drafts:
+                if record: record["status"] = "Attorney Approved"
+        else:
+            workflow["attorney_approved"] = False; workflow["stage"] = "draft_ready"
+            workflow["staff_review_note"] = req.note.strip()
+            for record in drafts:
+                if record: record["status"] = "Superseded"
     elif req.decision == "consultation_completed":
         if user["role"] not in {"paralegal", "attorney", "admin"}: raise HTTPException(403, "Staff access required")
         if workflow["stage"] != "consultation" or workflow.get("appointments", {}).get("consultation", {}).get("status") != "scheduled": raise HTTPException(409, "Consultation must be approved first")
         workflow["appointments"]["consultation"]["status"] = "completed"
         workflow["stage"] = "complete" if workflow.get("appointments", {}).get("signing", {}).get("status") == "scheduled" else "signing"
     else: raise HTTPException(400, "Unsupported review decision")
-    workflow["staff_review_note"] = req.note; workflow["updated_at"] = now_iso()
+    if req.decision not in {"attorney_approved", "attorney_changes"}:
+        workflow["staff_review_note"] = req.note
+    workflow["updated_at"] = now_iso()
     matter = ensure_workflow_matter(workflow)
     matter_stage = {"conflict_review":"1 Intake", "conflict_hold":"1 Intake", "document_selection":"2 Attorney Scope", "intake":"3 Client Data Collection", "draft_ready":"4 Drafting", "client_review":"6 Client Review", "attorney_review":"5 Review Queue", "consultation":"7 Signing Preparation", "signing":"7 Signing Preparation", "complete":"10 Closed"}.get(workflow["stage"], matter.get("stage"))
     if matter_stage and matter.get("stage") != matter_stage:

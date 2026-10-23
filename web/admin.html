@@ -19,8 +19,14 @@
     </nav>
     <div class="user-box" id="userBox"></div>
   </aside>
-  <p id="adminStatus" role="status" aria-live="polite"></p>
   <main class="main-content" id="adminMain" hidden>
+    <p id="adminStatus" role="status" aria-live="polite"></p>
+    <dialog id="reviewDialog" class="review-dialog">
+      <div class="review-panel"><h2 id="reviewTitle"></h2><p id="reviewStatus"></p><div id="reviewDocuments"></div>
+        <label for="reviewNote">Reviewer note (required when requesting changes)</label><textarea id="reviewNote" maxlength="1000"></textarea>
+        <div class="modal-actions"><button type="button" class="btn secondary" id="closeReview">Close</button><button type="button" class="btn secondary" id="requestChanges">Request changes</button><button type="button" class="btn" id="approveDrafts">Approve drafts</button></div>
+      </div>
+    </dialog>
     <datalist id="matterOptions"></datalist>
     <dialog id="historyDialog"><h2 id="historyTitle">Matter history</h2><div id="historyContent"></div><button class="btn secondary" id="closeHistory">Close</button></dialog>
     <div class="topbar"><h1>Staff Dashboard</h1>
@@ -37,8 +43,8 @@
             <div class="form-group"><label>Client Name</label><input id="newClient" required></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Owner</label><input id="newOwner" placeholder="Paralegal A"></div>
-            <div class="form-group"><label>Attorney Reviewer</label><input id="newAttorney" placeholder="Attorney 1"></div>
+            <div class="form-group"><label>Owner</label><select id="newOwner"><option value="">Unassigned</option></select></div>
+            <div class="form-group"><label>Attorney Reviewer</label><select id="newAttorney"><option value="">Unassigned</option></select></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Risk</label><select id="newRisk"><option>Low</option><option>Medium</option><option>High</option></select></div>
@@ -63,15 +69,14 @@
       <div class="card" style="padding:0;">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead>
+            <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Attorney reviewer</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead>
             <tbody id="adminMatterRows"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <div class="grid2">
-      <div class="section">
+    <div class="section">
         <h2>Change Request Queue</h2><p id="changeRequestsMessage" role="status"></p>
         <div class="card" style="padding:0;">
           <div class="table-wrap"><table>
@@ -80,7 +85,7 @@
           </table></div>
         </div>
       </div>
-      <div class="section">
+    <div class="section">
         <h2>Appointments</h2><p id="appointmentMessage" role="status"></p>
         <div class="card" style="padding:0;">
           <div class="table-wrap"><table>
@@ -89,7 +94,6 @@
           </table></div>
         </div>
       </div>
-    </div>
 
     <div class="section">
       <h2>Documents</h2><p id="documentsMessage" role="status"></p>

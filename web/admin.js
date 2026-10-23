@@ -23,12 +23,46 @@ async function request(path, method="GET", body=null) {
   return res.json();
 }
 
+async function openWorkflowReview(workflow) {
+  if (!workflow) return;
+  const dialog=q("reviewDialog");
+  q("reviewTitle").textContent=`Review drafts · ${workflow.client_name}`;
+  q("reviewStatus").textContent=workflow.staff_review_note ? `Previous reviewer note: ${workflow.staff_review_note}` : "Illustrative working drafts; not signing-ready.";
+  const drafts=workflow.drafts||workflow.attorney_demo_drafts||{};
+  q("reviewDocuments").innerHTML=Object.entries(drafts).map(([name,d])=>`<article class="review-document"><h3>${esc(name)} · v${esc(d.version)}</h3><pre class="document-content">${esc(d.content)}</pre></article>`).join("");
+  dialog.dataset.workflow=workflow.id;
+  q("reviewNote").value="";
+  q("approveDrafts").disabled=Object.values(drafts).some(d=>String(d.content||"").includes("[ATTORNEY TO COMPLETE"));
+  q("reviewStatus").textContent += q("approveDrafts").disabled ? " Complete every [ATTORNEY TO COMPLETE…] placeholder before approval." : "";
+  dialog.showModal();
+}
+async function submitWorkflowReview(decision) {
+  const dialog=q("reviewDialog"), note=q("reviewNote").value.trim();
+  if (decision === "attorney_changes" && !note) { q("reviewStatus").textContent="Enter a note describing the required changes."; q("reviewNote").focus(); return; }
+  if (decision === "attorney_approved" && !confirm("Approve these drafts?")) return;
+  if (decision === "attorney_changes" && !confirm("Send these drafts back to the paralegal with your notes?")) return;
+  const buttons=[q("approveDrafts"),q("requestChanges")]; buttons.forEach(button=>button.disabled=true);
+  try { await request(`/workflows/${dialog.dataset.workflow}/staff-review`,"PATCH",{decision,note}); dialog.close();showMessage("workflowMessage",decision==="attorney_approved"?"Drafts approved.":"Drafts returned with reviewer notes.");await Promise.all([loadWorkflows(),loadMatters(),loadDocuments()]); }
+  catch(error) { showError(error,"workflowMessage"); }
+  finally { buttons.forEach(button=>button.disabled=false); }
+}
 async function loadWorkflows() {
   const rows = document.getElementById("workflowRows"); if (!rows) return;
   try {
   const workflows = await request("/my-workflow");
   if (!Array.isArray(workflows)) throw new Error("Staff workflow data is unavailable for this account.");
-  rows.innerHTML = workflows.map(w => `<tr><td>${esc(w.client_name)}<br><small>${esc((w.related_names||[]).join(", "))}</small></td><td>${esc(workflowLabel(w.stage))}</td><td>${esc((w.documents_requested||[]).join(", ")||"Conflict review")}${(w.attorney_demo_drafts&&Object.keys(w.attorney_demo_drafts).length)?`<details><summary>Attorney demo drafts</summary>${Object.entries(w.attorney_demo_drafts).map(([name,d])=>`<h4>${esc(name)}</h4><pre>${esc(d.content)}</pre>`).join("")}</details>`:w.drafts&&Object.keys(w.drafts).length?`<details><summary>Review drafts</summary>${Object.entries(w.drafts).map(([name,d])=>`<h4>${esc(name)}</h4><pre>${esc(d.content)}</pre>`).join("")}</details>`:""}</td><td>${w.stage==="conflict_review"?`<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="conflict_cleared">Clear</button> <button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="conflict_flagged">Flag</button>`:w.stage==="attorney_review"?(staffUser?.role==="attorney"||staffUser?.role==="admin"?`<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="attorney_approved">Attorney approve</button> <button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="attorney_changes">Request changes</button>`:"Attorney review requires an attorney."):["consultation","signing"].includes(w.stage)?`${w.stage==="consultation"&&(w.appointments||{}).consultation?.status==="requested"?`<input type="datetime-local" data-time="${esc(w.id)}-consultation" value="${esc(localDateTime((w.appointments||{}).consultation.requested_at))}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="consultation">Approve consultation</button>`:""} ${w.stage==="signing"&&(w.appointments||{}).signing?.status==="requested"?`<input type="datetime-local" data-time="${esc(w.id)}-signing" value="${esc(localDateTime((w.appointments||{}).signing.requested_at))}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="signing">Approve signing</button>`:""} ${w.stage==="consultation"&&(w.appointments||{}).consultation?.status==="scheduled"?`<button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="consultation_completed">Mark consultation complete</button>`:""}`:w.stage==="draft_ready"&&(staffUser?.role==="attorney"||staffUser?.role==="admin")?`<button class="btn sm" data-generate-demo="${esc(w.id)}">Generate demo drafts</button>`:"—"}</td></tr>`).join("");
+  rows.innerHTML = workflows.map(w => {
+    const assignedAttorney = adminMatters.find(m => m.id === w.matter_id)?.attorney_reviewer;
+    const canReview = staffUser?.role === "admin" || (staffUser?.role === "attorney" && assignedAttorney === staffUser.id);
+    const hasDraft = Object.keys(w.drafts||{}).length > 0 || Object.keys(w.attorney_demo_drafts||{}).length > 0;
+    const review = w.stage === "attorney_review" && canReview && hasDraft ? `<button class="btn sm" data-review="${esc(w.id)}">Review drafts</button>` : "";
+    const appointment = w.appointments||{};
+    const intakeAction = w.stage === "conflict_review" ? `<button class="btn sm" data-workflow="${esc(w.id)}" data-decision="conflict_cleared">Clear</button> <button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="conflict_flagged">Flag</button>` : w.stage === "consultation" && appointment.consultation?.status === "requested" ? `<input type="datetime-local" data-time="${esc(w.id)}-consultation" value="${esc(localDateTime(appointment.consultation.requested_at))}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="consultation">Approve consultation</button>` : w.stage === "signing" && appointment.signing?.status === "requested" ? `<input type="datetime-local" data-time="${esc(w.id)}-signing" value="${esc(localDateTime(appointment.signing.requested_at))}"><button class="btn sm" data-schedule="${esc(w.id)}" data-kind="signing">Approve signing</button>` : w.stage === "consultation" && appointment.consultation?.status === "scheduled" ? `<button class="btn secondary sm" data-workflow="${esc(w.id)}" data-decision="consultation_completed">Mark consultation complete</button>` : w.stage === "draft_ready" && (staffUser?.role==="attorney"||staffUser?.role==="admin") ? `<button class="btn sm" data-generate-demo="${esc(w.id)}">Generate demo drafts</button>` : "—";
+    const draftLabel = w.attorney_demo_drafts && Object.keys(w.attorney_demo_drafts).length ? "Illustrative demo drafts — not signing-ready" : "Drafts";
+    return `<tr><td>${esc(w.client_name)}<br><small>${esc((w.related_names||[]).join(", "))}</small></td><td>${esc(workflowLabel(w.stage))}</td><td>${esc((w.documents_requested||[]).join(", ")||"Conflict review")} ${hasDraft?`<p>${esc(draftLabel)} · ${Object.keys(w.drafts||w.attorney_demo_drafts||{}).length} document(s)</p>`:""}${w.staff_review_note?`<p><strong>Reviewer notes:</strong> ${esc(w.staff_review_note)}</p>`:""}</td><td>${review} ${intakeAction}</td></tr>`;
+  }).join("");
+  rows.querySelectorAll("button[data-review]").forEach(button=>button.onclick=()=>openWorkflowReview(workflows.find(w=>w.id===button.dataset.review)));
+
   rows.querySelectorAll("button[data-schedule]").forEach(button => button.addEventListener("click", async () => { const input=rows.querySelector(`[data-time="${button.dataset.workflow}-${button.dataset.kind}"]`); if (!input?.value) {showError("Choose a date and time.","workflowMessage");return;} if(!confirm(`Approve this ${button.dataset.kind} appointment request?`))return; try {button.disabled=true;await request(`/workflows/${button.dataset.workflow}/appointment`,"PATCH",{kind:button.dataset.kind,scheduled_at:new Date(input.value).toISOString()});showMessage("workflowMessage","Appointment request approved.");await Promise.all([loadWorkflows(),loadAppointments()]);}catch(error){showError(error,"workflowMessage");button.disabled=false;} }));
   rows.querySelectorAll("button[data-generate-demo]").forEach(button => button.addEventListener("click", async () => {
     if (!confirm("Generate attorney-review demo drafts? These are not legally approved or signing-ready.")) return;
@@ -52,7 +86,8 @@ async function load() {
   q("workflowRows").innerHTML='<tr><td colspan="4">Loading…</td></tr>';
   const box=q("userBox"), name=document.createElement("p"),role=document.createElement("p"),link=document.createElement("a");
   name.textContent=staffUser.name; role.textContent=staffUser.role; link.href="#";link.textContent="Logout";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
-  try { stageOptions=await request("/stages"); } catch(error) { showError(error,"mattersMessage"); }
+  try { [stageOptions,staffList]=await Promise.all([request("/stages"),request("/staff")]); } catch(error) { showError(error,"mattersMessage"); }
+  setupStaffSelectors();
   await loadSection(loadMatters);
   const sections=[loadWorkflows,loadChangeRequests,loadAppointments,loadDocuments,loadReport,loadTasks,loadContacts,loadOperationsReports,loadAudit,()=>loadPracticeFiles("prompt"),()=>loadPracticeFiles("template")];
   await Promise.allSettled(sections.map(loadSection));
@@ -73,13 +108,14 @@ async function loadMatters() {
       rows.innerHTML = "";
       matters.forEach(m => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><button class="btn secondary sm" data-history="${esc(m.id)}">${esc(m.id)}</button></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td>${esc(m.risk_level)}</td><td>${esc(m.priority)}</td><td>${esc(m.due_date?new Date(`${m.due_date}T00:00:00`).toLocaleDateString():"")}</td>
+        tr.innerHTML = `<td><button class="btn secondary sm" data-history="${esc(m.id)}">${esc(m.id)}</button></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td><select class="attorneySelect" data-id="${esc(m.id)}"><option value="">Unassigned</option>${staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}" ${m.attorney_reviewer===s.id?"selected":""}>${esc(s.name)}</option>`).join("")}</select></td><td>${esc(m.risk_level)}</td><td>${esc(m.priority)}</td><td>${esc(m.due_date?new Date(`${m.due_date}T00:00:00`).toLocaleDateString():"")}</td>
         <td><select data-id="${esc(m.id)}" class="stageSelect">
         ${[...new Set([m.stage,...stageOptions])].map(s=>`<option value="${esc(s)}" ${s===m.stage?"selected":""} ${stageOptions.includes(s)?"":"disabled"}>${esc(s)}</option>`).join("")}
         </select></td>`;
         rows.appendChild(tr);
       });
       rows.querySelectorAll("[data-history]").forEach(button=>button.onclick=()=>loadMatterHistory(button.dataset.history));
+      rows.querySelectorAll(".attorneySelect").forEach(select=>select.addEventListener("change",async()=>{const id=select.dataset.id,attorney_reviewer=select.value||null;if(!confirm("Change the assigned attorney for this matter?")){await loadMatters();return;}try{select.disabled=true;await request(`/matters/${encodeURIComponent(id)}`,"PATCH",{attorney_reviewer});showMessage("mattersMessage","Attorney assignment updated.");await loadMatters();}catch(error){showError(error,"mattersMessage");await loadMatters();}}));
       document.querySelectorAll(".stageSelect").forEach(sel => {
         sel.addEventListener("change", async (e) => {
           const id = e.target.getAttribute("data-id"), stage=e.target.value;
@@ -128,11 +164,14 @@ async function loadDocuments() {
     const rows = document.getElementById("docRows");
     if (rows) {
       rows.innerHTML = "";
-      items.forEach(d => {
+      const latestItems=items.filter(d=>!items.some(other=>other.matter_id===d.matter_id&&other.name===d.name&&other.version>d.version));
+      latestItems.forEach(d => {
         const tr = document.createElement("tr");
         const content = typeof d.content === "string" ? d.content : "";
         const preview = content ? `<details><summary>Open document</summary><pre class="document-content">${esc(content)}</pre></details>` : `<span class="muted">No draft content is stored for this record.</span>`;
-        tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}<br>${preview}</td><td>${esc(d.version)}</td><td><select data-doc-status="${esc(d.id)}">${["Draft","Attorney Review","Client Review","Signed","Archived"].map(status=>`<option ${d.status===status?"selected":""}>${status}</option>`).join("")}</select> <button class="btn secondary sm" data-save-document="${esc(d.id)}">Save</button></td>`;
+        const state = d.status==="Superseded" ? `Replaced by v${esc(d.replaced_by_version||"?")}` : d.status;
+        const history = items.filter(old=>old.matter_id===d.matter_id&&old.name===d.name&&old.version<d.version).map(old=>`<details><summary>Version history</summary><p>v${esc(old.version)} · ${esc(old.status)} · replaced by v${esc(old.replaced_by_version||d.version)}</p><details><summary>Open v${esc(old.version)}</summary><pre class="document-content">${esc(old.content||"")}</pre></details></details>`).join("");
+        tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}<br>${d.status==="Superseded"?`<span class="muted">History version</span>`:preview}${history}</td><td>v${esc(d.version)}${d.status==="Superseded"?` · replaced by v${esc(d.replaced_by_version||"?")}`:" · latest"}</td><td>${esc(state)}${d.status==="Superseded"?"":`<select data-doc-status="${esc(d.id)}">${["Draft","Attorney Review","Client Review","Signed","Archived"].map(status=>`<option ${d.status===status?"selected":""}>${status}</option>`).join("")}</select> <button class="btn secondary sm" data-save-document="${esc(d.id)}">Save</button>`}</td>`;
         rows.appendChild(tr);
       });
       rows.querySelectorAll("[data-save-document]").forEach(button=>button.onclick=async()=>{const id=button.dataset.saveDocument;button.disabled=true;try{await request(`/documents/${id}`,"PATCH",{status:rows.querySelector(`[data-doc-status="${CSS.escape(id)}"]`).value});await loadDocuments();await loadAudit();showMessage("documentsMessage","Document status updated.")}catch(e){showError(e,"documentsMessage")}finally{button.disabled=false}});
@@ -161,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const submit=e.submitter, originalLabel=submit.textContent; submit.disabled=true;submit.textContent="Creating…";
     try {
+      body.owner = body.owner || "Unassigned";
       const result = await request("/matters","POST",body);
       form.reset(); closeModal("matterModal"); showMessage("mattersMessage",`Matter created: ${result.id}`);
       await Promise.all([loadMatters(),loadWorkflows(),loadTasks(),loadReport(),loadAudit()]);
@@ -182,16 +222,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-let adminMatters = [], stageOptions=[];
+let adminMatters = [], stageOptions=[], staffList=[];
 const q = id => document.getElementById(id);
 const query = values => new URLSearchParams(values).toString();
 function showMessage(id, text) { const node=q(id); if(node) node.textContent=text; }
 function showError(error, target="adminStatus") { const node=q(target);if(node){node.textContent=error?.message||String(error);node.classList.add("error-message");} }
+function setupStaffSelectors() {
+  q("newOwner").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>["paralegal","attorney","admin"].includes(s.role)).map(s=>`<option value="${esc(s.name)}">${esc(s.name)} · ${esc(s.role)}</option>`).join("");
+  q("newAttorney").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+}
 function setupMatterSelectors() {
   const data=q("matterOptions"); if(data) data.innerHTML=adminMatters.map(m=>`<option value="${esc(m.id)}">${esc(m.client_name)}</option>`).join("");
   for(const id of ["commMatter","taskFilter","taskMatter"]) { const select=q(id); if(!select) continue; const previous=select.value; select.innerHTML=`<option value="">${id==="taskFilter"?"All matters":"Select a matter"}</option>`+adminMatters.map(m=>`<option value="${esc(m.id)}">${esc(m.id)} — ${esc(m.client_name)}</option>`).join(""); if(previous) select.value=previous; }
-  const owners=[...new Set(adminMatters.flatMap(m=>[m.owner,m.attorney_reviewer]).filter(Boolean))], ownerSelect=q("taskOwner"), owner=ownerSelect?.value;
-  if(ownerSelect){ownerSelect.innerHTML='<option value="">Select owner</option>'+owners.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join("");if(owners.includes(owner))ownerSelect.value=owner;}
+  const ownerSelect=q("taskOwner"), owner=ownerSelect?.value;
+  if(ownerSelect){ownerSelect.innerHTML='<option value="">Select owner</option>'+staffList.filter(s=>["paralegal","attorney","admin"].includes(s.role)).map(s=>`<option value="${esc(s.name)}">${esc(s.name)} · ${esc(s.role)}</option>`).join("");if(staffList.some(s=>s.name===owner))ownerSelect.value=owner;}
 }
 async function loadTasks() {
   try {
@@ -237,6 +281,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   q("matterModal")?.addEventListener("close",()=>{q("matterForm").reset();q("adminOut").textContent="";});
   q("matterModal")?.addEventListener("click",event=>{if(event.target===q("matterModal"))closeModal("matterModal")});
   q("closeHistory")?.addEventListener("click",()=>q("historyDialog").close());
+  q("closeReview")?.addEventListener("click",()=>q("reviewDialog").close());
+  q("approveDrafts")?.addEventListener("click",()=>submitWorkflowReview("attorney_approved"));
+  q("requestChanges")?.addEventListener("click",()=>submitWorkflowReview("attorney_changes"));
   q("taskFilter")?.addEventListener("change",loadTasks);
   q("commMatter")?.addEventListener("change",loadCommunications);
   q("refreshAudit")?.addEventListener("click",loadAudit);

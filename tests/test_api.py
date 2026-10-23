@@ -260,6 +260,44 @@ def test_client_workflow_isolation_and_staff_queue_authorization():
     assert c.get("/my-workflow",headers={"Authorization":"Bearer "+c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()["token"]}).status_code == 200
 
 
+def test_staff_assignment_authorization_approval_attribution_and_change_notes():
+    from app import users, hash_pw, matters, workflows
+    attorney_ids=[]
+    for email,name in [("assigned@example.com","Assigned Attorney"),("other@example.com","Other Attorney")]:
+        uid=str(uuid.uuid4()); attorney_ids.append(uid)
+        users[email]={"id":uid,"name":name,"email":email,"role":"attorney","password_hash":hash_pw("test-password"),"created_at":datetime.datetime.utcnow().isoformat()}
+    client=c.post("/auth/signup",json={"name":"Fictional Client","email":"review-client@example.com","password":"long-secure-password"}).json()
+    ch={"Authorization":"Bearer "+client["token"]}
+    assigned=c.post("/auth/login",json={"email":"assigned@example.com","password":"test-password"}).json()
+    ah={"Authorization":"Bearer "+assigned["token"]}
+    other=c.post("/auth/login",json={"email":"other@example.com","password":"test-password"}).json()
+    oh={"Authorization":"Bearer "+other["token"]}
+    assert c.get("/staff").status_code==401
+    staff=c.get("/staff",headers=ah)
+    assert staff.status_code==200 and all(u["role"] in {"paralegal","attorney","admin"} for u in staff.json())
+    matter=c.post("/matters",json={"client_name":"Fictional Matter","attorney_reviewer":attorney_ids[0]},headers=ah).json()
+    mid=matter["id"]
+    assert c.patch(f"/matters/{mid}",json={"attorney_reviewer":"fake"},headers=ah).status_code==400
+    assert c.get(f"/matters/{mid}",headers=ah).json()["attorney_reviewer"]==attorney_ids[0]
+    workflow=c.post("/workflows",json={},headers=ch).json(); wid=workflow["id"]
+    workflows[wid]["matter_id"]=mid; workflows[wid]["conflict_status"]="cleared"; workflows[wid]["stage"]="attorney_review"
+    doc={"id":str(uuid.uuid4()),"matter_id":mid,"workflow_id":wid,"name":"Trust","version":1,"status":"Client Review","content":"Complete terms"}
+    from app import documents
+    documents[doc["id"]]=doc; workflows[wid]["drafts"]={"Trust":{"document_id":doc["id"],"content":doc["content"]}}
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=oh).status_code==403
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_changes"},headers=ah).status_code==400
+    requested=c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_changes","note":"Clarify the trustee powers."},headers=ah)
+    assert requested.status_code==200 and requested.json()["staff_review_note"]=="Clarify the trustee powers."
+    workflows[wid]["stage"]="attorney_review"; doc["status"]="Client Review"
+    doc["content"]="[ATTORNEY TO COMPLETE — trustee powers]"
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah).status_code==409
+    doc["content"]="Completed trust draft"
+    approved=c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah)
+    assert approved.status_code==200 and approved.json()["approved_by"]==attorney_ids[0] and approved.json()["approved_at"]
+    assert doc["status"]=="Attorney Approved"
+    assert c.patch(f"/documents/{doc['id']}",json={"status":"Attorney Approved"},headers=ah).status_code==403
+
+
 def test_workflow_attorney_consultation_and_signing_gates():
     from app import users, hash_pw
     users["attorney@example.com"]={"id":str(uuid.uuid4()),"name":"Test Attorney","email":"attorney@example.com","role":"attorney","password_hash":hash_pw("attorney-test-password"),"created_at":datetime.datetime.utcnow().isoformat()}
@@ -272,6 +310,8 @@ def test_workflow_attorney_consultation_and_signing_gates():
     c.post(f"/workflows/{wid}/drafts",headers=h)
     c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=h)
     attorney=c.post("/auth/login",json={"email":"attorney@example.com","password":"attorney-test-password"}).json(); ah={"Authorization":"Bearer "+attorney["token"]}
+    from app import workflows, matters
+    matters[workflows[wid]["matter_id"]]["attorney_reviewer"]=users["attorney@example.com"]["id"]
     approved = c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah)
     assert approved.status_code==200
     client_docs = c.get("/documents",headers=h).json()
@@ -530,4 +570,5 @@ def test_attorney_demo_drafts_are_attorney_only_and_do_not_advance_workflow(monk
     second=c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ah).json()
     docs=[d for d in backend.documents.values() if d.get("workflow_id")==wid and d.get("attorney_only")]
     assert sorted((d["version"],d["status"]) for d in docs)==[(1,"Superseded"),(2,"Attorney Review")]
+    assert next(d for d in docs if d["version"]==1)["replaced_by_version"]==2
     assert second["drafts"]["Pour-over will"]["version"]==2
