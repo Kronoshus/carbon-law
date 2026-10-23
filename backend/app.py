@@ -694,7 +694,7 @@ def reopen_workflow_section(workflow_id: str, req: WorkflowSection, authorizatio
     if req.part == 1:
         workflow["conflict_status"] = "pending"
         workflow["conflict_reviewed_at"] = None
-    elif workflow.get("conflict_status") not in {"cleared", "demo_cleared"}:
+    elif req.part > 2 and workflow.get("conflict_status") not in {"cleared", "demo_cleared"}:
         raise HTTPException(409, "Complete conflict review first")
     workflow["stage"] = stages[req.part]
     if req.part <= 4:
@@ -853,7 +853,7 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
     workflow = workflows.get(workflow_id)
     if not workflow: raise HTTPException(404, "request not found")
     if req.decision == "conflict_cleared":
-        if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict review is not pending")
+        if workflow["conflict_status"] != "pending": raise HTTPException(409, "Conflict review is not pending")
         workflow["conflict_status"] = "cleared"; workflow["conflict_reviewed_at"] = now_iso(); workflow["stage"] = "document_selection"
     elif req.decision == "conflict_flagged":
         workflow["conflict_status"] = "flagged"; workflow["stage"] = "conflict_hold"
