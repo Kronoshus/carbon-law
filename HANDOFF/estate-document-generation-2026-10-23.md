@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-23  
 **Repo:** `/home/dkkm10/carbon-law-gh`  
-**Branch:** `main`; current HEAD `95e95c9` (`Update estate generation handoff for attorney portal`), one local commit ahead of `origin/main` (`0707e99`). Check `git status` and remote state before editing or pushing. Working tree was clean at last check.
+**Branch:** `main`; implementation commit `c262662` (`feat: add attorney estate demo drafts`) is pushed to `origin/main`. Frontend GitHub Pages deployment succeeded; Render backend auto-deployed the commit and was separately restarted following the production reset. Check `git status` and remote state before editing. Production data state and credential incident are documented in `HANDOFF/README.md`.
 **Goal:** In the attorney-accessible firm side only (`https://carbon.bailment.tech/admin.html`), let authorized attorneys generate four document-shaped California estate-plan demo drafts from a client’s approved intake/Beam summary before initial consultation: revocable living trust, pour-over will, advance health care directive, and financial power of attorney.
 
 ## User’s current decisions
@@ -16,15 +16,15 @@
 
 ## Current implementation / safeguards
 
-- `templates/california/` contains summary/checklist content, not operative legal instruments. Existing templates cannot be represented as valid forms. Four runtime Beam prompts live at `prompt-library/prompts/california/carbon-law/` and explicitly request attorney-review drafts with placeholders.
-- `backend/app.py` currently exposes client-authenticated `POST /workflows/{id}/drafts` (`generate_workflow_drafts`, around lines 903–926). It renders the current summary/checklists, calls Beam in `demo_mode`, stores versioned document records and transitions to client review. **Do not just repurpose it for attorney-side generation.** Add a separate attorney/admin-only endpoint, use the existing staff auth and workflow readiness gates, and only make the action available in `web/admin.js`/`web/admin.html` to attorney/admin roles. Paralegals and clients must not invoke generation. The user specifically limited new generation UI to `/admin.html`.
+- `templates/california/` retains legacy summaries/checklists. Four illustrative attorney-review demo templates are in `templates/california/demo/`; see its README for the unverified-law caveat. Four runtime Beam prompts remain in `prompt-library/prompts/california/carbon-law/` for the legacy client summary workflow.
+- `backend/app.py` retains client-authenticated `POST /workflows/{id}/drafts` for the prior summary/checklist flow. The separate attorney/admin-only `POST /workflows/{id}/attorney-demo-drafts` creates versioned attorney-only document drafts from the workflow intake and preserves workflow stage. The staff action is in `web/admin.js` on `/admin.html`; paralegals and clients are denied. `/documents` returns content to attorneys/admins; the admin Documents table has an Open document disclosure. Metadata-only rows have no generated text and are labeled as such; this UI does not backfill old records.
 - Existing staff workflow review is `PATCH /workflows/{id}/staff-review`; attorney/admin approval is separately gated; preserve current client review and attorney review flows and never change approval/stage as a side effect of model output. Existing document records are versioned and superseded by matter + document name; preserve this behavior unless tests prove a narrow correction necessary.
 - Scope/ownership warning from reviewer: no evident per-matter attorney ACL exists; staff workflow queue is firm-wide. Do not invent a new permission model, but verify existing staff access assumptions and avoid cross-client leakage. If attorney-only is a firm-wide role, enforce attorney/admin role on backend and do not trust client-controlled `demo_mode` or payload role.
 - Keep audit events (actor, action, workflow/document/version) without prompt, intake, model response, sensitive health/financial data, or secrets.
 - Keep outputs untrusted; use fixed document-specific prompts, delimit intake as data, enforce labels outside model output, validate/reject empty or malformed response, and don’t partially write records on failure. Model text must not be able to remove labels or mark approval.
 - Privacy: `backend/app.py` currently loads local `~/.config/carbon-law/beam.env`; never print/log/commit/share Beam credentials and do not change Render secrets. Use only fictional fixtures with mocked Beam in automated tests. The existing handoff reports prior fictional Beam smoke tests; do not repeat hosted calls with any real intake.
 
-## Legal research status — not yet sufficient to claim verified law
+## Legal research status — not verified
 
 A research agent identified likely relevant provisions, but official California Legislature pages returned 403/Cloudflare during retrieval, so the exact current text and amendments were **not successfully verified**. Treat these as research leads only, not verified authority. Before drafting the demo form content, obtain and cite one authoritative source per issue, preferably direct official California Legislative Information statutes, recording source URL and access date; where official access remains unavailable, report the blocker and do not falsely claim verification.
 
@@ -48,6 +48,15 @@ A CourtListener MCP connection appeared in the environment, but tool discovery f
 7. Add focused tests: client/paralegal denied; attorney/admin allowed only at ready state; conflict and incomplete intake gates; Beam not invoked on denials; fixed prompt/form per requested type; fictional/minimal payload; labels survive adversarial model output; failures are atomic; version/supersession; audit without content/PII; clients cannot read attorney-side draft; existing review approval transitions remain unchanged.
 8. Run all project tests/checks, inspect `git diff`, then report **implemented, tested, pushed, deployed** as separate bullets. Do not claim push/deploy unless actually done. Never print, commit, or share Beam credentials. Do not change Render configuration absent authorization.
 
+## Implementation and production reset status
+
+- Implemented and pushed at `c262662`; Pages deployment succeeded. Render auto-deployed the same commit. The backend was restarted after clearing production data.
+- Production Neon project `Bailment.tech`, branch `production`, database `carbon_law` was cleared transactionally on 2026-10-23. Only `users` was preserved (3 accounts); sessions and all application collections were emptied. Aggregate verification showed zero entries in all non-user collections; Render `/health` returned `ok` after restart.
+- Local `backend/carbon.db` collections were also cleared except `users` (29 local accounts). `/mnt/c/Users/bestf/Desktop/matters.csv` was reduced to header only.
+- The user explicitly asked to preserve accounts; do not delete or reset `users`. Sessions were cleared, so sign-in may be required again.
+- Admin Documents now shows stored content via an Open document expander. The former `CL-E9D1E751`/similar documents were removed by the reset; fresh docs need to be generated through the attorney/admin workflow action. Metadata-only records cannot be converted into drafts by opening them.
+- Security follow-up: a Composio Render environment-variable response exposed values for database URL, Beam API key, and initial staff setup token in tool context. A phone alert was sent; rotate these credentials and review access. Never repeat, log, or commit the values.
+
 ## Important files
 
 - `backend/app.py`: `WORKFLOW_TEMPLATES`, `BEAM_DOCUMENT_PROMPTS`, `_beam_review_summary`, `render_workflow_document`, `generate_workflow_drafts`, `/documents`, `/workflows/{id}/staff-review`.
@@ -57,6 +66,6 @@ A CourtListener MCP connection appeared in the environment, but tool discovery f
 - `templates/california/`: current summaries/checklists only.
 - `prompt-library/prompts/california/carbon-law/`: four existing prompts.
 
-## How this work paused
+## Historical handoff
 
-A prior agent did not modify implementation. It hit a goal budget limit and then stopped instead of continuing with available context; this is not a repository blocker. Three subagents completed source, portal, and safety reviews. Their findings are recorded above. The next agent should proceed with the work, not spend the turn re-explaining the budget limitation.
+This file originated as a pre-implementation task handoff. Its initial legal research leads and staged implementation plan are historical; the current implementation and production reset state above supersede those pending-action items. The legal verification caveat remains active.
