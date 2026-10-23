@@ -636,6 +636,15 @@ def ensure_workflow_matter(workflow):
     return matter
 
 
+@app.get("/my-workflows")
+def my_workflows(authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    owned = [workflow for workflow in workflows.values() if workflow["client_user_id"] == user["id"]]
+    for workflow in owned:
+        ensure_workflow_matter(workflow)
+    return sorted(owned, key=lambda workflow: workflow["created_at"], reverse=True)
+
+
 @app.get("/my-workflow")
 def my_workflow(authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization)

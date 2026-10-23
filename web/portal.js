@@ -44,27 +44,33 @@ async function loadPlanningRequest() {
   const box = el("planningRequest");
   if (!box) return;
   try {
-    const workflow = await request("/my-workflow");
-    if (Array.isArray(workflow)) throw new Error("Unexpected workflow response");
-    if (!workflow) {
+    const workflows = await request("/my-workflows");
+    if (!workflows.length) {
       const matter = matters[0];
       box.innerHTML = matter ? `<h3>${esc(matter.client_name)}’s matter</h3><p><strong>Matter:</strong> ${esc(matter.id)}</p><p><strong>Status:</strong> ${esc(matter.stage)}</p><p><a href="intake.html">Start a planning request</a></p>` : `No planning request yet. <a href="intake.html">Start an intake</a>`;
       return;
     }
-    const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
-    const consultation = formatAppointmentTime(workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at);
-    const signing = formatAppointmentTime(workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at);
-    const cancel = ["consultation", "signing"].filter(kind => workflow.appointments?.[kind] && !["cancelled", "Cancelled"].includes(workflow.appointments[kind].status)).map(kind => `<button class="btn secondary" data-cancel-appointment="${kind}">Cancel ${kind}</button>`).join(" ");
-    box.innerHTML = `<h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p><p><strong>Consultation:</strong> ${esc(consultation)}</p><p><strong>Signing:</strong> ${esc(signing)}</p>${cancel}<p><button class="btn" id="editPlanningRequest">Modify planning request</button></p>`;
+    box.innerHTML = workflows.map(workflow => {
+      const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
+      const appointmentLine = kind => {
+        const appointment = workflow.appointments?.[kind];
+        const value = appointment?.scheduled_at || appointment?.requested_at;
+        const status = appointment?.status === "requested" ? " <span class=\"badge\">Pending approval</span>" : appointment?.status === "scheduled" ? " <span class=\"badge\">Approved</span>" : appointment?.status === "cancelled" ? " <span class=\"badge\">Cancelled</span>" : "";
+        return `<p><strong>${kind === "consultation" ? "Consultation" : "Signing"}:</strong> ${esc(formatAppointmentTime(value))}${status}</p>`;
+      };
+      const cancel = ["consultation", "signing"].filter(kind => workflow.appointments?.[kind] && !["cancelled", "Cancelled"].includes(workflow.appointments[kind].status)).map(kind => `<button class="btn secondary" data-cancel-appointment="${esc(workflow.id)}:${kind}">Cancel ${kind}</button>`).join(" ");
+      return `<article class="planning-request"><h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p>${appointmentLine("consultation")}${appointmentLine("signing")}${cancel}<p><button class="btn" data-edit-workflow="${esc(workflow.id)}">Modify planning request</button></p></article>`;
+    }).join('<hr>');
     box.querySelectorAll("[data-cancel-appointment]").forEach(button => button.onclick = async () => {
-      try { await request(`/workflows/${workflow.id}/cancel-appointment`, "POST", {decision:"cancel",note:button.dataset.cancelAppointment}); await loadPlanningRequest(); }
+      const [workflowId, kind] = button.dataset.cancelAppointment.split(":");
+      try { await request(`/workflows/${workflowId}/cancel-appointment`, "POST", {decision:"cancel",note:kind}); await loadPlanningRequest(); }
       catch (error) { showToast("Could not cancel appointment: " + error.message); }
     });
-    el("editPlanningRequest").onclick = async () => {
-      try { await request(`/workflows/${workflow.id}/edit`, "POST", {}); location.href = "intake.html"; }
+    box.querySelectorAll("[data-edit-workflow]").forEach(button => button.onclick = async () => {
+      try { await request(`/workflows/${button.dataset.editWorkflow}/edit`, "POST", {}); location.href = "intake.html"; }
       catch (error) { showToast("Could not edit request: " + error.message); }
-    };
-  } catch (error) { box.textContent = "Could not load your planning request: " + error.message; }
+    });
+  } catch (error) { box.textContent = "Could not load your planning requests: " + error.message; }
 }
 
 async function loadWorkflowAppointments() {

@@ -154,6 +154,18 @@ def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=staff_headers).status_code == 403
 
 
+def test_client_portal_lists_all_planning_workflows():
+    client = c.post("/auth/signup",json={"name":"Multi Plan","email":"multi-plan@example.com","password":"long-secure-password"}).json()
+    headers={"Authorization":"Bearer "+client["token"]}
+    first=c.post("/workflows",json={"related_names":["First Person"]},headers=headers).json()
+    second=c.post("/workflows",json={"related_names":["Second Person"]},headers=headers).json()
+    listed=c.get("/my-workflows",headers=headers)
+    assert listed.status_code==200
+    assert {workflow["id"] for workflow in listed.json()} == {first["id"],second["id"]}
+    stranger=c.post("/auth/signup",json={"name":"Other","email":"multi-plan-other@example.com","password":"long-secure-password"}).json()
+    assert c.get("/my-workflows",headers={"Authorization":"Bearer "+stranger["token"]}).json()==[]
+
+
 def test_client_workflow_isolation_and_staff_queue_authorization():
     one = c.post("/auth/signup",json={"name":"One","email":"oneflow@example.com","password":"long-secure-password"}).json()
     two = c.post("/auth/signup",json={"name":"Two","email":"twoflow@example.com","password":"long-secure-password"}).json()
