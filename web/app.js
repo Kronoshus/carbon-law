@@ -11,8 +11,15 @@ const DASHBOARD_API = "https://carbon-law.onrender.com";
 async function request(path, method="GET", body=null) {
   const opts = { method, headers: {"Content-Type":"application/json", ...(getToken() ? {Authorization:"Bearer "+getToken()} : {})} };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(DASHBOARD_API + path, opts);
-  if (!res.ok) throw new Error(await res.text());
+  let res;
+  try { res = await fetch(DASHBOARD_API + path, opts); }
+  catch (_) { throw new Error("Could not reach the Carbon backend. Check your connection and try again."); }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) throw new Error("Your session has expired. Sign in again to continue.");
+    if (res.status === 403) throw new Error("Your account does not have staff access to this report.");
+    throw new Error(data.detail || `Backend request failed (${res.status}).`);
+  }
   return res.json();
 }
 
@@ -20,8 +27,12 @@ let matters = [];
 async function load() {
   try {
     matters = await request("/matters");
+    document.getElementById("backendError")?.remove();
   } catch (e) {
     matters = [];
+    let error = document.getElementById("backendError");
+    if (!error) { error = document.createElement("p"); error.id = "backendError"; error.className = "intake-error"; document.querySelector(".main-content").prepend(error); }
+    error.textContent = e.message;
   }
   populateFilters();
   render();
@@ -73,7 +84,7 @@ async function loadReport() {
     const report = await request("/reports/friday");
     renderReportSummary(report);
   } catch (e) {
-    document.getElementById("report").textContent = "Backend unavailable.";
+    document.getElementById("report").textContent = e.message;
   }
 }
 document.addEventListener("DOMContentLoaded", () => {
@@ -89,9 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("genReport");
   if (btn) btn.addEventListener("click", async () => {
+    btn.disabled = true;
     try {
       const report = await request("/reports/friday");
       renderReportSummary(report);
-    } catch (e) { }
+    } catch (e) {
+      document.getElementById("report").textContent = e.message;
+    } finally { btn.disabled = false; }
   });
 });
