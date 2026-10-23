@@ -725,7 +725,7 @@ def edit_workflow(workflow_id: str, authorization: Optional[str]=Header(None)):
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
     if workflow["stage"] not in {"client_review", "attorney_review", "consultation", "signing", "complete", "draft_ready"}: raise HTTPException(409, "Request cannot be edited at this stage")
-    workflow["stage"] = "document_selection"
+    workflow["stage"] = "intake"
     workflow["client_approved"] = False
     workflow["attorney_approved"] = False
     workflow["drafts"] = {}

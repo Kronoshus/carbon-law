@@ -29,7 +29,6 @@ async function load() {
   if (!token) { window.location.href = "login.html"; return; }
   try { matters = await request("/my-matters"); } catch(e){ matters=[]; if (el("matterDetail")) el("matterDetail").textContent = "Could not load matters: " + e.message; showToast("Backend unavailable"); }
   renderMatterSelects();
-  renderDetail();
   await loadPlanningRequest();
   loadDocs();
   if (currentUser && currentUser.role !== "client") loadReport();
@@ -45,9 +44,6 @@ async function loadPlanningRequest() {
       box.innerHTML = matter ? `<h3>${esc(matter.client_name)}’s matter</h3><p><strong>Matter:</strong> ${esc(matter.id)}</p><p><strong>Status:</strong> ${esc(matter.stage)}</p><p><a href="intake.html">Start a planning request</a></p>` : `No planning request yet. <a href="intake.html">Start an intake</a>`;
       return;
     }
-    const matter = matters.find(item => item.id === workflow.matter_id);
-    if (matter) el("matterSelect").value = matter.id;
-    renderDetail();
     const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
     const consultation = workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at || "Not requested";
     const signing = workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at || "Not requested";
@@ -65,31 +61,10 @@ async function loadPlanningRequest() {
 }
 
 function renderMatterSelects() {
-  const options = el("matterOptions");
-  if (options) options.innerHTML = matters.map(m=>`<option value="${esc(m.id)}">${esc(m.client_name)}</option>`).join("");
   for (const id of ["crMatter", "apptMatter"]) {
     const input = el(id);
     if (input && matters.length === 1 && !input.value) input.value = matters[0].id;
   }
-}
-function renderDetail() {
-  const id = el("matterSelect")?.value;
-  const m = matters.find(x=>x.id===id);
-  const box = el("matterDetail");
-  if (!box) return;
-  if (!m) { box.innerHTML = "No matter selected."; return; }
-  box.innerHTML = `<div class="card"><h3>${esc(m.id)} — ${esc(m.client_name)}</h3>
-  <p><strong>Stage:</strong> ${esc(m.stage)}</p>
-  <p><strong>Owner:</strong> ${esc(m.owner)}</p>
-  <p><strong>Attorney Reviewer:</strong> ${esc(m.attorney_reviewer||"Unassigned")}</p>
-  <p><strong>Due Date:</strong> ${esc(m.due_date||"TBD")}</p>
-  <p><strong>Risk:</strong> ${esc(m.risk_level)} | <strong>Priority:</strong> ${esc(m.priority)}</p>
-  <p><strong>Document Status:</strong> ${esc(m.document_status)}</p>
-  <p><strong>Title Status:</strong> ${esc(m.title_status)}</p>
-  <p><strong>Funding Status:</strong> ${esc(m.funding_status)}</p>
-  <p><strong>Appointment Status:</strong> ${esc(m.appointment_status)}</p>
-  <p><strong>Next Action:</strong> ${esc(m.next_action||"")}</p>
-  <p><strong>Blocker:</strong> ${esc(m.blocker||"None")}</p></div>`;
 }
 async function loadDocs() {
   try {
@@ -112,7 +87,6 @@ async function loadReport() {
 }
 document.addEventListener("DOMContentLoaded", () => {
   load();
-  el("matterSelect")?.addEventListener("input", renderDetail);
   el("changeForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (el("changeType").value === "New will") {
