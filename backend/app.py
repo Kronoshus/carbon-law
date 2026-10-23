@@ -589,7 +589,7 @@ def create_document(doc: PortalDocument, authorization: Optional[str]=Header(Non
 @app.get("/documents")
 def list_documents(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = list(documents.values()) if u["role"] in ("paralegal","attorney","admin") else [d for d in documents.values() if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") == "Client Review"]
+    out = list(documents.values()) if u["role"] in ("paralegal","attorney","admin") else [d for d in documents.values() if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") in {"Client Review", "Attorney Approved"}]
     if matter_id: out=[d for d in out if d["matter_id"]==matter_id]
     if status: out=[d for d in out if d["status"]==status]
     return out
@@ -815,14 +815,72 @@ def save_workflow_intake(workflow_id: str, req: WorkflowIntake, authorization: O
     return workflow
 
 
+WORKFLOW_TEMPLATES = {
+    "Revocable living trust": "revocable-living-trust-summary-template.md",
+    "Pour-over will": "pour-over-will-template.md",
+    "Advance health care directive": "healthcare-directive-checklist.md",
+    "Financial power of attorney": "financial-power-of-attorney-checklist.md",
+}
+
+
+def render_workflow_document(workflow, name):
+    template_name = WORKFLOW_TEMPLATES[name]
+    template_path = os.path.join(TEMPLATE_ROOT, template_name)
+    if not os.path.isfile(template_path):
+        raise HTTPException(503, f"The approved {name} review template is unavailable")
+    fields = {"client_name": workflow.get("client_name", ""), "client": workflow.get("client_name", "")}
+    fields.update(workflow.get("intake", {}).get("general", {}))
+    fields.update(workflow.get("intake", {}).get("documents", {}).get(name, {}))
+    aliases = {
+        "spouse_1": fields.get("client_name", ""), "spouse_2": fields.get("spouse", "Not provided"),
+        "client_names": fields.get("client_name", ""), "trust_name": fields.get("trust_name", "Not provided"),
+        "successor_trustee": fields.get("successor_trustees", fields.get("successor_trustee", "Not provided")),
+        "alternate_successor_trustee": fields.get("alternate_successor_trustee", "Not provided"),
+        "distribution_summary": fields.get("distributions", fields.get("distribution_summary", "Not provided")),
+        "minor_distribution_standard": fields.get("minor_distribution_standard", "Not provided"),
+        "funding_plan": fields.get("asset_categories", fields.get("funding_plan", "Not provided")),
+        "executor": fields.get("executor", "Not provided"), "guardian": fields.get("guardian", "Not provided"),
+        "alternate_guardian": fields.get("alternate_guardian", "Not provided"),
+        "healthcare_agent": fields.get("health_agent", fields.get("healthcare_agent", "Not provided")),
+        "alternate_healthcare_agent": fields.get("alternate_health_agent", "Not provided"),
+        "hipaa_status": fields.get("hipaa_status", "Not provided"),
+        "end_of_life_notes": fields.get("end_of_life_notes", "Not provided"),
+        "agent": fields.get("financial_agent", fields.get("agent", "Not provided")),
+        "alternate_agent": fields.get("alternate_financial_agent", fields.get("alternate_agent", "Not provided")),
+        "authority_scope": fields.get("authority_scope", "Not provided"),
+        "gifting_authority": fields.get("gifting_authority", "Not provided"),
+        "real_property_authority": fields.get("real_property_authority", "Not provided"),
+        "trust_date": fields.get("trust_date", "Not provided"),
+    }
+    import re
+    body = re.sub(r"{{\s*([a-zA-Z0-9_]+)\s*}}", lambda match: str(aliases.get(match.group(1), fields.get(match.group(1), "Not provided")) or "Not provided"), open(template_path, encoding="utf-8").read())
+    label = "DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\n" if workflow.get("demo_mode") else ""
+    return label + "DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\nThis working summary/checklist is not an executed or execution-ready legal instrument.\n\n" + body
+
+
 @app.post("/workflows/{workflow_id}/drafts")
 def generate_workflow_drafts(workflow_id: str, authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"client"})
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
     if workflow["conflict_status"] not in {"cleared", "demo_cleared"} or workflow["stage"] != "draft_ready": raise HTTPException(409, "Conflict review and completed intake are required")
-    workflow["drafts"] = {name:{"status":"Review draft","content":"DRAFT FOR ATTORNEY REVIEW — NOT FOR SIGNING\n\n" + json.dumps({"document":name,"intake":workflow["intake"]},indent=2)} for name in workflow["documents_requested"]}
-    workflow["stage"] = "client_review"; workflow["updated_at"] = now_iso(); save_data()
+    rendered = {name: render_workflow_document(workflow, name) for name in workflow["documents_requested"]}
+    matter = ensure_workflow_matter(workflow)
+    generated = {}
+    for name, content in rendered.items():
+        existing = [d for d in documents.values() if d.get("matter_id") == matter["id"] and d.get("name") == name]
+        for prior in existing:
+            if prior.get("status") in {"Client Review", "Attorney Review"}:
+                prior["status"] = "Superseded"
+        record = {"id": str(uuid.uuid4()), "matter_id": matter["id"], "workflow_id": workflow_id,
+                  "name": name, "version": max((d.get("version", 0) for d in existing), default=0) + 1,
+                  "status": "Client Review", "content": content, "created_at": now_iso()}
+        documents[record["id"]] = record
+        generated[name] = {"status": "Review draft", "content": content, "document_id": record["id"], "version": record["version"]}
+    workflow["drafts"] = generated
+    workflow["stage"] = "client_review"; workflow["updated_at"] = now_iso()
+    log_audit(user["email"], "generate_review_drafts", "workflow", workflow_id, ", ".join(generated))
+    save_data()
     return workflow
 
 
@@ -832,9 +890,17 @@ def client_review_workflow(workflow_id: str, req: WorkflowDecision, authorizatio
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
     if workflow["stage"] not in {"client_review", "draft_ready"}: raise HTTPException(409, "Drafts are not ready for review")
+    if workflow["stage"] == "client_review" and req.decision == "approved":
+        workflow["stage"] = "attorney_review"
+        workflow["client_review_note"] = req.note
+        workflow["client_approved"] = True
+        workflow["updated_at"] = now_iso(); save_data(); return workflow
     if req.decision == "changes_requested":
         workflow["stage"] = "intake"
         workflow["client_approved"] = False
+        for draft in workflow.get("drafts", {}).values():
+            record = documents.get(draft.get("document_id"))
+            if record: record["status"] = "Attorney Review"
         workflow["drafts"] = {}
         workflow["client_review_note"] = req.note
         workflow["updated_at"] = now_iso(); save_data(); return workflow
@@ -909,9 +975,15 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
         if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney approval required")
         if workflow["stage"] != "attorney_review": raise HTTPException(409, "Client approval is required first")
         workflow["attorney_approved"] = True; workflow["stage"] = "consultation"
+        for draft in workflow.get("drafts", {}).values():
+            record = documents.get(draft.get("document_id"))
+            if record: record["status"] = "Attorney Approved"
     elif req.decision == "attorney_changes":
         if user["role"] not in {"attorney", "admin"}: raise HTTPException(403, "Attorney review required")
         workflow["attorney_approved"] = False; workflow["stage"] = "draft_ready"
+        for draft in workflow.get("drafts", {}).values():
+            record = documents.get(draft.get("document_id"))
+            if record: record["status"] = "Superseded"
     elif req.decision == "consultation_completed":
         if user["role"] not in {"paralegal", "attorney", "admin"}: raise HTTPException(403, "Staff access required")
         if workflow["stage"] != "consultation" or workflow.get("appointments", {}).get("consultation", {}).get("status") != "scheduled": raise HTTPException(409, "Consultation must be approved first")

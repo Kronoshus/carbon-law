@@ -193,8 +193,23 @@ def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     draft = c.post(f"/workflows/{wid}/drafts",headers=headers)
     assert draft.status_code == 200
     assert "NOT FOR SIGNING" in draft.json()["drafts"]["Pour-over will"]["content"]
+    content = draft.json()["drafts"]["Pour-over will"]["content"]
+    assert "Pour-Over Will Summary Template (California)" in content
+    assert "Executor: Example Person" in content
+    assert "{{executor}}" not in content
+    listed_docs = c.get("/documents", headers=headers).json()
+    generated = next(doc for doc in listed_docs if doc.get("workflow_id") == wid)
+    assert generated["status"] == "Client Review" and generated["content"] == content
+    stranger = c.post("/auth/signup",json={"name":"Workflow Outsider","email":"flow-outsider@example.com","password":"long-secure-password"}).json()
+    assert all(doc.get("workflow_id") != wid for doc in c.get("/documents",headers={"Authorization":"Bearer "+stranger["token"]}).json())
+    assert c.patch(f"/workflows/{wid}/client-review",json={"decision":"changes_requested","note":"Update executor"},headers=headers).status_code == 200
+    assert c.get("/documents",headers=headers).json() == []
+    c.patch(f"/workflows/{wid}/intake",json=payload,headers=headers)
+    revised = c.post(f"/workflows/{wid}/drafts",headers=headers).json()
+    assert revised["drafts"]["Pour-over will"]["version"] == 2
     assert c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=headers).status_code == 200
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=staff_headers).status_code == 403
+    assert c.get("/my-workflows",headers=headers).json()[0]["stage"] == "attorney_review"
 
 
 def test_client_portal_lists_all_planning_workflows():
@@ -233,7 +248,10 @@ def test_workflow_attorney_consultation_and_signing_gates():
     c.post(f"/workflows/{wid}/drafts",headers=h)
     c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=h)
     attorney=c.post("/auth/login",json={"email":"attorney@example.com","password":"attorney-test-password"}).json(); ah={"Authorization":"Bearer "+attorney["token"]}
-    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah).status_code==200
+    approved = c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah)
+    assert approved.status_code==200
+    client_docs = c.get("/documents",headers=h).json()
+    assert any(d.get("workflow_id") == wid and d["status"] == "Attorney Approved" for d in client_docs)
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=h).status_code==200
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==409
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=ah).status_code==200
@@ -264,6 +282,7 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     draft=c.post(f"/workflows/{demo['id']}/drafts",headers=demo_headers)
     assert draft.status_code==200
     assert draft.json()["stage"]=="client_review"
+    assert "DEMO — SIMULATION ONLY" in draft.json()["drafts"]["Pour-over will"]["content"]
     assert c.patch(f"/workflows/{demo['id']}/client-review",json={"decision":"approved"},headers=demo_headers).json()["stage"]=="attorney_review"
     assert c.post(f"/workflows/{demo['id']}/demo-attorney-review",headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["stage"]=="consultation"

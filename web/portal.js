@@ -114,7 +114,8 @@ async function loadDocs() {
     rows.innerHTML = "";
     docs.forEach(d => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}</td><td>${d.version}</td><td>${esc(d.status)}</td>`;
+      const review = d.content ? `<details><summary>View review draft</summary><pre>${esc(d.content)}</pre></details>` : "";
+      tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}${review}</td><td>${d.version}</td><td>${esc(d.status)}</td>`;
       rows.appendChild(tr);
     });
   } catch(e){}
