@@ -1,52 +1,24 @@
 # Carbon Law
 
-Carbon Law is an open, free-budget operational model and automation system for a California estate planning law firm. It combines:
+Carbon Law is a workflow prototype for California estate-planning matter operations. It provides a staff/client web interface, matter and task tracking, change requests, appointment workflows, and illustrative document-generation flows. It is not a production legal practice-management system or a substitute for attorney review.
 
-1. A practical paralegal workflow answer for taking ownership of an estate planning matter.
-2. A scalable department plan for 30 to 100 active estate planning matters.
-3. A website/app surface to track matters, tasks, attorney review, client communication, document status, appointments, and changes.
-4. A prompt-library pipeline for California estate planning documents.
-5. Interrupt/change-control rules so any matter can be modified at any time.
+## Repository
 
-## What this repository does
+- `web/` — static client and staff interface, deployed with GitHub Pages.
+- `backend/` — FastAPI service and persistence layer.
+- `docs/` — product behavior, workflow stages, implementation and deployment notes.
+- `prompt-library/` — drafting prompt specifications and prompts.
+- `templates/` — illustrative sample documents; not approved for execution.
+- `tests/` — backend/API behavior checks.
 
-- Organizes estate planning work from intake to signed documents.
-- Tracks every matter in a standard stage model.
-- Shows which matters are progressing, stalled, or need immediate attention.
-- Keeps every task, owner, due date, and blocker visible.
-- Supports interruption and change requests without losing history.
-- Automates reminders and rescheduling.
-- Maintains a realistic paralegal-style status report.
-- Aims to operate on free tools and budget-friendly automation.
+## Matter workflow
 
-## Free-budget tool stack
+Matters progress through intake, scope review, client data collection, drafting, attorney review, client review, signing preparation, execution, funding follow-up, and closure. Each matter should have an owner, next action, due date, and visible blockers. Legal decisions and document approval remain with the supervising attorney.
 
-- GitHub Pages or Vercel free tier for the web app.
-- GitHub Issues/Projects for workflow tracking.
-- Google Sheets or Airtable free tier for matter tracking if not self-hosted.
-- Cal.com free tier or Calendly free tier for scheduling.
-- ntfy.sh for free push notifications.
-- Clio Manage/Grow if already licensed; otherwise Google Workspace + open source forms.
-- CourtListener API for legal research cross-checks.
-- Juralio ideas for matter and document structure where useful.
+## Development and deployment
 
-## Operating principle
+See `docs/backend-deployment.md` for backend setup and deployment notes. The web app is deployed from `web/` through GitHub Pages. Configure the frontend API endpoint and backend secrets through the documented deployment environment; never commit client information or credentials.
 
-Every matter moves through the same named stages. Every stage has an owner, a due date, a checklist, a blocker field, and a next action. No matter skips a stage silently.
+## Prototype and data warning
 
-## Core stages
-
-1. Intake and Conflicts
-2. Attorney Scope Review
-3. Client Document Collection
-4. Trust/Wills/POA Drafting
-5. Exception and Update Intake
-6. Attorney Review and Revision
-7. Client Review and Signing Readiness
-8. Funding and Asset Transfer Guidance
-9. Execution and Notarization
-10. Closing, Delivery, and Follow-Up
-
-## Fast status reporting
-
-A Friday 4 p.m. report can be produced in about five minutes because every matter has one current stage, one owner, one due date, and one next action in a single tracker.
+Use fictional data for demos. Do not enter real client information unless the firm has approved the deployment, security controls, data handling, and applicable vendor terms. Demo estate documents and AI-generated content are illustrative and must not be used as legal instruments without attorney review.
