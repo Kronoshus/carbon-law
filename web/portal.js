@@ -38,6 +38,7 @@ async function load() {
   renderMatterSelects();
   await loadPlanningRequest();
   await loadWorkflowAppointments();
+  await loadChangeRequests();
   loadDocs();
   if (currentUser && currentUser.role !== "client") loadReport();
 }
@@ -100,6 +101,10 @@ function renderMatterSelects() {
     const input = el(id);
     if (input && matters.length === 1 && !input.value) input.value = matters[0].id;
   }
+}
+async function loadChangeRequests() {
+  const box=el("changeRequestStatus"); if(!box)return;
+  try {const items=await request("/change-requests");box.innerHTML=items.length?items.map(c=>`<article><p><strong>${esc(c.change_type)}</strong> · ${esc(c.status)}</p><p>Matter: ${esc(c.matter_id)} · Documents: ${esc(c.affected_documents||"Not specified")}</p><p>${esc(c.resolution||c.note||c.impact||"The firm will update this request as it is reviewed.")}</p></article>`).join("<hr>"):"No change requests yet."}catch(e){box.textContent="Could not load your change requests: "+e.message}
 }
 async function loadDocs() {
   try {

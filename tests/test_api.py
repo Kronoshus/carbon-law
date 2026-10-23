@@ -240,7 +240,8 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert any(a["kind"]=="consultation" and a["status"]=="Requested" and a["matter_id"]==demo["matter_id"] for a in pending_appts)
     from app import appointments
     appointments.clear()
-    assert any(a["kind"]=="consultation" and a["status"]=="Requested" for a in c.get("/appointments",headers=demo_headers).json())
+    # Reads must be side-effect free; requests are materialized at write time.
+    assert c.get("/appointments",headers=demo_headers).json() == []
     staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
     sh={"Authorization":"Bearer "+staff["token"]}
     approved=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=sh)
@@ -312,3 +313,46 @@ def test_one_time_initial_attorney_setup_is_private_and_restricted(monkeypatch):
     assert c.get("/reports/friday", headers={"Authorization":"Bearer "+result.json()["token"]}).status_code == 200
     assert c.post("/auth/initial-staff-setup", json={"name":"Kevin","email":"kmohr@prompt.law","password":"long-secure-password"}, headers={"Authorization":"Bearer test-setup-key"}).status_code == 404
     assert "INITIAL_STAFF_SETUP_TOKEN" not in os.environ
+
+def test_staff_dashboard_operations_keep_client_views_in_sync_and_private():
+    client=c.post("/auth/signup",json={"name":"Dashboard Client","email":"dashboard-client@example.com","password":"long-secure-password"}).json()
+    staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
+    ch={"Authorization":"Bearer "+client["token"]}; sh={"Authorization":"Bearer "+staff["token"]}
+    workflow=c.post("/workflows",json={"phone":"555"},headers=ch).json(); wid=workflow["id"]; mid=workflow["matter_id"]
+    # Pending requests are represented at write time; reads must not overwrite staff appointment edits.
+    from app import workflows, appointments, matters
+    workflows[wid]["conflict_status"]="cleared"; workflows[wid]["stage"]="consultation"; workflows[wid]["attorney_approved"]=True
+    workflows[wid]["appointments"]={}
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T09:00"},headers=ch).status_code==200
+    c.get("/appointments",headers=sh)
+    appt=next(a for a in appointments.values() if a.get("workflow_id")==wid and a.get("kind")=="consultation")
+    assert c.patch(f"/appointments/{appt['id']}?status=Scheduled&scheduled_at=2030-01-02T10:30",headers=sh).status_code==200
+    c.get("/appointments",headers=sh)
+    assert workflows[wid]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
+    assert c.get("/my-workflows",headers=ch).json()[0]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
+    assert c.patch(f"/matters/{mid}",json={"stage":"4 Drafting"},headers=sh).status_code==200
+    assert c.get("/my-workflows",headers=ch).json()[0]["stage"]=="draft_ready"
+    assert c.get("/my-matters",headers=ch).json()[0]["stage"] in __import__("app").STAGES
+    # Sensitive internal task and comm details never leak to clients.
+    task=c.post("/tasks",json={"matter_id":mid,"title":"Internal review"},headers=sh).json()
+    assert c.get("/tasks",headers=ch).status_code==403
+    c.post("/communications",json={"matter_id":mid,"summary":"Private note","visibility":"internal"},headers=sh)
+    c.post("/communications",json={"matter_id":mid,"summary":"Client update","visibility":"client"},headers=sh)
+    assert [x["summary"] for x in c.get(f"/communications?matter_id={mid}",headers=ch).json()]==["Client update"]
+    matters[mid].update(owner="Staff",risk_level="High",blocker="Internal",priority="Urgent",next_action="Confidential")
+    view=c.get(f"/matters/{mid}",headers=ch).json()
+    assert not {"owner","risk_level","blocker","priority","next_action","client_email"} & set(view)
+    saved=c.post(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=sh)
+    # stage synchronization leaves a valid firm stage
+    assert matters[mid]["stage"] in __import__("app").STAGES
+
+def test_change_request_status_updates_client_view_and_closes_linked_task():
+    staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json(); h={"Authorization":"Bearer "+staff["token"]}
+    matter=c.post("/matters",json={"id":"CL-CR-RESOLVE","client_name":"CR Client"},headers=h).json()
+    cr=c.post("/change-requests",json={"matter_id":matter["id"],"change_type":"Beneficiary change"},headers=h).json()
+    assert c.patch(f"/change-requests/{cr['id']}",json={"status":"Whatever"},headers=h).status_code==400
+    updated=c.patch(f"/change-requests/{cr['id']}",json={"status":"Resolved","resolution":"Completed after attorney review"},headers=h)
+    assert updated.status_code==200
+    from app import tasks
+    assert tasks[cr["task_id"]]["status"]=="Done"
+    assert c.get("/change-requests",headers=h).json()[-1]["resolution"]=="Completed after attorney review"

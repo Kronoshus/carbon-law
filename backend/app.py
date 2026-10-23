@@ -274,6 +274,7 @@ class CommEntry(BaseModel):
     channel: str = "email"
     direction: str = "outbound"
     summary: str
+    visibility: str = "internal"
 
 # ---------- helpers ----------
 def send_signup_email(to_email, client_name):
@@ -378,7 +379,8 @@ def get_matter(matter_id: str, authorization: Optional[str]=Header(None)):
     matter = matters[matter_id]
     if u["role"] not in ("paralegal","attorney","admin") and matter.get("client_user_id") != u["id"]:
         raise HTTPException(403,"matter access denied")
-    return matter if u["role"] in ("paralegal","attorney","admin") else {k:v for k,v in matter.items() if k not in {"notes", "client_email", "client_user_id"}}
+    client_fields = {"id", "client_name", "stage", "document_status", "title_status", "funding_status", "appointment_status", "created_at", "updated_at"}
+    return matter if u["role"] in ("paralegal","attorney","admin") else {k:v for k,v in matter.items() if k in client_fields}
 
 @app.patch("/matters/{matter_id}")
 def patch_matter(matter_id: str, updates: dict, authorization: Optional[str]=Header(None)):
@@ -395,8 +397,14 @@ def patch_matter(matter_id: str, updates: dict, authorization: Optional[str]=Hea
     matters[matter_id]["updated_at"]=now_iso()
     if "stage" in updates and updates["stage"] != old_stage:
         stage_history.setdefault(matter_id,[]).append(
-            {"stage":updates["stage"],"time":now_iso(),"by": (u["email"] if u else "system")})
-    log_audit((u["email"] if u else "system"),"update","matter",matter_id,str(updates))
+            {"stage":updates["stage"],"time":now_iso(),"by":u["email"]})
+        workflow_stage = {"1 Intake":"conflict_review", "2 Attorney Scope":"document_selection", "3 Client Data Collection":"intake", "4 Drafting":"draft_ready", "5 Review Queue":"attorney_review", "6 Client Review":"client_review", "7 Signing Preparation":"consultation", "8 Execution":"signing", "9 Funding Follow-Up":"signing", "10 Closed":"complete"}.get(updates["stage"])
+        for workflow in workflows.values():
+            if workflow.get("matter_id") == matter_id and workflow_stage:
+                workflow["stage"] = workflow_stage; workflow["updated_at"] = now_iso()
+                if workflow_stage in {"conflict_review", "document_selection", "intake", "draft_ready"}:
+                    workflow["client_approved"] = False; workflow["attorney_approved"] = False; workflow["drafts"] = {}
+    log_audit(u["email"],"update","matter",matter_id,str(updates))
     save_data()
     return matters[matter_id]
 
@@ -421,13 +429,14 @@ def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header
         rec["requested_by"] = u["email"]
         rec["status"] = "Open"
     rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
-    changes.append(rec)
-    # auto-create revision task
+    # auto-create revision task and retain its link for status changes
     tid = str(uuid.uuid4())
     tasks[tid] = {"id":tid,"matter_id":cr.matter_id,"title":f"Review change: {cr.change_type}",
                   "owner":matters[cr.matter_id].get("owner","Unassigned"),"due_date":None,
                   "status":"Open","blocker":"None","created_at":now_iso()}
-    log_audit("client" if not authorization else "user","create","change_request",rec["id"],cr.change_type)
+    rec["task_id"] = tid
+    changes.append(rec)
+    log_audit(u["email"],"create","change_request",rec["id"],cr.change_type)
     save_data()
     return rec
 
@@ -440,19 +449,23 @@ def list_change_requests(matter_id: Optional[str]=None, status: Optional[str]=No
     return out
 
 @app.patch("/change-requests/{request_id}")
-def update_change_request(request_id: str, status: Optional[str]=None, note: Optional[str]=None,
-                         resolution: Optional[str]=None, authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+def update_change_request(request_id: str, payload: Dict[str, Any] = Body(default={}), authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
+    allowed = {"Open", "In Review", "Resolved", "Rejected"}
+    if payload.get("status") is not None and payload["status"] not in allowed:
+        raise HTTPException(400, "invalid change request status")
+    if set(payload) - {"status", "note", "resolution"}:
+        raise HTTPException(400, "unsupported change request fields")
     for cr in changes:
-        if cr["id"]==request_id:
-            if status: cr["status"]=status
-            if note: cr["note"]=note
-            if resolution: cr["resolution"]=resolution
-            cr["updated_at"]=now_iso()
-            log_audit("user","update","change_request",request_id,status or "")
+        if cr["id"] == request_id:
+            cr.update({key:value for key,value in payload.items() if value is not None})
+            cr["updated_at"] = now_iso()
+            if payload.get("status") in {"Resolved", "Rejected"} and cr.get("task_id") in tasks:
+                tasks[cr["task_id"]]["status"] = "Done"; tasks[cr["task_id"]]["updated_at"] = now_iso()
+            log_audit(user["email"], "update", "change_request", request_id, payload.get("status", "updated"))
             save_data()
             return cr
-    raise HTTPException(404,"change request not found")
+    raise HTTPException(404, "change request not found")
 
 # appointments
 @app.post("/appointments")
@@ -474,29 +487,9 @@ def create_appointment(appt: Appointment, authorization: Optional[str]=Header(No
     save_data()
     return rec
 
-def ensure_workflow_appointment_requests():
-    changed = False
-    for workflow in workflows.values():
-        matter = ensure_workflow_matter(workflow)
-        for kind, details in workflow.get("appointments", {}).items():
-            if details.get("status") != "requested" or not details.get("requested_at"):
-                continue
-            appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow["id"] and a.get("kind") == kind), None)
-            if appointment:
-                appointment.update(scheduled_at=details["requested_at"], status="Requested")
-            else:
-                appointment = {"id":str(uuid.uuid4()),"matter_id":matter["id"],"kind":kind,"scheduled_at":details["requested_at"],
-                    "status":"Requested","note":f"Client requested {kind} appointment","workflow_id":workflow["id"],"created_at":now_iso()}
-                appointments[appointment["id"]] = appointment
-            changed = True
-    if changed:
-        save_data()
-
-
 @app.get("/appointments")
 def list_appointments(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    ensure_workflow_appointment_requests()
     out = list(appointments.values()) if u["role"] in ("paralegal","attorney","admin") else [a for a in appointments.values() if matters.get(a["matter_id"],{}).get("client_user_id")==u["id"]]
     if matter_id: out=[a for a in out if a["matter_id"]==matter_id]
     if status: out=[a for a in out if a["status"]==status]
@@ -514,30 +507,37 @@ def update_appointment(appointment_id: str, status: Optional[str]=None, note: Op
         if status != "Cancelled": raise HTTPException(403,"Clients may only cancel appointments")
     elif user["role"] not in {"paralegal","attorney","admin"}:
         raise HTTPException(403,"Staff access required")
-    if status: appointments[appointment_id]["status"]=status
-    if note: appointments[appointment_id]["note"]=note
-    if scheduled_at: appointments[appointment_id]["scheduled_at"]=scheduled_at
-    appointments[appointment_id]["updated_at"]=now_iso()
+    allowed_statuses = {"Requested", "Scheduled", "Cancelled", "Completed", "Booked", "Rescheduled"}
+    if status and status not in allowed_statuses:
+        raise HTTPException(400, "invalid appointment status")
+    if status: appointment["status"] = status
+    if note is not None: appointment["note"] = note
+    if scheduled_at: appointment["scheduled_at"] = scheduled_at
+    appointment["updated_at"] = now_iso()
     mid = appointments[appointment_id]["matter_id"]
     if mid in matters and status:
         matters[mid]["appointment_status"]=status; matters[mid]["updated_at"]=now_iso()
     if appointment.get("workflow_id") in workflows:
         workflow = workflows[appointment["workflow_id"]]
         kind = appointment.get("kind")
-        if status == "Cancelled" and kind in workflow.get("appointments", {}):
-            workflow["appointments"][kind]["status"] = "cancelled"
-        elif status == "Scheduled" and kind in workflow.get("appointments", {}):
-            workflow["appointments"][kind]["status"] = "scheduled"
-            workflow["appointments"][kind]["scheduled_at"] = appointment.get("scheduled_at")
-        workflow["updated_at"] = now_iso()
-    log_audit("user","update","appointment",appointment_id,status or "")
+        if kind in workflow.get("appointments", {}):
+            detail = workflow["appointments"][kind]
+            if status == "Cancelled": detail["status"] = "cancelled"
+            elif status in {"Scheduled", "Booked", "Rescheduled"}: detail["status"] = "scheduled"
+            if scheduled_at: detail["scheduled_at"] = scheduled_at
+            elif status in {"Scheduled", "Booked", "Rescheduled"}: detail["scheduled_at"] = appointment.get("scheduled_at")
+            workflow["updated_at"] = now_iso()
+            if status in {"Scheduled", "Booked", "Rescheduled"} and workflow["stage"] in {"consultation", "signing"}:
+                workflow["stage"] = "complete" if kind == "signing" and workflow.get("appointments", {}).get("consultation", {}).get("status") == "completed" else workflow["stage"]
+    actor = user["email"]
+    log_audit(actor,"update","appointment",appointment_id,status or ("rescheduled" if scheduled_at else "updated"))
     save_data()
     return appointments[appointment_id]
 
 # documents
 @app.post("/documents")
 def create_document(doc: PortalDocument, authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if doc.matter_id not in matters: raise HTTPException(404,"matter not found")
     # auto-version: if same name exists, increment
     existing = [d for d in documents.values() if d["matter_id"]==doc.matter_id and d["name"]==doc.name]
@@ -545,7 +545,7 @@ def create_document(doc: PortalDocument, authorization: Optional[str]=Header(Non
         doc.version = max(d["version"] for d in existing)+1
     rec = doc.model_dump(); rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
     documents[rec["id"]]=rec
-    log_audit("user","create","document",rec["id"],doc.name)
+    log_audit(user["email"],"create","document",rec["id"],doc.name)
     save_data()
     return rec
 
@@ -560,11 +560,12 @@ def list_documents(matter_id: Optional[str]=None, status: Optional[str]=None, au
 @app.patch("/documents/{doc_id}")
 def update_document(doc_id: str, status: Optional[str]=None, version: Optional[int]=None,
                    authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if doc_id not in documents: raise HTTPException(404,"document not found")
     if status: documents[doc_id]["status"]=status
     if version: documents[doc_id]["version"]=version
     documents[doc_id]["updated_at"]=now_iso()
+    log_audit(user["email"],"update","document",doc_id,status or "updated")
     save_data()
     return documents[doc_id]
 
@@ -590,11 +591,13 @@ def update_contact(contact_id: str, payload: Dict[str, Any] = Body(default={}),
     require_auth(authorization, {"paralegal","attorney","admin"})
     for c in contacts:
         if c["id"]==contact_id:
-            if "status" in payload and payload["status"] is not None:
-                c["status"]=payload["status"]
+            if payload.get("status") is not None:
+                if payload["status"] not in {"New", "Contacted", "Consultation Scheduled", "Converted", "Closed"}:
+                    raise HTTPException(400, "invalid contact status")
+                c["status"] = payload["status"]
             if "note" in payload and payload["note"] is not None:
                 c["note"]=payload["note"]
-            c["updated_at"]=now_iso(); save_data(); return c
+            c["updated_at"]=now_iso(); log_audit(user["email"],"update","contact",contact_id,str(payload)); save_data(); return c
     raise HTTPException(404,"contact not found")
 
 # intake
@@ -642,7 +645,8 @@ def my_workflows(authorization: Optional[str]=Header(None)):
     owned = [workflow for workflow in workflows.values() if workflow["client_user_id"] == user["id"]]
     for workflow in owned:
         ensure_workflow_matter(workflow)
-    return sorted(owned, key=lambda workflow: workflow["created_at"], reverse=True)
+    safe = [{k:v for k,v in workflow.items() if k not in {"staff_review_note"}} for workflow in owned]
+    return sorted(safe, key=lambda workflow: workflow["created_at"], reverse=True)
 
 
 @app.get("/my-workflow")
@@ -653,6 +657,7 @@ def my_workflow(authorization: Optional[str]=Header(None)):
     workflow = client_workflow(user)
     if workflow:
         ensure_workflow_matter(workflow)
+        return {k:v for k,v in workflow.items() if k != "staff_review_note"}
     return workflow
 
 
@@ -696,6 +701,8 @@ def reopen_workflow_section(workflow_id: str, req: WorkflowSection, authorizatio
         workflow["conflict_reviewed_at"] = None
     elif req.part > 2 and workflow.get("conflict_status") not in {"cleared", "demo_cleared"}:
         raise HTTPException(409, "Complete conflict review first")
+    if workflow.get("conflict_status") == "flagged" and req.part > 1:
+        raise HTTPException(409, "Conflict review must be resolved before continuing")
     workflow["stage"] = stages[req.part]
     if req.part <= 4:
         workflow["client_approved"] = False
@@ -757,9 +764,12 @@ def save_workflow_intake(workflow_id: str, req: WorkflowIntake, authorization: O
     if workflow["stage"] not in {"intake", "draft_ready"}: raise HTTPException(409, "Use the modify-request action before editing this intake")
     workflow["intake"] = {"general": req.general, "documents": {k:v for k,v in req.documents.items() if k in workflow["documents_requested"]}}
     if workflow.get("matter_id") in matters:
-        matters[workflow["matter_id"]]["stage"] = "3 Trust/Wills/POA Drafting"
-        matters[workflow["matter_id"]]["document_status"] = "Drafting"
-        matters[workflow["matter_id"]]["updated_at"] = now_iso()
+        matter = matters[workflow["matter_id"]]
+        if matter.get("stage") != "4 Drafting":
+            matter["stage"] = "4 Drafting"
+            stage_history.setdefault(matter["id"], []).append({"stage":"4 Drafting","time":now_iso(),"by":user["email"]})
+        matter["document_status"] = "Drafting"
+        matter["updated_at"] = now_iso()
     workflow["client_approved"] = False
     workflow["attorney_approved"] = False
     workflow["drafts"] = {}
@@ -871,6 +881,11 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
         workflow["stage"] = "complete" if workflow.get("appointments", {}).get("signing", {}).get("status") == "scheduled" else "signing"
     else: raise HTTPException(400, "Unsupported review decision")
     workflow["staff_review_note"] = req.note; workflow["updated_at"] = now_iso()
+    matter = ensure_workflow_matter(workflow)
+    matter_stage = {"conflict_review":"1 Intake", "conflict_hold":"1 Intake", "document_selection":"2 Attorney Scope", "intake":"3 Client Data Collection", "draft_ready":"4 Drafting", "client_review":"6 Client Review", "attorney_review":"5 Review Queue", "consultation":"7 Signing Preparation", "signing":"7 Signing Preparation", "complete":"10 Closed"}.get(workflow["stage"], matter.get("stage"))
+    if matter_stage and matter.get("stage") != matter_stage:
+        matter["stage"] = matter_stage; matter["updated_at"] = now_iso()
+        stage_history.setdefault(matter["id"], []).append({"stage":matter_stage,"time":now_iso(),"by":user["email"]})
     log_audit(user["email"], "review", "workflow", workflow_id, req.decision); save_data(); return workflow
 
 
@@ -898,7 +913,7 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
     elif user["role"] in {"paralegal", "attorney", "admin"}:
         matter = ensure_workflow_matter(workflow)
         workflow["appointments"][kind] = {"scheduled_at":at,"status":"scheduled"}
-        appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow_id and a.get("kind") == kind), None)
+        appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow_id and a.get("kind") == kind and a.get("status") != "Cancelled"), None)
         if appointment:
             appointment.update(scheduled_at=at,status="Scheduled",note=f"{kind.title()} approved by staff",updated_at=now_iso())
         else:
@@ -915,16 +930,17 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
 # tasks
 @app.post("/tasks")
 def create_task(t: Task, authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if t.matter_id not in matters: raise HTTPException(404,"matter not found")
     tid = str(uuid.uuid4())
     rec = t.model_dump(); rec["id"]=tid; rec["created_at"]=now_iso()
-    tasks[tid]=rec; save_data(); return rec
+    tasks[tid]=rec; log_audit(user["email"],"create","task",tid,t.title); save_data(); return rec
 
 @app.get("/tasks")
 def list_tasks(matter_id: Optional[str]=None, status: Optional[str]=None, owner: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = list(tasks.values()) if u["role"] in ("paralegal","attorney","admin") else [t for t in tasks.values() if matters.get(t["matter_id"],{}).get("client_user_id")==u["id"]]
+    if u["role"] == "client": raise HTTPException(403, "Tasks are staff-only")
+    out = list(tasks.values())
     if matter_id: out=[t for t in out if t["matter_id"]==matter_id]
     if status: out=[t for t in out if t["status"]==status]
     if owner: out=[t for t in out if t["owner"]==owner]
@@ -933,26 +949,27 @@ def list_tasks(matter_id: Optional[str]=None, status: Optional[str]=None, owner:
 @app.patch("/tasks/{task_id}")
 def update_task(task_id: str, payload: Dict[str, Any] = Body(default={}),
                 authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if task_id not in tasks: raise HTTPException(404,"task not found")
     for k in ("status","owner","due_date","blocker"):
         if k in payload and payload[k] is not None:
             tasks[task_id][k]=payload[k]
-    tasks[task_id]["updated_at"]=now_iso(); save_data()
+    tasks[task_id]["updated_at"]=now_iso(); log_audit(user["email"],"update","task",task_id,str(payload)); save_data()
     return tasks[task_id]
 
 # comms
 @app.post("/communications")
 def create_comm(c: CommEntry, authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if c.matter_id not in matters: raise HTTPException(404,"matter not found")
+    if c.visibility not in {"internal", "client"}: raise HTTPException(400, "invalid communication visibility")
     rec = c.model_dump(); rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
-    comms.append(rec); save_data(); return rec
+    comms.append(rec); log_audit(user["email"],"create","communication",rec["id"],c.channel); save_data(); return rec
 
 @app.get("/communications")
 def list_comms(matter_id: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = list(comms) if u["role"] in ("paralegal","attorney","admin") else [c for c in comms if matters.get(c["matter_id"],{}).get("client_user_id")==u["id"]]
+    out = list(comms) if u["role"] in ("paralegal","attorney","admin") else [c for c in comms if c.get("visibility") == "client" and matters.get(c["matter_id"],{}).get("client_user_id")==u["id"]]
     if matter_id: out=[c for c in out if c["matter_id"]==matter_id]
     return out
 
@@ -1037,7 +1054,8 @@ def my_matters(authorization: Optional[str]=Header(None)):
     client_workflows = [w for w in workflows.values() if w["client_user_id"] == u["id"]]
     for workflow in client_workflows:
         ensure_workflow_matter(workflow)
-    return [{k:v for k,v in m.items() if k not in {"notes", "client_email", "client_user_id"}} for m in matters.values() if m.get("client_user_id")==u["id"]]
+    client_fields = {"id", "client_name", "stage", "document_status", "title_status", "funding_status", "appointment_status", "created_at", "updated_at"}
+    return [{k:v for k,v in m.items() if k in client_fields} for m in matters.values() if m.get("client_user_id")==u["id"]]
 
 # prompts/templates
 @app.get("/prompts")
@@ -1103,7 +1121,7 @@ def friday_report(authorization: Optional[str]=Header(None)):
         "overdue_count": len(overdue),
         "open_change_requests": len([c for c in changes if c.get("status")=="Open"]),
         "open_tasks": len([t for t in tasks.values() if t.get("status")=="Open"]),
-        "appointments_pending": len([a for a in appointments.values() if a.get("status") in ("Booked","Rescheduled")]),
+        "appointments_pending": len([a for a in appointments.values() if a.get("status") in ("Booked","Rescheduled","Requested")]),
     }
 
 @app.get("/reports/capacity")

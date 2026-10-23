@@ -14,10 +14,13 @@
       <a href="admin.html" class="active">Staff Dashboard</a>
       <a href="portal.html">Client Portal</a>
       <a href="prompts.html">Prompt Library</a>
+      <a href="#workQueue">Work Queue</a><a href="#contacts">Client Contacts</a><a href="#communications">Communications</a><a href="#reportsRecords">Reports &amp; Records</a><a href="#practiceLibrary">Practice Library</a>
     </nav>
     <div class="user-box" id="userBox"></div>
   </aside>
   <main class="main-content">
+    <datalist id="matterOptions"></datalist>
+    <dialog id="historyDialog"><h2 id="historyTitle">Matter history</h2><div id="historyContent"></div><button class="btn secondary" id="closeHistory">Close</button></dialog>
     <div class="topbar"><h1>Staff Dashboard</h1>
       <div class="actions">
         <button class="btn sm" onclick="openModal('matterModal')">+ New Matter</button>
@@ -77,7 +80,7 @@
         </div>
       </div>
       <div class="section">
-        <h2>Appointments</h2>
+        <h2>Appointments</h2><p id="appointmentMessage" role="status"></p>
         <div class="card" style="padding:0;">
           <div class="table-wrap"><table>
             <thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead>
@@ -97,6 +100,27 @@
       </div>
     </div>
 
+    <div class="section">
+      <h2 id="workQueue">Work Queue</h2>
+      <div class="grid2">
+        <div class="card"><h3>Create task</h3><form id="taskForm"><div class="form-row"><label>Matter<input id="taskMatter" list="matterOptions" required></label><label>Owner<input id="taskOwner" required></label></div><label>Task<input id="taskTitle" maxlength="200" required></label><div class="form-row"><label>Due date<input id="taskDue" type="date"></label><label>Blocker<input id="taskBlocker" value="None" maxlength="300"></label></div><button class="btn sm">Add task</button></form><p id="taskMessage" role="status"></p></div>
+        <div class="card"><h3>Active tasks</h3><label>Filter by matter <select id="taskFilter"><option value="">All matters</option></select></label><div class="table-wrap"><table><thead><tr><th>Matter</th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Blocker</th></tr></thead><tbody id="taskRows"></tbody></table></div></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2 id="contacts">Client contacts</h2><div class="card table-wrap"><table><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Phone</th><th>Request</th><th>Status</th><th>Staff note</th><th>Save</th></tr></thead><tbody id="contactRows"></tbody></table></div><p id="contactMessage" role="status"></p>
+    </div>
+    <div class="section">
+      <h2 id="communications">Matter communications</h2><div class="card"><div class="form-row"><label>Matter<select id="commMatter" required></select></label><label>Channel<select id="commChannel"><option>email</option><option>phone</option><option>portal</option><option>meeting</option></select></label><label>Direction<select id="commDirection"><option value="outbound">Outbound</option><option value="inbound">Inbound</option></select></label></div><label>Summary<textarea id="commSummary" maxlength="2000" required></textarea></label><label>Visibility<select id="commVisibility"><option value="internal">Staff only</option><option value="client">Show in client portal</option></select></label><button class="btn sm" id="saveComm">Log communication</button><p id="commMessage" role="status"></p><div id="commRows"></div></div>
+    </div>
+    <div class="section">
+      <h2 id="reportsRecords">Reports &amp; records</h2><div class="grid2"><div class="card"><h3>Capacity by owner</h3><div id="capacityReport"></div></div><div class="card"><h3>Workflow bottlenecks</h3><div id="bottleneckReport"></div></div></div>
+      <div class="card"><h3>Recent audit activity</h3><label>Entity filter <input id="auditEntity" placeholder="e.g. matter, task"></label><button class="btn secondary sm" id="refreshAudit">Refresh</button><div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody id="auditRows"></tbody></table></div></div>
+      <p><a class="btn secondary" href="https://carbon-law.onrender.com/export/matters.csv" id="exportMatters">Export matters (CSV)</a></p>
+    </div>
+    <div class="section">
+      <h2 id="practiceLibrary">Practice library</h2><p>Read-only prompt and template reference for staff.</p><div class="grid2"><div class="card"><h3>Prompts</h3><select id="promptSelect"><option value="">Select a prompt</option></select><pre id="promptContent"></pre></div><div class="card"><h3>Templates</h3><select id="templateSelect"><option value="">Select a template</option></select><pre id="templateContent"></pre></div></div>
+    </div>
     <div class="section">
       <h2>Friday Report</h2>
       <button class="btn" id="genReport">Generate Friday Report</button>
