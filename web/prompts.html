@@ -10,7 +10,7 @@
     <a href="index.html#contact">Contact</a>
   </nav>
 </header>
-<section class="section">
+<section class="section" hidden>
 <h2>PromptLaw California Prompt Library</h2>
 <p>Browse the California estate planning prompt files and templates used for document drafting.</p>
 <div class="grid">
@@ -25,9 +25,12 @@
 <script>
 const PROMPTS_API = "https://carbon-law.onrender.com";
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-async function request(path){const headers={}; if(getToken()) headers.Authorization="Bearer "+getToken(); const res=await fetch(PROMPTS_API+path,{headers}); if(!res.ok) throw new Error(await res.text()); return res.json();}
+async function request(path){const headers={}; if(getToken()) headers.Authorization="Bearer "+getToken(); let res;try{res=await fetch(PROMPTS_API+path,{headers})}catch(_){throw new Error("Could not reach the Carbon backend. Check your connection and try again.")}if(!res.ok){const data=await res.json().catch(()=>({}));throw new Error(data.detail||`Request failed (${res.status}).`)}return res.json();}
 async function loadLists() {
   try {
+    const user=await CarbonAuth.requireServerAuth(["paralegal","attorney","admin"]);
+    if(!user)return;
+    document.querySelector(".section").hidden=false;
     const prompts = await request("/prompts");
     const pl = document.getElementById("promptList");
     pl.innerHTML = prompts.map(p=>`<li><a href="#" data-type="prompt" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)}</a></li>`).join("");
@@ -39,11 +42,12 @@ async function loadLists() {
         e.preventDefault();
         const type = a.getAttribute("data-type");
         const name = a.getAttribute("data-name");
-        const data = await request(`/${type}s/${encodeURIComponent(name)}`);
-        document.getElementById("contentView").textContent = data.content;
+        const view=document.getElementById("contentView");
+        try { const data = await request(`/${type}s/${encodeURIComponent(name)}`); view.textContent = data.content; }
+        catch(error) { view.textContent = error.message; }
       });
     });
-  } catch(e) { document.getElementById("contentView").textContent = "Backend unavailable."; }
+  } catch(e) { document.querySelector(".section").hidden=false; document.getElementById("contentView").textContent = e.message; }
 }
 loadLists();
 </script>

@@ -23,20 +23,26 @@ async function request(path, method="GET", body=null) {
   return res.json();
 }
 
-let matters = [];
+let matters = [], staffVerified=false;
 async function load() {
   try {
+    const user=await CarbonAuth.requireServerAuth(["paralegal","attorney","admin"]);
+    if(!user)return;
+    staffVerified=true;
+    document.querySelector(".main-content").hidden=false;
+    const box=document.getElementById("userBox"),name=document.createElement("p"),role=document.createElement("p"),link=document.createElement("a");name.textContent=user.name;role.textContent=user.role;link.href="#";link.textContent="Logout";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
     matters = await request("/matters");
     document.getElementById("backendError")?.remove();
   } catch (e) {
     matters = [];
     let error = document.getElementById("backendError");
     if (!error) { error = document.createElement("p"); error.id = "backendError"; error.className = "intake-error"; document.querySelector(".main-content").prepend(error); }
-    error.textContent = e.message;
+    document.querySelector(".main-content").hidden=false; error.textContent = e.message;
   }
+  if(!staffVerified)return;
   populateFilters();
   render();
-  loadReport();
+  await loadReport();
 }
 function populateFilters() {
   const stages = [...new Set(matters.map(m=>m.stage))].sort();

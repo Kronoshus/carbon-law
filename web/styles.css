@@ -111,9 +111,13 @@ td strong { color: var(--text); }
 .empty { color: var(--text-muted); padding: 40px; text-align: center; font-size: 14px; }
 .loading { color: var(--text-muted); font-style: italic; padding: 20px; text-align: center; }
 
+.error-message, .intake-error { color:#a61b1b; font-weight:600; }
+
 /* Modal */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn .2s; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.matter-dialog { padding:0; border:0; background:transparent; max-width:none; overflow:visible; }
+.matter-dialog::backdrop { background:rgba(0,0,0,.7); backdrop-filter:blur(4px); }
 .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; max-width: 560px; width: 92%; box-shadow: var(--shadow-lg); }
 .modal h2 { margin-bottom: 20px; font-size: 20px; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }

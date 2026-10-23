@@ -83,7 +83,7 @@ async function loadWorkflowAppointments() {
     const pending = items.filter(item => item.workflow_id && item.status === "Requested");
     box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(formatAppointmentTime(item.scheduled_at))} <span class="badge">Pending approval</span> <button class="btn secondary" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
     box.querySelectorAll("[data-cancel-appt]").forEach(button => button.onclick = async () => {
-      try { await request(`/appointments/${button.dataset.cancelAppt}?status=Cancelled`, "PATCH"); await loadWorkflowAppointments(); await loadPlanningRequest(); }
+      try { await request(`/appointments/${button.dataset.cancelAppt}`, "PATCH", {status:"Cancelled"}); await loadWorkflowAppointments(); await loadPlanningRequest(); }
       catch (error) { showToast("Could not cancel appointment: " + error.message); }
     });
   } catch (error) { box.textContent = "Could not load appointment requests: " + error.message; }

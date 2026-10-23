@@ -57,6 +57,15 @@ workflows: Dict[str, Dict[str, Any]] = {}
 def now_iso():
     return datetime.datetime.utcnow().isoformat()
 
+def normalize_scheduled_at(value: str) -> str:
+    try:
+        parsed=datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise HTTPException(400,"scheduled_at must be a timezone-aware ISO-8601 timestamp") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise HTTPException(400,"scheduled_at must include a timezone offset")
+    return parsed.astimezone(datetime.timezone.utc).isoformat().replace("+00:00","Z")
+
 def load_data():
     global matters, changes, appointments, documents, users, sessions, contacts, tasks, audit, comms, stage_history, workflows
     matters = _db.load_collection("matters", {})
@@ -156,13 +165,15 @@ def require_auth(authorization, roles=None):
     u = get_user_from_token(token)
     if not u:
         raise HTTPException(401, "not authenticated")
+    if u.get("role") not in ROLES:
+        raise HTTPException(403, "invalid account role")
     if roles and u["role"] not in roles:
         raise HTTPException(403, "insufficient role")
     return u, token
 
 # ---------- models ----------
 class Matter(BaseModel):
-    id: str
+    id: Optional[str] = None
     client_name: str
     stage: str = "1 Intake"
     owner: str = "Unassigned"
@@ -197,6 +208,15 @@ class Appointment(BaseModel):
     scheduled_at: str
     status: str = "Booked"
     note: str = ""
+
+class AppointmentUpdate(BaseModel):
+    status: Optional[str] = None
+    note: Optional[str] = None
+    scheduled_at: Optional[str] = None
+
+class DocumentUpdate(BaseModel):
+    status: Optional[str] = None
+    version: Optional[int] = None
 
 class PortalDocument(BaseModel):
     matter_id: str
@@ -336,6 +356,11 @@ def root():
     return HTMLResponse("<h1>Carbon Law Backend</h1><p><a href='/docs'>API Docs</a> | <a href='/health'>Health</a></p>")
 
 # matters
+@app.get("/stages")
+def list_stages(authorization: Optional[str]=Header(None)):
+    require_auth(authorization, {"paralegal","attorney","admin"})
+    return STAGES
+
 @app.get("/matters")
 def list_matters(stage: Optional[str]=None, owner: Optional[str]=None,
                  risk: Optional[str]=None, q: Optional[str]=None,
@@ -357,7 +382,8 @@ def list_matters(stage: Optional[str]=None, owner: Optional[str]=None,
 @app.post("/matters")
 def upsert_matter(m: Matter, authorization: Optional[str]=Header(None)):
     require_auth(authorization, {"paralegal","attorney","admin"})
-    if m.id in matters:
+    matter_id=m.id or "CL-"+uuid.uuid4().hex[:8].upper()
+    if matter_id in matters:
         raise HTTPException(409, "matter already exists; use PATCH")
     if m.stage not in STAGES:
         raise HTTPException(400, f"invalid stage; allowed: {STAGES}")
@@ -365,10 +391,10 @@ def upsert_matter(m: Matter, authorization: Optional[str]=Header(None)):
         raise HTTPException(400, "invalid risk_level")
     if m.priority not in PRIORITIES:
         raise HTTPException(400, "invalid priority")
-    data = m.model_dump(); data["created_at"]=now_iso(); data["updated_at"]=now_iso()
-    matters[m.id]=data
-    stage_history[m.id]=[{"stage":m.stage,"time":now_iso(),"by":"system"}]
-    log_audit("system","create","matter",m.id,m.client_name)
+    data = m.model_dump(); data["id"]=matter_id; data["created_at"]=now_iso(); data["updated_at"]=now_iso()
+    matters[matter_id]=data
+    stage_history[matter_id]=[{"stage":m.stage,"time":now_iso(),"by":"system"}]
+    log_audit("system","create","matter",matter_id,m.client_name)
     save_data()
     return data
 
@@ -477,6 +503,7 @@ def create_appointment(appt: Appointment, authorization: Optional[str]=Header(No
     if u["role"] == "client" and matters[appt.matter_id].get("client_user_id") != u["id"]:
         raise HTTPException(403,"matter access denied")
     rec = appt.model_dump()
+    rec["scheduled_at"] = normalize_scheduled_at(rec["scheduled_at"])
     if u["role"] == "client":
         rec["status"] = "Requested"
         rec["kind"] = "Signing"
@@ -498,9 +525,11 @@ def list_appointments(matter_id: Optional[str]=None, status: Optional[str]=None,
     return out
 
 @app.patch("/appointments/{appointment_id}")
-def update_appointment(appointment_id: str, status: Optional[str]=None, note: Optional[str]=None,
-                      scheduled_at: Optional[str]=None, authorization: Optional[str]=Header(None)):
+def update_appointment(appointment_id: str, payload: AppointmentUpdate,
+                      authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization)
+    status,note,scheduled_at=payload.status,payload.note,payload.scheduled_at
+    if scheduled_at is not None: scheduled_at=normalize_scheduled_at(scheduled_at)
     if appointment_id not in appointments: raise HTTPException(404,"appointment not found")
     appointment = appointments[appointment_id]
     matter = matters.get(appointment["matter_id"])
@@ -566,12 +595,13 @@ def list_documents(matter_id: Optional[str]=None, status: Optional[str]=None, au
     return out
 
 @app.patch("/documents/{doc_id}")
-def update_document(doc_id: str, status: Optional[str]=None, version: Optional[int]=None,
+def update_document(doc_id: str, payload: DocumentUpdate,
                    authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if doc_id not in documents: raise HTTPException(404,"document not found")
-    if status: documents[doc_id]["status"]=status
-    if version: documents[doc_id]["version"]=version
+    status,version=payload.status,payload.version
+    if status is not None: documents[doc_id]["status"]=status
+    if version is not None: documents[doc_id]["version"]=version
     documents[doc_id]["updated_at"]=now_iso()
     log_audit(user["email"],"update","document",doc_id,status or "updated")
     save_data()
@@ -902,7 +932,7 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
     user,_ = require_auth(authorization)
     workflow = workflows.get(workflow_id)
     if not workflow: raise HTTPException(404, "request not found")
-    kind, at = req.kind, req.scheduled_at
+    kind, at = req.kind, normalize_scheduled_at(req.scheduled_at)
     if kind not in {"consultation", "signing"} or not at: raise HTTPException(400, "Specify consultation/signing and a date/time")
     if kind == "consultation" and workflow["stage"] != "consultation": raise HTTPException(409, "Attorney approval must precede consultation")
     if kind == "signing" and workflow.get("appointments", {}).get("consultation", {}).get("status") not in {"requested", "scheduled", "completed"}: raise HTTPException(409, "Request a consultation before signing")

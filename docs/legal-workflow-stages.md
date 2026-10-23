@@ -4,8 +4,8 @@ Every matter has exactly one current stage. When work moves, the stage changes i
 
 | Stage | Goal | Exit criteria |
 |---|---|---|
-| 1 Intake and Conflicts | Capture parties, conflict check, scope, engagement terms | Conflict cleared, scope approved |
-| 2 Attorney Scope Review | Attorney confirms plan type and strategy | Strategy documented |
+| 1 Intake | Capture parties, conflict check, scope, engagement terms | Conflict cleared, scope approved |
+| 2 Attorney Scope | Attorney confirms plan type and strategy | Strategy documented |
 | 3 Client Data Collection | Full questionnaire, assets, debts, property title | Data complete |
 | 4 Drafting | Create trust, wills, POAs, HIPAA, deed | First draft created |
 | 5 Review Queue | Attorney reviews draft | Attorney comments resolved |

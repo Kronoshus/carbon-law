@@ -17,7 +17,7 @@
     </nav>
     <div class="user-box" id="userBox"></div>
   </aside>
-  <main class="main-content">
+  <main class="main-content" hidden>
     <div class="topbar">
       <h1>Matter Dashboard</h1>
       <div class="actions">
@@ -56,15 +56,6 @@
 <script src="auth.js"></script>
 <script src="app.js"></script>
 <script>
-const u = getUser();
-if (!u || !getToken()) { window.location.href = "login.html"; }
-else {
-  const box = document.getElementById("userBox");
-  const name = document.createElement("p"); name.textContent = u.name;
-  const role = document.createElement("p"); role.textContent = u.role;
-  const link = document.createElement("a"); link.href = "#"; link.textContent = "Logout"; link.onclick = () => { logout(); return false; };
-  box.replaceChildren(name, role, link);
-}
 </script>
 </body>
 </html>

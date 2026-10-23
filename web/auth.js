@@ -26,4 +26,15 @@ function requireAuth(roles) {
   return u;
 }
 function authHeader() { const t=getToken(); return t ? "Bearer "+t : null; }
-window.CarbonAuth = { logout, requireAuth, authHeader, getToken, setToken, clearToken, getUser, setUser };
+async function requireServerAuth(roles) {
+  if (!getToken()) { window.location.href="login.html"; return null; }
+  let response;
+  try { response=await fetch("https://carbon-law.onrender.com/auth/me",{headers:{Authorization:authHeader()}}); }
+  catch (_) { throw new Error("Could not verify your account. Check your connection and try again."); }
+  if (response.status===401) { logout(); return null; }
+  if (!response.ok) throw new Error("Could not verify your account. Please try again.");
+  const user=await response.json(); setUser(user);
+  if (roles&&!roles.includes(user.role)) { window.location.href="index.html"; return null; }
+  return user;
+}
+window.CarbonAuth = { logout, requireAuth, requireServerAuth, authHeader, getToken, setToken, clearToken, getUser, setUser };

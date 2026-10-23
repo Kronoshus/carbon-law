@@ -34,6 +34,33 @@ def test_email_case_whitespace_normalization():
     assert login.status_code == 200
 
 
+def test_staff_stage_options_are_authoritative_and_private():
+    assert c.get("/stages").status_code == 401
+    token=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()["token"]
+    response=c.get("/stages",headers={"Authorization":"Bearer "+token})
+    assert response.status_code==200
+    assert response.json()==__import__("app").STAGES
+
+
+def test_document_update_uses_json_body_not_query():
+    staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
+    h={"Authorization":"Bearer "+staff["token"]}
+    matter=c.post("/matters",json={"client_name":"Doc Update Test"},headers=h).json()
+    doc=c.post("/documents",json={"matter_id":matter["id"],"name":"Will"},headers=h).json()
+    changed=c.patch(f"/documents/{doc['id']}",json={"status":"Signed","version":2},headers=h)
+    assert changed.status_code==200 and changed.json()["status"]=="Signed" and changed.json()["version"]==2
+    legacy=c.patch(f"/documents/{doc['id']}?status=Archived&version=3",headers=h)
+    assert legacy.status_code==422
+    assert c.get("/documents",headers=h).json()[0]["status"]=="Signed"
+
+
+def test_matter_id_is_generated_when_omitted():
+    token=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()["token"]
+    result=c.post("/matters",json={"client_name":"Generated ID Client"},headers={"Authorization":"Bearer "+token})
+    assert result.status_code==200
+    assert result.json()["id"].startswith("CL-") and len(result.json()["id"])==11
+
+
 def test_matter_crud_rbac():
     # login as paralegal
     r = c.post("/auth/login", json={"email":"staff@example.com","password":"staff-test-password"})
@@ -207,12 +234,12 @@ def test_workflow_attorney_consultation_and_signing_gates():
     c.patch(f"/workflows/{wid}/client-review",json={"decision":"approved"},headers=h)
     attorney=c.post("/auth/login",json={"email":"attorney@example.com","password":"attorney-test-password"}).json(); ah={"Authorization":"Bearer "+attorney["token"]}
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"attorney_approved"},headers=ah).status_code==200
-    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=h).status_code==200
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==409
-    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=ah).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=ah).status_code==200
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"consultation_completed"},headers=ah).status_code==200
-    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=h).status_code==200
-    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=ah).json()["stage"]=="complete"
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=h).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=ah).json()["stage"]=="complete"
 
 
 def test_demo_conflict_review_is_explicit_and_delayed():
@@ -240,10 +267,10 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert c.patch(f"/workflows/{demo['id']}/client-review",json={"decision":"approved"},headers=demo_headers).json()["stage"]=="attorney_review"
     assert c.post(f"/workflows/{demo['id']}/demo-attorney-review",headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["stage"]=="consultation"
-    consultation=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=demo_headers)
+    consultation=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=demo_headers)
     assert consultation.status_code==200 and consultation.json()["stage"]=="consultation"
     assert consultation.json()["appointments"]["consultation"]["status"]=="requested"
-    signing_request=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
+    signing_request=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=demo_headers)
     assert signing_request.status_code==200 and signing_request.json()["stage"]=="consultation"
     assert signing_request.json()["appointments"]["signing"]["status"]=="requested"
     pending_appts=c.get("/appointments",headers=demo_headers).json()
@@ -254,19 +281,32 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert c.get("/appointments",headers=demo_headers).json() == []
     staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
     sh={"Authorization":"Bearer "+staff["token"]}
-    approved=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=sh)
+    approved=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=sh)
     assert approved.status_code==200 and approved.json()["appointments"]["consultation"]["status"]=="scheduled"
     assert any(a["kind"]=="consultation" and a["status"]=="Scheduled" for a in c.get("/appointments",headers=sh).json())
     assert c.patch(f"/workflows/{demo['id']}/staff-review",json={"decision":"consultation_completed"},headers=sh).json()["stage"]=="signing"
-    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
+    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=demo_headers)
     assert signing.status_code==200 and signing.json()["stage"]=="signing"
-    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=sh)
+    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=sh)
     assert signing.status_code==200 and signing.json()["stage"]=="complete"
     assert c.post(f"/workflows/{demo['id']}/edit",headers=demo_headers).status_code==200
     assert c.patch(f"/workflows/{demo['id']}/intake",json={"general":{"family":"Updated"},"documents":{}},headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["intake"]["general"]["family"]=="Updated"
     second=c.post("/workflows",json={"demo_mode":True},headers=demo_headers)
     assert second.status_code==200 and second.json()["id"]!=demo["id"] and second.json()["matter_id"]!=demo["matter_id"]
+
+
+def test_workflow_appointment_requires_timezone_and_normalizes_utc():
+    client=c.post("/auth/signup",json={"name":"TZ Client","email":"tz-client@example.com","password":"long-secure-password"}).json()
+    h={"Authorization":"Bearer "+client["token"]}
+    workflow=c.post("/workflows",json={"demo_mode":True},headers=h).json()
+    from app import workflows
+    workflows[workflow["id"]]["stage"]="consultation"
+    naive=c.patch(f"/workflows/{workflow['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h)
+    assert naive.status_code==400
+    result=c.patch(f"/workflows/{workflow['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=h)
+    assert result.status_code==200
+    assert result.json()["appointments"]["consultation"]["requested_at"]=="2030-01-01T17:00:00Z"
 
 
 def test_client_can_cancel_only_own_workflow_appointment():
@@ -276,7 +316,7 @@ def test_client_can_cancel_only_own_workflow_appointment():
     w=c.post("/workflows",json={"demo_mode":True},headers=h1).json()
     from app import workflows
     workflows[w["id"]]["stage"]="consultation"
-    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h1)
+    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=h1)
     assert c.post(f"/workflows/{w['id']}/cancel-appointment",json={"decision":"cancel","note":"consultation"},headers=h2).status_code==404
     cancelled=c.post(f"/workflows/{w['id']}/cancel-appointment",json={"decision":"cancel","note":"consultation"},headers=h1)
     assert cancelled.status_code==200
@@ -289,11 +329,11 @@ def test_client_cannot_change_appointment_when_cancelling():
     w=c.post("/workflows",json={"demo_mode":True},headers=h).json()
     from app import workflows, appointments
     workflows[w["id"]]["stage"]="consultation"
-    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h)
+    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00:00-07:00"},headers=h)
     appt=next(a for a in appointments.values() if a.get("workflow_id")==w["id"])
-    result=c.patch(f"/appointments/{appt['id']}?status=Cancelled&note=leak&scheduled_at=2030-02-01T10:00",headers=h)
+    result=c.patch(f"/appointments/{appt['id']}",json={"status":"Cancelled","note":"leak","scheduled_at":"2030-02-01T10:00:00-07:00"},headers=h)
     assert result.status_code==403
-    assert appointments[appt["id"]]["scheduled_at"]=="2030-01-01T10:00"
+    assert appointments[appt["id"]]["scheduled_at"]=="2030-01-01T17:00:00Z"
 
 
 def test_signup_accepts_six_character_password_and_rejects_five():
@@ -346,14 +386,17 @@ def test_staff_dashboard_operations_keep_client_views_in_sync_and_private():
     from app import workflows, appointments, matters
     workflows[wid]["conflict_status"]="cleared"; workflows[wid]["stage"]="consultation"; workflows[wid]["attorney_approved"]=True
     workflows[wid]["appointments"]={}
-    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T09:00"},headers=ch).status_code==200
+    assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T09:00:00-07:00"},headers=ch).status_code==200
     c.get("/appointments",headers=sh)
     appt=next(a for a in appointments.values() if a.get("workflow_id")==wid and a.get("kind")=="consultation")
-    assert c.patch(f"/appointments/{appt['id']}?status=Scheduled&scheduled_at=2030-01-02T10:30",headers=sh).status_code==200
+    assert c.patch(f"/appointments/{appt['id']}",json={"status":"Scheduled","scheduled_at":"2030-01-02T10:30:00-07:00"},headers=sh).status_code==200
+    unchanged=c.patch(f"/appointments/{appt['id']}?status=Cancelled&note=private",headers=sh)
+    assert unchanged.status_code==422
+    assert appointments[appt["id"]]["status"]=="Scheduled" and appointments[appt["id"]]["note"]!="private"
     c.get("/appointments",headers=sh)
-    assert workflows[wid]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
-    assert c.get("/my-workflows",headers=ch).json()[0]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T10:30"
-    assert c.patch(f"/appointments/{appt['id']}?status=Completed",headers=sh).status_code==200
+    assert workflows[wid]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T17:30:00Z"
+    assert c.get("/my-workflows",headers=ch).json()[0]["appointments"]["consultation"]["scheduled_at"]=="2030-01-02T17:30:00Z"
+    assert c.patch(f"/appointments/{appt['id']}",json={"status":"Completed"},headers=sh).status_code==200
     assert workflows[wid]["appointments"]["consultation"]["status"]=="completed"
     workflows[wid]["drafts"]={"will":"Attorney-approved draft"}
     workflows[wid]["client_approved"]=True
