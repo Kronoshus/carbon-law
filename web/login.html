@@ -31,7 +31,8 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
     setToken(result.token); setUser(result.user);
     document.getElementById("out").textContent = "Logged in. Redirecting...";
     const u = result.user;
-    setTimeout(() => window.location.href = (u.role==="client" ? "intake.html" : "admin.html"), 800);
+    const destination = u.role === "client" ? await api("/my-workflow", "GET", null, result.token).then(workflow => workflow?.stage === "complete" ? "portal.html" : "intake.html").catch(() => "intake.html") : "admin.html";
+    setTimeout(() => window.location.href = destination, 800);
   } catch (e) {
     document.getElementById("out").textContent = e.message.includes("invalid credentials")
       ? "We couldn’t find an account with that email and password. Check both, or create an account below."

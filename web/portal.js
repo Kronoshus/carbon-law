@@ -91,7 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     if (el("changeType").value === "New will") {
       try {
-        await request("/workflows", "POST", {related_names:[], demo_mode:false});
+        const workflow = await request("/workflows", "POST", {related_names:[], demo_mode:false});
+        el("crOut").textContent = `New matter ${workflow.matter_id} created. Opening the planning request…`;
         window.location.href = "intake.html";
       } catch (error) { el("crOut").textContent = error.message; }
       return;
