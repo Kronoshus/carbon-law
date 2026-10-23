@@ -23,6 +23,7 @@ function showToast(msg) {
 }
 
 let matters = [];
+let pendingNewWill = null;
 const currentUser = getUser();
 async function load() {
   const token = getToken();
@@ -75,6 +76,13 @@ async function loadWorkflowAppointments() {
   } catch (error) { box.textContent = "Could not load appointment requests: " + error.message; }
 }
 
+function showNewWillMatter(workflow) {
+  el("matterIdGroup").hidden = false;
+  el("crMatter").required = false;
+  el("crMatter").value = workflow.matter_id;
+  el("crMatter").disabled = true;
+  el("crOut").innerHTML = `New matter <strong>${esc(workflow.matter_id)}</strong> created. <a href="intake.html">Continue the new planning request →</a>`;
+}
 function renderMatterSelects() {
   for (const id of ["crMatter", "apptMatter"]) {
     const input = el(id);
@@ -102,14 +110,23 @@ async function loadReport() {
 }
 document.addEventListener("DOMContentLoaded", () => {
   load();
+  el("changeType")?.addEventListener("change", () => {
+    const isNewWill = el("changeType").value === "New will";
+    el("crMatter").required = !isNewWill;
+    el("matterIdGroup").hidden = isNewWill;
+    el("crMatter").disabled = false;
+    el("crMatter").value = "";
+    el("crOut").textContent = "";
+    if (isNewWill && !pendingNewWill) el("crOut").textContent = "Submit to create a new matter ID.";
+    if (isNewWill && pendingNewWill) showNewWillMatter(pendingNewWill);
+  });
   el("changeForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (el("changeType").value === "New will") {
       try {
-        const workflow = await request("/workflows", "POST", {related_names:[], demo_mode:false});
-        el("crMatter").value = workflow.matter_id;
-        el("crMatter").disabled = true;
-        el("crOut").innerHTML = `New matter <strong>${esc(workflow.matter_id)}</strong> created. <a href="intake.html">Continue the new planning request →</a>`;
+        const workflow = pendingNewWill || await request("/workflows", "POST", {related_names:[], demo_mode:false});
+        pendingNewWill = workflow;
+        showNewWillMatter(workflow);
       } catch (error) { el("crOut").textContent = error.message; }
       return;
     }

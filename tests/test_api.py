@@ -211,6 +211,9 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert consultation.json()["appointments"]["consultation"]["status"]=="requested"
     pending_appts=c.get("/appointments",headers=demo_headers).json()
     assert any(a["kind"]=="consultation" and a["status"]=="Requested" and a["matter_id"]==demo["matter_id"] for a in pending_appts)
+    from app import appointments
+    appointments.clear()
+    assert any(a["kind"]=="consultation" and a["status"]=="Requested" for a in c.get("/appointments",headers=demo_headers).json())
     staff=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
     sh={"Authorization":"Bearer "+staff["token"]}
     approved=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=sh)

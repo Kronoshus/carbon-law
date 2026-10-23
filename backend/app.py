@@ -464,9 +464,29 @@ def create_appointment(appt: Appointment, authorization: Optional[str]=Header(No
     save_data()
     return rec
 
+def ensure_workflow_appointment_requests():
+    changed = False
+    for workflow in workflows.values():
+        matter = ensure_workflow_matter(workflow)
+        for kind, details in workflow.get("appointments", {}).items():
+            if details.get("status") != "requested" or not details.get("requested_at"):
+                continue
+            appointment = next((a for a in appointments.values() if a.get("workflow_id") == workflow["id"] and a.get("kind") == kind), None)
+            if appointment:
+                appointment.update(scheduled_at=details["requested_at"], status="Requested")
+            else:
+                appointment = {"id":str(uuid.uuid4()),"matter_id":matter["id"],"kind":kind,"scheduled_at":details["requested_at"],
+                    "status":"Requested","note":f"Client requested {kind} appointment","workflow_id":workflow["id"],"created_at":now_iso()}
+                appointments[appointment["id"]] = appointment
+            changed = True
+    if changed:
+        save_data()
+
+
 @app.get("/appointments")
 def list_appointments(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
+    ensure_workflow_appointment_requests()
     out = list(appointments.values()) if u["role"] in ("paralegal","attorney","admin") else [a for a in appointments.values() if matters.get(a["matter_id"],{}).get("client_user_id")==u["id"]]
     if matter_id: out=[a for a in out if a["matter_id"]==matter_id]
     if status: out=[a for a in out if a["status"]==status]
