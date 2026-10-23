@@ -390,6 +390,8 @@ def test_change_request_status_updates_client_view_and_closes_linked_task():
     client=c.post("/auth/signup",json={"name":"CR Client","email":"cr-client@example.com","password":"long-secure-password"}).json()
     from app import matters
     matters[matter["id"]]["client_user_id"]=__import__("app").users["cr-client@example.com"]["id"]
+    c.post("/change-requests",json={"matter_id":matter["id"],"change_type":"Update beneficiary","note":"Staff-only note"},headers={"Authorization":"Bearer "+client["token"]})
     visible=c.get("/change-requests",headers={"Authorization":"Bearer "+client["token"]}).json()
-    assert visible[-1]["resolution"]=="Completed after attorney review"
-    assert "note" not in visible[-1] and "requested_by" not in visible[-1] and "task_id" not in visible[-1]
+    resolved=next(item for item in visible if item["id"]==cr["id"])
+    assert resolved["resolution"]=="Completed after attorney review"
+    assert all("note" not in item and "requested_by" not in item and "task_id" not in item for item in visible)
