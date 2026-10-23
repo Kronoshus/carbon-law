@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Initial Attorney Setup | Carbon Law Group</title><link rel="stylesheet" href="styles.css"></head>
+<body class="home-page"><header class="home-nav"><a class="home-brand" href="index.html"><span class="home-mark">C</span><span>CARBON <i>LAW GROUP</i></span></a><nav></nav><a class="home-nav-cta" href="staff-login.html">Staff sign in ↗</a></header>
+<main class="auth-shell"><div class="auth-wrap"><form class="auth-card" id="setupForm"><h1>Initial attorney account setup</h1><p>One-time setup for the authorized attorney account. Enter the setup key provided by the administrator, then choose a private password.</p>
+<div class="form-group"><label for="setupKey">One-time setup key</label><input id="setupKey" type="password" autocomplete="off" required></div>
+<div class="form-group"><label for="name">Full name</label><input id="name" autocomplete="name" required maxlength="120"></div>
+<div class="form-group"><label for="email">Authorized work email</label><input id="email" type="email" value="kmohr@prompt.law" readonly></div>
+<div class="form-group"><label for="password">Choose a password (12+ characters)</label><input id="password" type="password" minlength="12" autocomplete="new-password" required></div>
+<button class="btn" id="setupButton" type="submit">Create attorney account</button><p id="message" role="status" aria-live="polite"></p></form></div></main>
+<footer class="home-footer"><a class="home-brand" href="index.html"><span class="home-mark">C</span><span>CARBON <i>LAW GROUP</i></span></a><span>Authorized staff access only.</span></footer>
+<script src="auth.js"></script><script>
+document.getElementById("setupForm").addEventListener("submit",async event=>{event.preventDefault();const button=document.getElementById("setupButton"),message=document.getElementById("message");button.disabled=true;message.textContent="Creating attorney account…";try{const key=document.getElementById("setupKey").value;const result=await api("/auth/initial-staff-setup","POST",{name:document.getElementById("name").value,email:"kmohr@prompt.law",password:document.getElementById("password").value},key);setToken(result.token);setUser(result.user);location.href="admin.html"}catch(error){message.textContent=error.message;button.disabled=false}});
+</script></body></html>

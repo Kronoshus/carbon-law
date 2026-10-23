@@ -977,6 +977,32 @@ def signup(req: SignupRequest):
     save_data()
     return {"token":token,"user":public_user(users[req.email])}
 
+@app.post("/auth/initial-staff-setup")
+def initial_staff_setup(req: SignupRequest, authorization: Optional[str]=Header(None)):
+    expected = os.environ.get("INITIAL_STAFF_SETUP_TOKEN")
+    supplied = authorization.replace("Bearer ", "").strip() if authorization else ""
+    if not expected or not hmac.compare_digest(supplied, expected):
+        raise HTTPException(404, "not found")
+    if req.email.strip().lower() != "kmohr@prompt.law":
+        raise HTTPException(400, "setup is restricted to the authorized email")
+    if any(entry.get("action") == "initial_staff_setup" for entry in audit):
+        raise HTTPException(404, "not found")
+    if len(req.password) < 6:
+        raise HTTPException(400, "password must be at least 6 characters")
+    email = req.email.strip().lower()
+    existing = next((user for stored, user in users.items() if stored.strip().lower() == email), None)
+    if existing:
+        raise HTTPException(409, "account already exists; use staff sign in")
+    uid = str(uuid.uuid4())
+    users[email] = {"id":uid,"name":req.name.strip(),"email":email,"role":"attorney",
+                    "password_hash":hash_pw(req.password),"created_at":now_iso()}
+    token = str(uuid.uuid4())
+    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+datetime.timedelta(hours=24)).isoformat()}
+    log_audit(email,"initial_staff_setup","user",uid,"attorney account provisioned")
+    save_data()
+    os.environ.pop("INITIAL_STAFF_SETUP_TOKEN", None)
+    return {"token":token,"user":public_user(users[email])}
+
 @app.post("/auth/login")
 def login(req: LoginRequest):
     email = req.email.strip().lower()

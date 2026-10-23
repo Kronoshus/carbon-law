@@ -299,3 +299,16 @@ def test_concurrent_signups_with_same_email_create_one_account():
         codes = [r.status_code for r in pool.map(signup, range(16))]
     assert codes.count(200) == 1
     assert codes.count(400) == 15
+
+def test_one_time_initial_attorney_setup_is_private_and_restricted(monkeypatch):
+    import app as app_module
+    monkeypatch.setenv("INITIAL_STAFF_SETUP_TOKEN", "test-setup-key")
+    bad = c.post("/auth/initial-staff-setup", json={"name":"Kevin","email":"kmohr@prompt.law","password":"long-secure-password"}, headers={"Authorization":"Bearer wrong"})
+    assert bad.status_code == 404
+    wrong_email = c.post("/auth/initial-staff-setup", json={"name":"Other","email":"other@example.com","password":"long-secure-password"}, headers={"Authorization":"Bearer test-setup-key"})
+    assert wrong_email.status_code == 400
+    result = c.post("/auth/initial-staff-setup", json={"name":"Kevin","email":"kmohr@prompt.law","password":"long-secure-password"}, headers={"Authorization":"Bearer test-setup-key"})
+    assert result.status_code == 200 and result.json()["user"]["role"] == "attorney"
+    assert c.get("/reports/friday", headers={"Authorization":"Bearer "+result.json()["token"]}).status_code == 200
+    assert c.post("/auth/initial-staff-setup", json={"name":"Kevin","email":"kmohr@prompt.law","password":"long-secure-password"}, headers={"Authorization":"Bearer test-setup-key"}).status_code == 404
+    assert "INITIAL_STAFF_SETUP_TOKEN" not in os.environ
