@@ -1,4 +1,5 @@
 function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch])); }
+function formatAppointmentTime(value) { if (!value) return ""; const date = new Date(value); return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {dateStyle:"long",timeStyle:"short"}); }
 
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
@@ -79,7 +80,7 @@ async function loadWorkflowAppointments() {
   try {
     const items = await request("/appointments");
     const pending = items.filter(item => item.workflow_id && item.status === "Requested");
-    box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(item.scheduled_at)} <span class="badge">Pending approval</span> <button class="btn secondary" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
+    box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(formatAppointmentTime(item.scheduled_at))} <span class="badge">Pending approval</span> <button class="btn secondary" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
     box.querySelectorAll("[data-cancel-appt]").forEach(button => button.onclick = async () => {
       try { await request(`/appointments/${button.dataset.cancelAppt}?status=Cancelled`, "PATCH"); await loadWorkflowAppointments(); await loadPlanningRequest(); }
       catch (error) { showToast("Could not cancel appointment: " + error.message); }
