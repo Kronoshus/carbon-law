@@ -223,6 +223,7 @@ class IntakeRequest(BaseModel):
 
 class WorkflowStart(BaseModel):
     phone: str = Field(default="", max_length=40)
+    client_name: Optional[str] = Field(default=None, max_length=120)
     related_names: List[str] = Field(default_factory=list, max_length=20)
     demo_mode: bool = False
 
@@ -240,6 +241,15 @@ class WorkflowDecision(BaseModel):
 class WorkflowAppointment(BaseModel):
     kind: str
     scheduled_at: str = Field(min_length=1, max_length=40)
+
+class WorkflowSection(BaseModel):
+    part: int = Field(ge=1, le=7)
+
+class WorkflowConflictInfo(BaseModel):
+    phone: str = Field(default="", max_length=40)
+    client_name: Optional[str] = Field(default=None, max_length=120)
+    related_names: List[str] = Field(default_factory=list, max_length=20)
+    demo_mode: bool = False
 
 class SignupRequest(BaseModel):
     name: str
@@ -641,7 +651,7 @@ def my_workflow(authorization: Optional[str]=Header(None)):
 def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"client"})
     now = now_iso()
-    workflow = {"id":str(uuid.uuid4()), "client_user_id":user["id"], "client_name":user["name"],
+    workflow = {"id":str(uuid.uuid4()), "client_user_id":user["id"], "client_name":req.client_name.strip() if req.client_name and req.client_name.strip() else user["name"],
         "client_email":user["email"], "phone":req.phone, "related_names":[name.strip()[:120] for name in req.related_names if name.strip()], "documents_requested":[],
         "stage":"conflict_review", "conflict_status":"pending", "demo_mode":req.demo_mode, "intake":{}, "drafts":{},
         "client_approved":False, "attorney_approved":False, "appointments":{},
@@ -651,6 +661,38 @@ def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)
     log_audit(user["email"], "create", "workflow", workflow["id"], "conflict review requested")
     save_data()
     return workflow
+
+
+@app.patch("/workflows/{workflow_id}/conflict-info")
+def update_workflow_conflict_info(workflow_id: str, req: WorkflowConflictInfo, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict information is locked after review")
+    workflow["phone"] = req.phone
+    if req.client_name and req.client_name.strip(): workflow["client_name"] = req.client_name.strip()
+    workflow["related_names"] = [name.strip()[:120] for name in req.related_names if name.strip()]
+    workflow["demo_mode"] = req.demo_mode
+    workflow["updated_at"] = now_iso(); save_data(); return workflow
+
+
+@app.post("/workflows/{workflow_id}/reopen-section")
+def reopen_workflow_section(workflow_id: str, req: WorkflowSection, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    stages = {1:"conflict_review",2:"document_selection",3:"intake",4:"draft_ready",5:"attorney_review",6:"consultation",7:"consultation"}
+    if req.part == 1:
+        workflow["conflict_status"] = "pending"
+        workflow["conflict_reviewed_at"] = None
+    elif workflow.get("conflict_status") not in {"cleared", "demo_cleared"}:
+        raise HTTPException(409, "Complete conflict review first")
+    workflow["stage"] = stages[req.part]
+    if req.part <= 4:
+        workflow["client_approved"] = False
+        workflow["attorney_approved"] = False
+        workflow["drafts"] = {}
+    workflow["updated_at"] = now_iso(); save_data(); return workflow
 
 
 @app.post("/workflows/{workflow_id}/enable-demo-review")
@@ -675,6 +717,7 @@ def demo_conflict_review(workflow_id: str, authorization: Optional[str]=Header(N
     created = datetime.datetime.fromisoformat(workflow["created_at"])
     if (datetime.datetime.utcnow() - created).total_seconds() < 5: raise HTTPException(429, "Please wait for the demo review simulation to finish")
     workflow["conflict_status"] = "demo_cleared"
+    workflow["conflict_reviewed_at"] = now_iso()
     workflow["stage"] = "document_selection"
     workflow["updated_at"] = now_iso()
     log_audit(user["email"], "demo_review", "workflow", workflow_id, "simulated conflict review; not a real clearance")
@@ -802,7 +845,7 @@ def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization
     if not workflow: raise HTTPException(404, "request not found")
     if req.decision == "conflict_cleared":
         if workflow["stage"] != "conflict_review": raise HTTPException(409, "Conflict review is not pending")
-        workflow["conflict_status"] = "cleared"; workflow["stage"] = "document_selection"
+        workflow["conflict_status"] = "cleared"; workflow["conflict_reviewed_at"] = now_iso(); workflow["stage"] = "document_selection"
     elif req.decision == "conflict_flagged":
         workflow["conflict_status"] = "flagged"; workflow["stage"] = "conflict_hold"
     elif req.decision == "attorney_approved":

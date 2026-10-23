@@ -132,6 +132,7 @@ def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     started = c.post("/workflows", json={"phone":"555","related_names":["Example Person"]}, headers=headers)
     assert started.status_code == 200
     wid = started.json()["id"]
+    assert started.json()["related_names"] == ["Example Person"]
     payload = {"general":{"marital_status":"single"},"documents":{"Pour-over will":{"executor":"Example Person"}}}
     assert c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=headers).status_code == 409
     assert c.patch(f"/workflows/{wid}/intake",json=payload,headers=headers).status_code == 409
@@ -139,6 +140,11 @@ def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     staff = c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
     staff_headers = {"Authorization":"Bearer "+staff["token"]}
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=staff_headers).status_code == 200
+    assert c.post(f"/workflows/{wid}/reopen-section",json={"part":3},headers=headers).status_code==200
+    assert c.post(f"/workflows/{wid}/reopen-section",json={"part":1},headers=headers).status_code==200
+    updated=c.patch(f"/workflows/{wid}/conflict-info",json={"phone":"555-0000","related_names":["Another Person"]},headers=headers)
+    assert updated.status_code==200 and updated.json()["related_names"]==["Another Person"]
+    assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=staff_headers).status_code==200
     assert c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=headers).status_code == 200
     assert c.patch(f"/workflows/{wid}/intake",json=payload,headers=headers).status_code == 200
     draft = c.post(f"/workflows/{wid}/drafts",headers=headers)
