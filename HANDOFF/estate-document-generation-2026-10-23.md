@@ -1,60 +1,48 @@
-# Estate document generation — session handoff
+# Estate document generation — attorney-side generation handoff
 
 **Updated:** 2026-10-23  
-**Repository:** `/home/dkkm10/carbon-law-gh` (`Kronoshus/carbon-law`)  
-**Branch / commit:** `main` / `5b57fbd` (`Generate review summaries in estate workflow`)  
-**Git state at handoff:** clean after the commit was pushed to `origin/main`.
+**Repo:** `/home/dkkm10/carbon-law-gh`  
+**Branch:** `main`, clean at `0707e99` (`Use document-specific California drafting prompts`)  
+**Goal:** Continue estate document generation so an attorney can turn the approved intake/current Beam draft into a document-shaped draft using firm-approved California forms, from the firm portal. Keep all outputs attorney-reviewed and never signing-ready/legal-approved by implication.
 
-## User’s objective
+## Current state
 
-When a client submits an estate-planning request, prepare appropriate documents, make them available in the client portal, and surface them in the intake workflow for attorney review. The user asked that the PromptLaw skills (`prd-writer`, `write-taxonomy-from-prd`, `create-prompts-from-taxonomy`) guide research/prompting and document creation, and offered Beam’s approach as a reference.
+- The workflow offers four document types: revocable living trust, pour-over will, advance health care directive, and financial power of attorney.
+- `templates/california/` has summary/checklist templates only. They are **not operative, attorney-approved legal forms** and lack required clauses, execution formalities, and full signature/acknowledgment pages. Do not use them to claim or assemble legally sufficient instruments.
+- Four project-specific prompts are stored at `prompt-library/prompts/california/carbon-law/`. Backend maps types to these prompt files and passes the template filled with intake answers to Beam. The prompt files tell Beam to preserve only supplied facts, flag missing decisions, and produce a proposed attorney-review draft with `[ATTORNEY TO COMPLETE]` placeholders. The output is not a complete instrument.
+- Project scope docs: `prompt-library/PRD_Carbon_Law_CA_Estate_Document_Drafting.md` and `prompt-library/taxonomy/carbon-law-ca-estate-document-drafting.md`.
+- Beam is called only in `demo_mode`; the output is persistently labeled `DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT` and `DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING`. The implementation loads a local `~/.config/carbon-law/beam.env` if available; Render needs its own environment variable. Never show/log/commit the secret.
+- User reported a generated attorney-review trust outline that used example intake facts and clearly listed missing terms. That confirms Beam output is reaching the workflow; it does not prove the current templates can support full instruments.
+- Client portal already has Change Request Status and reloads the list immediately after submit (commit `23f6080`). User limited client-facing scope to document generation and change-request status. Do not add other client UI features without asking.
 
-## Completed in the last session
+## Deployment and verification
 
-- Changed `POST /workflows/{id}/drafts` to fill the existing California template for each selected type: revocable living trust, pour-over will, advance healthcare directive, financial POA.
-- Added an explicit mapping from actual intake field names to template placeholders; unprovided fields are labeled `Not provided`.
-- Drafts are marked **DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING** and state they are summaries/checklists, not execution-ready instruments. Demo-mode drafts also say **DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT**.
-- Stores each generated item as a versioned document linked to the workflow and matter. The existing authenticated client `/documents` view exposes documents at `Client Review` and, after actual attorney approval, `Attorney Approved`; portal now renders the content. A stranger cannot list the client’s records.
-- Client approval transitions to `attorney_review`; only attorney/admin review can then approve to consultation. Client change requests demote current client-visible records to `Attorney Review`; regeneration supersedes the previous client-review version. Attorney changes supersede the old drafts.
-- Added API assertions for template substitution, portal visibility and ownership filtering, version increments, client review, and attorney approval.
+- `0707e99` is pushed to `origin/main`. User supplied Render log showing Render checked out full SHA `0707e9988ce9c5ebe375d7046c59d77ad989dad0`, build succeeded, and service reported live.
+- Four document-specific Beam prompt smoke tests passed with fictional data; generated output was not logged. Test suite: **32 passed**; Python compile, JS checks, and `git diff --check` passed.
+- Current working tree was clean at handoff. Verify current deployment/branch before edits.
+- The PRD cites California Probate Code §§ 15200, 15400, 6110–6111, 6300–6303, 4121–4122, 4401, 4670–4675, and 4701 as *research anchors*. They have not all been independently verified against current official California Legislative Information. Verify law, statutory language, current forms, and firm requirements before using in an instrument prompt/template.
 
-**Not completed:** No model-generated content is wired into the app. Existing California PromptLaw library has 27 task prompts, but those are not validated document-generation schemas; Beam’s reference has generic legal drafting, not estate-plan document assembly. Existing firm templates are summaries/checklists only. Do not represent generated output as final legal instruments or send client PII to a hosted model without an explicit consent/privacy design and attorney-approved prompt/schema.
+## Next work: attorney portal generation
 
-## Beam access (credential is outside the repo)
+1. Ask the firm/user to provide the **attorney-approved, current forms** for the four document types, plus applicable clause/options library, field mapping, and signing/execution requirements. Existing repo files are not substitutes. If forms are not available, stop at the current attorney-review outline; do not invent an executable form or fill legal terms from model knowledge.
+2. Confirm legal research against official California sources with attorney review. Record form/source version and effective date. Identify required inputs and block generation on unresolved material choices rather than filling them with assumptions.
+3. Add an **attorney/admin-only** Generate Document action in the firm portal, driven by an authorized backend endpoint. Do not expose that action or its output to clients before the existing review/approval gate allows it. Resolve exactly whether attorney generation requires client review complete, existing workflow attorney-review state, and/or separate attorney authorization before implementation.
+4. Give Beam the approved prompt, approved template, and minimized/validated intake values; have it fill only authorized fields. Treat model output as untrusted: verify required fields/placeholders, reject missing or malformed output, and leave unresolved legal choices for counsel. Do not have Beam create statutory terms, execution pages, or legal conclusions unless explicitly part of the attorney-approved form/spec.
+5. Store each output through existing versioned document records, link to matter/workflow, supersede prior version correctly, preserve client ownership checks and attorney/client approval transitions, and log audit events. Keep generated artifacts in `Attorney Review` until attorney expressly approves; never let model output itself transition approval state.
+6. Add focused behavior tests: role authorization (client/paralegal denied as appropriate), gate ordering, prompt/template selection per type, no model use on non-demo/non-authorized paths, missing-field behavior, version/supersession, audit, and no cross-client exposure. Run all project tests and checks.
+7. Client-side changes remain limited to: (a) using intake to generate the requested drafts and (b) showing change-request status. Do not reshape unrelated portal UI.
 
-The latest user-provided Reflection/Beam key succeeded against `https://api.reflection.ai/openai/v1/chat/completions` with model `Beam-1.0-501B-A23B`. The previous key returned 401; use only the newer one.
+## Important files
 
-Credential was saved locally, not committed, with mode `0600` at:
+- `backend/app.py`: `WORKFLOW_TEMPLATES`, `BEAM_DOCUMENT_PROMPTS`, `_beam_review_summary`, `render_workflow_document`, `generate_workflow_drafts`, `/documents`, `/workflows/{id}/staff-review`.
+- `web/admin.js` / `web/admin.html`: firm workflow review currently displays existing draft content and supports attorney approval/request changes; no attorney-generation action yet.
+- `web/intake.html`: client workflow stages; draft generation and review gates.
+- `web/portal.js` / `web/portal.html`: change status and client portal documents.
+- `tests/test_api.py`: workflow ownership, stage gates, versioning and review tests.
+- `templates/california/`: current summary/checklists only.
+- `prompt-library/prompts/california/carbon-law/`: four runtime prompts.
+- `HANDOFF/estate-document-generation-2026-10-23.md`: prior handoff.
 
-`~/.config/carbon-law/beam.env`
+## Secret/privacy boundary
 
-It defines `BEAM_API_KEY`, `BEAM_BASE_URL`, and `BEAM_MODEL`. **Do not print, paste, commit, or include the key in this handoff.** For Python, load it in-memory using `python-dotenv` with `load_dotenv(Path.home() / ".config/carbon-law/beam.env")`; use `os.environ["BEAM_API_KEY"]`. For a shell command, source that file only in the subprocess environment (`set -a; . "$HOME/.config/carbon-law/beam.env"; set +a; ...`). A separate session on this same host should be able to read the file under the same Unix user. If missing/unreadable, ask the user to re-provide it; do not search git/history for secrets.
-
-Beam smoke test returned HTTP 200, model `Beam-1.0-501B-A23B`, finish reason `stop`, and answer: “3. The word ‘strawberry’ has three r’s.” No key value was logged here. The quick test used only a harmless public word-count prompt.
-
-## Validation / deployment state
-
-- `uv run --with pytest --with fastapi --with pydantic --with email-validator --with httpx --with python-multipart python -m pytest -q tests` — **30 passed**.
-- `node --check web/portal.js`, `node --check web/admin.js`, `python3 -m py_compile backend/app.py`, and `git diff --check` passed.
-- Commit `5b57fbd` pushed to `origin/main`.
-- After push, `https://carbon-law.onrender.com/health` returned HTTP 200 and `https://carbon.bailment.tech/portal.html` returned HTTP 200. These checks do not establish that Render has deployed this exact backend commit; check Render’s deploy status before claiming full rollout.
-- Browser-interactive verification was not run.
-
-## Relevant files
-
-- `backend/app.py` — workflow draft rendering, document records, review transitions and authorization.
-- `templates/california/` — four currently used templates.
-- `prompt-library/PRD_California_Estate_Planning_Prompt_Library.md`
-- `prompt-library/taxonomy/california-estate-planning-taxonomy.md`
-- `prompt-library/prompts/california/*.md` — 27 existing prompts.
-- `web/intake.html`, `web/portal.js` — client review and portal UI.
-- `web/admin.js` — staff workflow view (already shows draft text when the workflow is at attorney review).
-- `tests/test_api.py` — regression tests.
-- Beam reference checkout inspected at `/tmp/bailment-full-build`; user also has `/home/dkkm10/bailment-work/consolidation/full-build`. Neither implements estate document generation.
-
-## Next actions
-
-1. Check Render deploy status for commit `5b57fbd` and verify the updated backend route in a test account if authorized.
-2. Continue the actual objective: use the California estate planning PRD/taxonomy and PromptLaw prompt practices to design attorney-approved document-generation prompts for the limited, specific fields collected. Decide whether generated artifacts remain summaries pending attorney drafting or whether client-agreed, attorney-approved legal templates and required intake fields will be added for true instrument assembly.
-3. If using Beam, preserve the hosted-provider privacy decision: no real client records or sensitive estate facts until the firm explicitly approves disclosure and the input has a tested minimization/redaction plan. Keep output untrusted and attorney-reviewed. Treat the key only as a local secret; don’t put it in repository or Render configuration unless the user explicitly asks to deploy it there.
-4. Keep client and attorney approval gates. Do not enable signing, execution, or legal-approval claims from model output.
+Beam is a hosted provider. Use only simulated/fictitious data for smoke tests unless the firm explicitly approves hosted processing of real client data and a documented privacy/redaction plan. The key at `~/.config/carbon-law/beam.env` is private. Load in memory if needed; never print, commit, paste, or include it in logs, prompts, artifacts, or handoffs. Never put it in repo files. Do not change Render secret configuration unless explicitly authorized.
