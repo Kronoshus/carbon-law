@@ -154,6 +154,7 @@ def test_client_workflow_isolation_and_staff_queue_authorization():
     h1={"Authorization":"Bearer "+one["token"]};h2={"Authorization":"Bearer "+two["token"]}
     w=c.post("/workflows",json={"related_names":["A Person"]},headers=h1).json()
     assert c.get("/my-workflow",headers=h1).json()["id"] == w["id"]
+    assert c.get("/my-workflow",headers=h1).json()["matter_id"] in [m["id"] for m in c.get("/my-matters",headers=h1).json()]
     assert c.get("/my-workflow",headers=h2).json() is None
     assert c.patch(f"/workflows/{w['id']}/staff-review",json={"decision":"conflict_cleared"},headers=h2).status_code == 403
     assert c.get("/my-workflow",headers={"Authorization":"Bearer "+c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()["token"]}).status_code == 200
@@ -207,7 +208,24 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert consultation.status_code==200 and consultation.json()["stage"]=="signing"
     signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
     assert signing.status_code==200 and signing.json()["stage"]=="complete"
-    assert c.post("/workflows",json={"demo_mode":True},headers=demo_headers).status_code==200
+    assert c.post(f"/workflows/{demo['id']}/edit",headers=demo_headers).status_code==200
+    assert c.patch(f"/workflows/{demo['id']}/intake",json={"general":{"family":"Updated"},"documents":{}},headers=demo_headers).status_code==200
+    assert c.get("/my-workflow",headers=demo_headers).json()["intake"]["general"]["family"]=="Updated"
+    assert c.post("/workflows",json={"demo_mode":True},headers=demo_headers).status_code==409
+
+
+def test_client_can_cancel_only_own_workflow_appointment():
+    one=c.post("/auth/signup",json={"name":"Cancel One","email":"cancel-one@example.com","password":"long-secure-password"}).json()
+    two=c.post("/auth/signup",json={"name":"Cancel Two","email":"cancel-two@example.com","password":"long-secure-password"}).json()
+    h1={"Authorization":"Bearer "+one["token"]};h2={"Authorization":"Bearer "+two["token"]}
+    w=c.post("/workflows",json={"demo_mode":True},headers=h1).json()
+    from app import workflows
+    workflows[w["id"]]["stage"]="consultation"
+    c.patch(f"/workflows/{w['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=h1)
+    assert c.post(f"/workflows/{w['id']}/cancel-appointment",json={"decision":"cancel","note":"consultation"},headers=h2).status_code==404
+    cancelled=c.post(f"/workflows/{w['id']}/cancel-appointment",json={"decision":"cancel","note":"consultation"},headers=h1)
+    assert cancelled.status_code==200
+    assert cancelled.json()["appointments"]["consultation"]["status"]=="cancelled"
 
 
 def test_signup_accepts_six_character_password_and_rejects_five():

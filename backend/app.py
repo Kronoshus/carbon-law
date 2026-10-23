@@ -475,8 +475,15 @@ def list_appointments(matter_id: Optional[str]=None, status: Optional[str]=None,
 @app.patch("/appointments/{appointment_id}")
 def update_appointment(appointment_id: str, status: Optional[str]=None, note: Optional[str]=None,
                       scheduled_at: Optional[str]=None, authorization: Optional[str]=Header(None)):
-    require_auth(authorization, {"paralegal","attorney","admin"})
+    user,_ = require_auth(authorization)
     if appointment_id not in appointments: raise HTTPException(404,"appointment not found")
+    appointment = appointments[appointment_id]
+    matter = matters.get(appointment["matter_id"])
+    if user["role"] == "client":
+        if not matter or matter.get("client_user_id") != user["id"]: raise HTTPException(404,"appointment not found")
+        if status != "Cancelled": raise HTTPException(403,"Clients may only cancel appointments")
+    elif user["role"] not in {"paralegal","attorney","admin"}:
+        raise HTTPException(403,"Staff access required")
     if status: appointments[appointment_id]["status"]=status
     if note: appointments[appointment_id]["note"]=note
     if scheduled_at: appointments[appointment_id]["scheduled_at"]=scheduled_at
@@ -576,12 +583,29 @@ def client_workflow(user):
     return max(matches, key=lambda w: w["updated_at"]) if matches else None
 
 
+def ensure_workflow_matter(workflow):
+    if workflow.get("matter_id") in matters:
+        return matters[workflow["matter_id"]]
+    matter_id = "CL-" + workflow["id"].replace("-", "")[:8].upper()
+    matter = {"id":matter_id,"client_name":workflow["client_name"],"stage":"1 Intake","owner":"Unassigned",
+        "document_status":"Not Started","risk_level":"Low","priority":"Normal","client_email":workflow["client_email"],
+        "client_user_id":workflow["client_user_id"],"created_at":workflow["created_at"],"updated_at":now_iso()}
+    matters[matter_id] = matter
+    workflow["matter_id"] = matter_id
+    stage_history[matter_id] = [{"stage":"1 Intake","time":now_iso(),"by":"system"}]
+    save_data()
+    return matter
+
+
 @app.get("/my-workflow")
 def my_workflow(authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization)
     if user["role"] in ("paralegal", "attorney", "admin"):
         return list(workflows.values())
-    return client_workflow(user)
+    workflow = client_workflow(user)
+    if workflow:
+        ensure_workflow_matter(workflow)
+    return workflow
 
 
 @app.post("/workflows")
@@ -597,6 +621,7 @@ def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)
         "client_approved":False, "attorney_approved":False, "appointments":{},
         "created_at":now, "updated_at":now}
     workflows[workflow["id"]] = workflow
+    ensure_workflow_matter(workflow)
     log_audit(user["email"], "create", "workflow", workflow["id"], "conflict review requested")
     save_data()
     return workflow
@@ -636,9 +661,12 @@ def select_workflow_documents(workflow_id: str, req: WorkflowDocuments, authoriz
     user,_ = require_auth(authorization, {"client"})
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
-    if workflow["stage"] != "document_selection": raise HTTPException(409, "Conflict review must be cleared first")
+    if workflow["stage"] not in {"document_selection", "intake", "draft_ready"}: raise HTTPException(409, "Documents cannot be changed at this stage")
     if not req.documents_requested or not set(req.documents_requested) <= WORKFLOW_DOCUMENTS: raise HTTPException(400, "Select at least one supported document")
-    workflow["documents_requested"] = req.documents_requested; workflow["stage"] = "intake"; workflow["updated_at"] = now_iso(); save_data()
+    workflow["documents_requested"] = req.documents_requested
+    workflow.setdefault("intake", {})["documents"] = {k:v for k,v in workflow.get("intake", {}).get("documents", {}).items() if k in req.documents_requested}
+    workflow["drafts"] = {}
+    workflow["stage"] = "intake"; workflow["updated_at"] = now_iso(); save_data()
     return workflow
 
 
@@ -648,8 +676,15 @@ def save_workflow_intake(workflow_id: str, req: WorkflowIntake, authorization: O
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
     if workflow["conflict_status"] not in {"cleared", "demo_cleared"}: raise HTTPException(409, "Complete conflict review before detailed intake")
-    if workflow["stage"] not in {"intake", "draft_ready"}: raise HTTPException(409, "Intake is not open")
+    if workflow["stage"] not in {"intake", "draft_ready"}: raise HTTPException(409, "Use the modify-request action before editing this intake")
     workflow["intake"] = {"general": req.general, "documents": {k:v for k,v in req.documents.items() if k in workflow["documents_requested"]}}
+    if workflow.get("matter_id") in matters:
+        matters[workflow["matter_id"]]["stage"] = "3 Trust/Wills/POA Drafting"
+        matters[workflow["matter_id"]]["document_status"] = "Drafting"
+        matters[workflow["matter_id"]]["updated_at"] = now_iso()
+    workflow["client_approved"] = False
+    workflow["attorney_approved"] = False
+    workflow["drafts"] = {}
     workflow["stage"] = "draft_ready"; workflow["updated_at"] = now_iso(); save_data()
     return workflow
 
@@ -670,12 +705,49 @@ def client_review_workflow(workflow_id: str, req: WorkflowDecision, authorizatio
     user,_ = require_auth(authorization, {"client"})
     workflow = workflows.get(workflow_id)
     if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
-    if workflow["stage"] != "client_review": raise HTTPException(409, "Drafts are not ready for review")
+    if workflow["stage"] not in {"client_review", "draft_ready"}: raise HTTPException(409, "Drafts are not ready for review")
+    if req.decision == "changes_requested":
+        workflow["stage"] = "intake"
+        workflow["client_approved"] = False
+        workflow["drafts"] = {}
+        workflow["client_review_note"] = req.note
+        workflow["updated_at"] = now_iso(); save_data(); return workflow
     if req.decision not in {"changes_requested", "approved"}: raise HTTPException(400, "Choose approved or changes requested")
     workflow["client_review_note"] = req.note
     workflow["client_approved"] = req.decision == "approved"
     workflow["stage"] = "attorney_review" if workflow["client_approved"] else "draft_ready"
     workflow["updated_at"] = now_iso(); save_data(); return workflow
+
+
+@app.post("/workflows/{workflow_id}/edit")
+def edit_workflow(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if workflow["stage"] not in {"client_review", "attorney_review", "consultation", "signing", "complete", "draft_ready"}: raise HTTPException(409, "Request cannot be edited at this stage")
+    workflow["stage"] = "document_selection"
+    workflow["client_approved"] = False
+    workflow["attorney_approved"] = False
+    workflow["drafts"] = {}
+    workflow["updated_at"] = now_iso()
+    save_data()
+    return workflow
+
+
+@app.post("/workflows/{workflow_id}/cancel-appointment")
+def cancel_workflow_appointment(workflow_id: str, req: WorkflowDecision, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    kind = req.note
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if kind not in {"consultation", "signing"} or kind not in workflow.get("appointments", {}): raise HTTPException(404, "appointment not found")
+    workflow["appointments"][kind]["status"] = "cancelled"
+    workflow["updated_at"] = now_iso()
+    if workflow.get("demo_mode") and kind == "consultation": workflow["stage"] = "consultation"
+    if workflow.get("demo_mode") and kind == "signing": workflow["stage"] = "signing"
+    log_audit(user["email"], "cancel", "workflow_appointment", workflow_id, kind)
+    save_data()
+    return workflow
 
 
 @app.post("/workflows/{workflow_id}/demo-attorney-review")
@@ -838,6 +910,9 @@ def my_matters(authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
     if u["role"] in ("paralegal","attorney","admin"):
         return list(matters.values())
+    client_workflows = [w for w in workflows.values() if w["client_user_id"] == u["id"]]
+    for workflow in client_workflows:
+        ensure_workflow_matter(workflow)
     return [{k:v for k,v in m.items() if k not in {"notes", "client_email", "client_user_id"}} for m in matters.values() if m.get("client_user_id")==u["id"]]
 
 # prompts/templates

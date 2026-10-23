@@ -27,10 +27,10 @@ const currentUser = getUser();
 async function load() {
   const token = getToken();
   if (!token) { window.location.href = "login.html"; return; }
-  try { matters = await request("/my-matters"); } catch(e){ matters=[]; showToast("Backend unavailable"); }
+  try { matters = await request("/my-matters"); } catch(e){ matters=[]; if (el("matterDetail")) el("matterDetail").textContent = "Could not load matters: " + e.message; showToast("Backend unavailable"); }
   renderMatterSelects();
   renderDetail();
-  loadPlanningRequest();
+  await loadPlanningRequest();
   loadDocs();
   if (currentUser && currentUser.role !== "client") loadReport();
 }
@@ -39,24 +39,38 @@ async function loadPlanningRequest() {
   if (!box) return;
   try {
     const workflow = await request("/my-workflow");
-    if (!workflow) { box.textContent = "No planning request yet."; return; }
+    if (Array.isArray(workflow)) throw new Error("Unexpected workflow response");
+    if (!workflow) {
+      const matter = matters[0];
+      box.innerHTML = matter ? `<h3>${esc(matter.client_name)}’s matter</h3><p><strong>Matter:</strong> ${esc(matter.id)}</p><p><strong>Status:</strong> ${esc(matter.stage)}</p><p><a href="intake.html">Start a planning request</a></p>` : `No planning request yet. <a href="intake.html">Start an intake</a>`;
+      return;
+    }
+    const matter = matters.find(item => item.id === workflow.matter_id);
+    if (matter) el("matterSelect").value = matter.id;
+    renderDetail();
     const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
     const consultation = workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at || "Not requested";
     const signing = workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at || "Not requested";
-    box.innerHTML = `<h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p><p><strong>Consultation:</strong> ${esc(consultation)}</p><p><strong>Signing:</strong> ${esc(signing)}</p>`;
-  } catch (_) { box.textContent = "Could not load your planning request."; }
+    const cancel = ["consultation", "signing"].filter(kind => workflow.appointments?.[kind] && !["cancelled", "Cancelled"].includes(workflow.appointments[kind].status)).map(kind => `<button class="btn secondary" data-cancel-appointment="${kind}">Cancel ${kind}</button>`).join(" ");
+    box.innerHTML = `<h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p><p><strong>Consultation:</strong> ${esc(consultation)}</p><p><strong>Signing:</strong> ${esc(signing)}</p>${cancel}<p><button class="btn" id="editPlanningRequest">Modify planning request</button></p>`;
+    box.querySelectorAll("[data-cancel-appointment]").forEach(button => button.onclick = async () => {
+      try { await request(`/workflows/${workflow.id}/cancel-appointment`, "POST", {decision:"cancel",note:button.dataset.cancelAppointment}); await loadPlanningRequest(); }
+      catch (error) { showToast("Could not cancel appointment: " + error.message); }
+    });
+    el("editPlanningRequest").onclick = async () => {
+      try { await request(`/workflows/${workflow.id}/edit`, "POST", {}); location.href = "intake.html"; }
+      catch (error) { showToast("Could not edit request: " + error.message); }
+    };
+  } catch (error) { box.textContent = "Could not load your planning request: " + error.message; }
 }
 
-function matterOptions(selectId) {
-  const sel = el(selectId);
-  if (!sel) return;
-  sel.innerHTML = matters.map(m=>`<option value="${esc(m.id)}">${esc(m.id)} - ${esc(m.client_name)}</option>`).join("");
-}
 function renderMatterSelects() {
-  matterOptions("matterSelect");
-  matterOptions("crMatter");
-  matterOptions("apptMatter");
-  matterOptions("docMatter");
+  const options = el("matterOptions");
+  if (options) options.innerHTML = matters.map(m=>`<option value="${esc(m.id)}">${esc(m.client_name)}</option>`).join("");
+  for (const id of ["crMatter", "apptMatter"]) {
+    const input = el(id);
+    if (input && matters.length === 1 && !input.value) input.value = matters[0].id;
+  }
 }
 function renderDetail() {
   const id = el("matterSelect")?.value;
@@ -98,7 +112,7 @@ async function loadReport() {
 }
 document.addEventListener("DOMContentLoaded", () => {
   load();
-  el("matterSelect")?.addEventListener("change", renderDetail);
+  el("matterSelect")?.addEventListener("input", renderDetail);
   el("changeForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (el("changeType").value === "New will") {
