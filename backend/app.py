@@ -590,7 +590,7 @@ def create_document(doc: PortalDocument, authorization: Optional[str]=Header(Non
 @app.get("/documents")
 def list_documents(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = list(documents.values()) if u["role"] in ("paralegal","attorney","admin") else [d for d in documents.values() if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") in {"Client Review", "Attorney Approved"}]
+    out = [d for d in documents.values() if u["role"] in {"attorney", "admin"} or not d.get("attorney_only")] if u["role"] in ("paralegal","attorney","admin") else [d for d in documents.values() if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") in {"Client Review", "Attorney Approved"} and not d.get("attorney_only")]
     if matter_id: out=[d for d in out if d["matter_id"]==matter_id]
     if status: out=[d for d in out if d["status"]==status]
     return out
@@ -600,6 +600,8 @@ def update_document(doc_id: str, payload: DocumentUpdate,
                    authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if doc_id not in documents: raise HTTPException(404,"document not found")
+    if documents[doc_id].get("attorney_only") and user["role"] not in {"attorney", "admin"}:
+        raise HTTPException(403, "Attorney access required")
     status,version=payload.status,payload.version
     if status is not None: documents[doc_id]["status"]=status
     if version is not None: documents[doc_id]["version"]=version
@@ -692,6 +694,11 @@ def my_workflows(authorization: Optional[str]=Header(None)):
 def my_workflow(authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization)
     if user["role"] in ("paralegal", "attorney", "admin"):
+        if user["role"] in {"attorney", "admin"}:
+            return [{**workflow, "attorney_demo_drafts": {
+                doc["name"]: {"content": doc["content"], "document_id": doc["id"], "version": doc["version"], "status": doc["status"]}
+                for doc in documents.values() if doc.get("workflow_id") == workflow.get("id") and doc.get("attorney_only") and doc.get("status") != "Superseded"
+            }} for workflow in workflows.values()]
         return list(workflows.values())
     workflow = client_workflow(user)
     if workflow:
@@ -863,6 +870,50 @@ def _beam_review_summary(name, template_filled):
     return content.strip()
 
 
+DEMO_FORM_TEMPLATES = {
+    "Revocable living trust": "revocable-living-trust.md",
+    "Pour-over will": "pour-over-will.md",
+    "Advance health care directive": "advance-health-care-directive.md",
+    "Financial power of attorney": "financial-power-of-attorney.md",
+}
+
+
+def render_attorney_demo_form(workflow, name):
+    if name not in DEMO_FORM_TEMPLATES:
+        raise HTTPException(400, "Unsupported estate document type")
+    path = os.path.join(TEMPLATE_ROOT, "demo", DEMO_FORM_TEMPLATES[name])
+    try:
+        template = open(path, encoding="utf-8").read()
+    except OSError as error:
+        raise HTTPException(503, "Demo form template is unavailable") from error
+    fields = {"client_name": workflow.get("client_name", "Not provided")}
+    fields.update(workflow.get("intake", {}).get("general", {}))
+    fields.update(workflow.get("intake", {}).get("documents", {}).get(name, {}))
+    aliases = {
+        "trust_name": fields.get("trust_name", "Not provided"),
+        "funding_plan": fields.get("asset_categories", fields.get("funding_plan", "Not provided")),
+        "successor_trustee": fields.get("successor_trustees", fields.get("successor_trustee", "Not provided")),
+        "alternate_successor_trustee": fields.get("alternate_successor_trustee", "Not provided"),
+        "distribution_summary": fields.get("distributions", fields.get("distribution_summary", "Not provided")),
+        "executor": fields.get("executor", "Not provided"), "guardian": fields.get("guardian", "Not provided"),
+        "alternate_guardian": fields.get("alternate_guardian", "Not provided"),
+        "healthcare_agent": fields.get("health_agent", fields.get("healthcare_agent", "Not provided")),
+        "alternate_healthcare_agent": fields.get("alternate_health_agent", fields.get("alternate_healthcare_agent", "Not provided")),
+        "end_of_life_notes": fields.get("end_of_life_notes", "Not provided"),
+        "hipaa_status": fields.get("hipaa_status", "Not provided"),
+        "agent": fields.get("financial_agent", fields.get("agent", "Not provided")),
+        "alternate_agent": fields.get("alternate_financial_agent", fields.get("alternate_agent", "Not provided")),
+        "authority_scope": fields.get("authority_scope", "Not provided"),
+        "gifting_authority": fields.get("gifting_authority", "Not provided"),
+        "real_property_authority": fields.get("real_property_authority", "Not provided"),
+    }
+    import re
+    body = re.sub(r"{{\s*([a-zA-Z0-9_]+)\s*}}", lambda m: str(aliases.get(m.group(1), fields.get(m.group(1), "Not provided")) or "Not provided"), template)
+    return ("DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\n"
+            "DRAFT — ATTORNEY REVIEW REQUIRED — NOT LEGALLY APPROVED — NOT SIGNING-READY\n"
+            "Do not use with clients. California statutory requirements are unverified.\n\n" + body)
+
+
 def render_workflow_document(workflow, name):
     template_name = WORKFLOW_TEMPLATES[name]
     template_path = os.path.join(TEMPLATE_ROOT, template_name)
@@ -898,6 +949,38 @@ def render_workflow_document(workflow, name):
         body = _beam_review_summary(name, body)
     label = "DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\n" if workflow.get("demo_mode") else ""
     return label + "DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\nThis working summary/checklist is not an executed or execution-ready legal instrument.\n\n" + body
+
+
+@app.post("/workflows/{workflow_id}/attorney-demo-drafts")
+def generate_attorney_demo_drafts(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"attorney", "admin"})
+    workflow = workflows.get(workflow_id)
+    if not workflow: raise HTTPException(404, "request not found")
+    if workflow.get("conflict_status") not in {"cleared", "demo_cleared"} or workflow.get("stage") != "draft_ready":
+        raise HTTPException(409, "Conflict review and completed intake are required")
+    requested = workflow.get("documents_requested", [])
+    if not requested or any(name not in DEMO_FORM_TEMPLATES for name in requested):
+        raise HTTPException(409, "Choose supported estate documents before generation")
+    rendered = {name: render_attorney_demo_form(workflow, name) for name in requested}
+    matter = ensure_workflow_matter(workflow)
+    # Prepare all records before changing shared state so rendering errors are atomic.
+    generated, records = {}, []
+    for name, content in rendered.items():
+        existing = [d for d in documents.values() if d.get("matter_id") == matter["id"] and d.get("name") == name]
+        version = max((d.get("version", 0) for d in existing), default=0) + 1
+        record = {"id": str(uuid.uuid4()), "matter_id": matter["id"], "workflow_id": workflow_id,
+                  "name": name, "version": version, "status": "Attorney Review", "content": content,
+                  "attorney_only": True, "created_at": now_iso()}
+        records.append((record, existing))
+        generated[name] = {"status": "Attorney Review", "content": content, "document_id": record["id"], "version": version}
+    for record, existing in records:
+        for prior in existing:
+            if prior.get("status") in {"Client Review", "Attorney Review"}: prior["status"] = "Superseded"
+        documents[record["id"]] = record
+    workflow["updated_at"] = now_iso()
+    log_audit(user["email"], "generate_attorney_demo_drafts", "workflow", workflow_id, ", ".join(requested))
+    save_data()
+    return {"workflow_id": workflow_id, "drafts": generated}
 
 
 @app.post("/workflows/{workflow_id}/drafts")

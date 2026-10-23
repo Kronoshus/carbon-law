@@ -481,3 +481,53 @@ def test_change_request_status_updates_client_view_and_closes_linked_task():
     resolved=next(item for item in visible if item["id"]==cr["id"])
     assert resolved["resolution"]=="Completed after attorney review"
     assert all("note" not in item and "requested_by" not in item and "task_id" not in item for item in visible)
+
+
+def test_attorney_demo_drafts_are_attorney_only_and_do_not_advance_workflow(monkeypatch):
+    import app as backend
+    backend.users["estate-attorney@example.com"]={"id":str(uuid.uuid4()),"name":"Estate Attorney","email":"estate-attorney@example.com","role":"attorney","password_hash":hash_pw("estate-attorney-password"),"created_at":datetime.datetime.utcnow().isoformat()}
+    attorney=c.post("/auth/login",json={"email":"estate-attorney@example.com","password":"estate-attorney-password"}).json()
+    ah={"Authorization":"Bearer "+attorney["token"]}
+    client=c.post("/auth/signup",json={"name":"Demo Client","email":"attorney-demo-client@example.com","password":"long-secure-password"}).json()
+    ch={"Authorization":"Bearer "+client["token"]}
+    workflow=c.post("/workflows",json={},headers=ch).json(); wid=workflow["id"]
+    assert c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ch).status_code==403
+    assert c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ah).status_code==409
+    paralegal=c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
+    ph={"Authorization":"Bearer "+paralegal["token"]}
+    assert c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ph).status_code==403
+    staff_clear=c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=ph)
+    assert staff_clear.status_code==200
+    assert c.patch(f"/workflows/{wid}/documents",json={"documents_requested":["Pour-over will"]},headers=ch).status_code==200
+    assert c.patch(f"/workflows/{wid}/intake",json={"general":{},"documents":{"Pour-over will":{"executor":"Fictional Executor"}}},headers=ch).status_code==200
+    before=c.get("/my-workflow",headers=ch).json()
+    assert before["stage"]=="draft_ready"
+    generated=c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ah)
+    assert generated.status_code==200
+    draft=generated.json()["drafts"]["Pour-over will"]["content"]
+    assert "Fictional Executor" in draft and "NOT LEGALLY APPROVED" in draft and "NOT SIGNING-READY" in draft
+    assert "California statutory requirements are unverified" in draft
+    from app import DEMO_FORM_TEMPLATES, render_attorney_demo_form
+    assert len(DEMO_FORM_TEMPLATES)==4
+    for name in DEMO_FORM_TEMPLATES:
+        form=render_attorney_demo_form({"client_name":"Fictional Client","intake":{"general":{},"documents":{}}},name)
+        assert "DEMO — SIMULATION ONLY" in form and "ATTORNEY TO COMPLETE" in form
+    assert c.get("/my-workflow",headers=ch).json()["stage"]=="draft_ready"
+    assert draft not in str(c.get("/my-workflow",headers=ch).json())
+    assert draft not in str(c.get("/documents",headers=ch).json())
+    assert draft not in str(c.get("/documents",headers=ph).json())
+    row=next(w for w in c.get("/my-workflow",headers=ah).json() if w["id"]==wid)
+    assert row["attorney_demo_drafts"]["Pour-over will"]["content"]==draft
+    docid=generated.json()["drafts"]["Pour-over will"]["document_id"]
+    attorney_doc=next(d for d in c.get("/documents",headers=ah).json() if d["id"]==docid)
+    assert attorney_doc["status"]=="Attorney Review" and attorney_doc["content"]==draft
+    assert c.get("/documents",headers=ch).json()==[]
+    assert c.patch(f"/documents/{docid}",json={"status":"Client Review"},headers=ph).status_code==403
+    audit=[event for event in backend.audit if event.get("action")=="generate_attorney_demo_drafts" and event.get("entity_id")==wid]
+    assert audit and audit[-1]["actor"]=="estate-attorney@example.com"
+    assert draft not in str(audit[-1]) and "Fictional Executor" not in str(audit[-1])
+    # A retry versions the draft and retains history while superseding the prior active version.
+    second=c.post(f"/workflows/{wid}/attorney-demo-drafts",headers=ah).json()
+    docs=[d for d in backend.documents.values() if d.get("workflow_id")==wid and d.get("attorney_only")]
+    assert sorted((d["version"],d["status"]) for d in docs)==[(1,"Superseded"),(2,"Attorney Review")]
+    assert second["drafts"]["Pour-over will"]["version"]==2
