@@ -230,7 +230,8 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert c.post(f"/workflows/{demo['id']}/edit",headers=demo_headers).status_code==200
     assert c.patch(f"/workflows/{demo['id']}/intake",json={"general":{"family":"Updated"},"documents":{}},headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["intake"]["general"]["family"]=="Updated"
-    assert c.post("/workflows",json={"demo_mode":True},headers=demo_headers).status_code==409
+    second=c.post("/workflows",json={"demo_mode":True},headers=demo_headers)
+    assert second.status_code==200 and second.json()["id"]!=demo["id"] and second.json()["matter_id"]!=demo["matter_id"]
 
 
 def test_client_can_cancel_only_own_workflow_appointment():
