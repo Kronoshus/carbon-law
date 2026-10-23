@@ -17,6 +17,11 @@ async function request(path, method="GET", body=null) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+function formatAppointmentTime(value) {
+  if (!value || value === "Not requested") return value || "Not requested";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {dateStyle:"long", timeStyle:"short"});
+}
 function showToast(msg) {
   const t = document.createElement("div"); t.className="toast"; t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
@@ -47,8 +52,8 @@ async function loadPlanningRequest() {
       return;
     }
     const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
-    const consultation = workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at || "Not requested";
-    const signing = workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at || "Not requested";
+    const consultation = formatAppointmentTime(workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at);
+    const signing = formatAppointmentTime(workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at);
     const cancel = ["consultation", "signing"].filter(kind => workflow.appointments?.[kind] && !["cancelled", "Cancelled"].includes(workflow.appointments[kind].status)).map(kind => `<button class="btn secondary" data-cancel-appointment="${kind}">Cancel ${kind}</button>`).join(" ");
     box.innerHTML = `<h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p><p><strong>Consultation:</strong> ${esc(consultation)}</p><p><strong>Signing:</strong> ${esc(signing)}</p>${cancel}<p><button class="btn" id="editPlanningRequest">Modify planning request</button></p>`;
     box.querySelectorAll("[data-cancel-appointment]").forEach(button => button.onclick = async () => {
