@@ -37,6 +37,6 @@ function showComplete(){const signing=workflow.appointments?.signing;el("stepBod
 async function cancelWorkflowAppointment(kind){try{workflow=await call(`/workflows/${workflow.id}/cancel-appointment`,"POST",{decision:"cancel",note:kind});render()}catch(e){showError(e.message)}}
 function showError(msg){let box=document.createElement("p");box.className="intake-error";box.textContent=msg;el("stepBody").prepend(box)}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-async function refresh(){try{workflow=await call("/my-workflow");render()}catch(e){showError(e.message)}}
+async function refresh(){try{const params=new URLSearchParams(location.search);const requestedId=params.get("workflow");if(requestedId){const all=await call("/my-workflows");workflow=all.find(item=>item.id===requestedId);if(!workflow)throw Error("Planning request not found");viewPart=Number(params.get("part"))||null}else workflow=await call("/my-workflow");render()}catch(e){showError(e.message)}}
 if(!user||!getToken())location.href="login.html";else refresh();
 </script></body></html>

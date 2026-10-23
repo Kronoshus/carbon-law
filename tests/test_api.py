@@ -140,6 +140,8 @@ def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     staff = c.post("/auth/login",json={"email":"staff@example.com","password":"staff-test-password"}).json()
     staff_headers = {"Authorization":"Bearer "+staff["token"]}
     assert c.patch(f"/workflows/{wid}/staff-review",json={"decision":"conflict_cleared"},headers=staff_headers).status_code == 200
+    reopened=c.post(f"/workflows/{wid}/reopen-section",json={"part":2},headers=headers)
+    assert reopened.status_code==200 and reopened.json()["stage"]=="document_selection"
     assert c.post(f"/workflows/{wid}/reopen-section",json={"part":3},headers=headers).status_code==200
     assert c.post(f"/workflows/{wid}/reopen-section",json={"part":1},headers=headers).status_code==200
     updated=c.patch(f"/workflows/{wid}/conflict-info",json={"phone":"555-0000","related_names":["Another Person"]},headers=headers)

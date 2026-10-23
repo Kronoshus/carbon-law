@@ -67,7 +67,7 @@ async function loadPlanningRequest() {
       catch (error) { showToast("Could not cancel appointment: " + error.message); }
     });
     box.querySelectorAll("[data-edit-workflow]").forEach(button => button.onclick = async () => {
-      try { await request(`/workflows/${button.dataset.editWorkflow}/edit`, "POST", {}); location.href = "intake.html"; }
+      try { await request(`/workflows/${button.dataset.editWorkflow}/reopen-section`, "POST", {part:2}); location.href = `intake.html?workflow=${encodeURIComponent(button.dataset.editWorkflow)}&part=2`; }
       catch (error) { showToast("Could not edit request: " + error.message); }
     });
   } catch (error) { box.textContent = "Could not load your planning requests: " + error.message; }
