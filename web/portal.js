@@ -117,10 +117,10 @@ document.addEventListener("DOMContentLoaded", () => {
   load();
   el("changeType")?.addEventListener("change", () => {
     const isNewWill = el("changeType").value === "New will";
-    el("crMatter").required = !isNewWill;
     el("matterIdGroup").hidden = isNewWill;
+    el("crMatter").required = !isNewWill;
     el("crMatter").disabled = false;
-    el("crMatter").value = "";
+    el("crMatter").value = isNewWill ? "" : (matters[0]?.id || "");
     el("crOut").textContent = "";
     if (isNewWill && !pendingNewWill) el("crOut").textContent = "Submit to create a new matter ID.";
     if (isNewWill && pendingNewWill) showNewWillMatter(pendingNewWill);
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const workflow = pendingNewWill || await request("/workflows", "POST", {related_names:[], demo_mode:false});
         pendingNewWill = workflow;
-        showNewWillMatter(workflow);
+        location.href = "intake.html";
       } catch (error) { el("crOut").textContent = error.message; }
       return;
     }

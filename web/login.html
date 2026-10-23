@@ -31,7 +31,7 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
     setToken(result.token); setUser(result.user);
     document.getElementById("out").textContent = "Logged in. Redirecting...";
     const u = result.user;
-    const destination = u.role === "client" ? await api("/my-workflow", "GET", null, result.token).then(workflow => workflow?.stage === "complete" ? "portal.html" : "intake.html").catch(() => "intake.html") : "admin.html";
+    const destination = u.role === "client" ? await api("/my-workflow", "GET", null, result.token).then(workflow => workflow?.stage === "complete" || (workflow?.appointments?.consultation?.requested_at && workflow?.appointments?.signing?.requested_at) ? "portal.html" : "intake.html").catch(() => "intake.html") : "admin.html";
     setTimeout(() => window.location.href = destination, 800);
   } catch (e) {
     document.getElementById("out").textContent = e.message.includes("invalid credentials")

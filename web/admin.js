@@ -1,6 +1,7 @@
 function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch])); }
 
 const STAGES = ["1 Intake","2 Attorney Scope","3 Client Data Collection","4 Drafting","5 Review Queue","6 Client Review","7 Signing Preparation","8 Execution","9 Funding Follow-Up","10 Closed"];
+function formatAppointmentTime(value) { if (!value) return ""; const date = new Date(value); return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {dateStyle:"long",timeStyle:"short"}); }
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
   if (!el || !report) return;
@@ -83,7 +84,7 @@ async function loadAppointments() {
       rows.innerHTML = "";
       items.forEach(a => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${esc(a.matter_id)}</td><td>${esc(a.kind)}</td><td>${esc(a.scheduled_at)}</td><td>${esc(a.status)}</td><td>${esc(a.note||"")}</td>`;
+        tr.innerHTML = `<td>${a.id.slice(0,8)}</td><td>${esc(a.matter_id)}</td><td>${esc(a.kind)}</td><td>${esc(formatAppointmentTime(a.scheduled_at))}</td><td>${esc(a.status)}</td><td>${esc(a.note||"")}</td>`;
         rows.appendChild(tr);
       });
     }
