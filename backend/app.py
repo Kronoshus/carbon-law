@@ -731,6 +731,10 @@ def schedule_workflow(workflow_id: str, req: WorkflowAppointment, authorization:
     if user["role"] == "client":
         if workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
         workflow["appointments"][kind] = {"requested_at":at,"status":"requested"}
+        if workflow.get("demo_mode"):
+            workflow["appointments"][kind]["status"] = "scheduled"
+            if kind == "consultation": workflow["stage"] = "signing"
+            else: workflow["stage"] = "complete"
     elif user["role"] in {"paralegal", "attorney", "admin"}:
         workflow["appointments"][kind] = {"scheduled_at":at,"status":"scheduled"}
         if kind == "signing": workflow["stage"] = "complete"

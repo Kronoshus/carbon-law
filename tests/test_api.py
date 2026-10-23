@@ -203,6 +203,10 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert c.patch(f"/workflows/{demo['id']}/client-review",json={"decision":"approved"},headers=demo_headers).json()["stage"]=="attorney_review"
     assert c.post(f"/workflows/{demo['id']}/demo-attorney-review",headers=demo_headers).status_code==200
     assert c.get("/my-workflow",headers=demo_headers).json()["stage"]=="consultation"
+    consultation=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"consultation","scheduled_at":"2030-01-01T10:00"},headers=demo_headers)
+    assert consultation.status_code==200 and consultation.json()["stage"]=="signing"
+    signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
+    assert signing.status_code==200 and signing.json()["stage"]=="complete"
 
 
 def test_signup_accepts_six_character_password_and_rejects_five():
