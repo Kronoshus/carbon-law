@@ -158,7 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     try {
       const result = await request("/change-requests","POST",body);
-      el("crOut").textContent = "Submitted: " + result.id;
+      el("crOut").textContent = "Submitted. Current status: " + result.status;
+      await loadChangeRequests();
     } catch (error) { el("crOut").textContent = error.message; }
   });
   el("bookAppt")?.addEventListener("click", async () => {

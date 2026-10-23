@@ -1,4 +1,4 @@
-import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io, asyncio
+import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io, asyncio, urllib.request, urllib.error
 from fastapi import FastAPI, HTTPException, Header, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -823,6 +823,47 @@ WORKFLOW_TEMPLATES = {
 }
 
 
+BEAM_DOCUMENT_GUIDANCE = {
+    "Revocable living trust": "Summarize trust identity, settlors, successor trustees, distribution wishes, and stated funding plan. Flag missing spouse or co-settlor facts and unresolved distribution terms.",
+    "Pour-over will": "Summarize testator, executor, guardian and alternate guardian nominations, and the stated pour-over destination. Flag a missing trust identity or any nomination that is not provided.",
+    "Advance health care directive": "Summarize healthcare agent and alternate, HIPAA status, and stated end-of-life notes. Do not interpret medical wishes or add medical advice.",
+    "Financial power of attorney": "Summarize named financial agent and alternate, stated authority scope, gifting authority, and real-property authority. Flag each item not provided; do not infer powers.",
+}
+
+
+def _beam_review_summary(name, template_filled):
+    from dotenv import load_dotenv
+    load_dotenv(os.path.expanduser("~/.config/carbon-law/beam.env"), override=False)
+    api_key = os.environ.get("BEAM_API_KEY")
+    if not api_key:
+        raise HTTPException(503, "Beam is not configured for simulated document generation")
+    base_url = os.environ.get("BEAM_BASE_URL", "https://api.reflection.ai/openai/v1").rstrip("/")
+    model = os.environ.get("BEAM_MODEL", "Beam-1.0-501B-A23B")
+    prompt = (
+        "Create a clearer, client-specific working estate-planning summary from the supplied "
+        "California template and intake values. This is a simulated demonstration, not a legal "
+        "instrument. Preserve the template's headings and supplied facts. Do not add legal terms, "
+        "invent missing facts, claim statutory compliance, or give signing instructions. Mark "
+        "unknowns as Not provided and put unresolved choices in an Attorney review questions section. "
+        "Return only the summary text.\n\n"
+        f"Requested item: {name}\nDocument-specific guidance: {BEAM_DOCUMENT_GUIDANCE[name]}\n\nTemplate with intake values:\n{template_filled}"
+    )
+    payload = json.dumps({"model": model, "messages": [
+        {"role": "system", "content": "You produce simulated attorney-review summaries, never legal instruments."},
+        {"role": "user", "content": prompt}], "temperature": 0.2}).encode()
+    request = urllib.request.Request(base_url + "/chat/completions", data=payload,
+        headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=45) as response:
+            result = json.loads(response.read())
+        content = result["choices"][0]["message"]["content"]
+    except (urllib.error.URLError, TimeoutError, KeyError, IndexError, TypeError, ValueError) as error:
+        raise HTTPException(502, "Beam could not generate the simulated review summary") from error
+    if not isinstance(content, str) or not content.strip():
+        raise HTTPException(502, "Beam returned an empty simulated review summary")
+    return content.strip()
+
+
 def render_workflow_document(workflow, name):
     template_name = WORKFLOW_TEMPLATES[name]
     template_path = os.path.join(TEMPLATE_ROOT, template_name)
@@ -854,6 +895,8 @@ def render_workflow_document(workflow, name):
     }
     import re
     body = re.sub(r"{{\s*([a-zA-Z0-9_]+)\s*}}", lambda match: str(aliases.get(match.group(1), fields.get(match.group(1), "Not provided")) or "Not provided"), open(template_path, encoding="utf-8").read())
+    if workflow.get("demo_mode"):
+        body = _beam_review_summary(name, body)
     label = "DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\n" if workflow.get("demo_mode") else ""
     return label + "DRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\nThis working summary/checklist is not an executed or execution-ready legal instrument.\n\n" + body
 

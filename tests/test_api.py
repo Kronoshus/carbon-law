@@ -173,6 +173,17 @@ def test_all_estate_workflow_outputs_are_attorney_review_summaries():
         assert "not an executed or execution-ready legal instrument" in content
 
 
+def test_demo_workflow_generates_summary_with_beam_and_keeps_review_labels(monkeypatch):
+    import app as backend
+    called = []
+    monkeypatch.setattr(backend, "_beam_review_summary", lambda name, body: called.append((name, body)) or "Generated simulated summary")
+    workflow = {"client_name": "Demo Client", "intake": {"general": {}, "documents": {}}, "demo_mode": True}
+    content = backend.render_workflow_document(workflow, "Pour-over will")
+    assert called and called[0][0] == "Pour-over will"
+    assert content.startswith("DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\nDRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\n")
+    assert content.endswith("Generated simulated summary")
+
+
 def test_workflow_requires_staff_conflict_clearance_and_gates_order():
     client = c.post("/auth/signup", json={"name":"Workflow Client","email":"flow@example.com","password":"long-secure-password"}).json()
     headers = {"Authorization":"Bearer "+client["token"]}
