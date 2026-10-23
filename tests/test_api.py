@@ -207,6 +207,7 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     assert consultation.status_code==200 and consultation.json()["stage"]=="signing"
     signing=c.patch(f"/workflows/{demo['id']}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00"},headers=demo_headers)
     assert signing.status_code==200 and signing.json()["stage"]=="complete"
+    assert c.post("/workflows",json={"demo_mode":True},headers=demo_headers).status_code==200
 
 
 def test_signup_accepts_six_character_password_and_rejects_five():

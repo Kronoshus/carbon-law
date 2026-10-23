@@ -588,7 +588,7 @@ def my_workflow(authorization: Optional[str]=Header(None)):
 def start_workflow(req: WorkflowStart, authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"client"})
     current = client_workflow(user)
-    if current and current["stage"] != "closed":
+    if current and current["stage"] not in {"closed", "complete"}:
         raise HTTPException(409, "You already have a request in progress")
     now = now_iso()
     workflow = {"id":str(uuid.uuid4()), "client_user_id":user["id"], "client_name":user["name"],

@@ -30,9 +30,23 @@ async function load() {
   try { matters = await request("/my-matters"); } catch(e){ matters=[]; showToast("Backend unavailable"); }
   renderMatterSelects();
   renderDetail();
+  loadPlanningRequest();
   loadDocs();
   if (currentUser && currentUser.role !== "client") loadReport();
 }
+async function loadPlanningRequest() {
+  const box = el("planningRequest");
+  if (!box) return;
+  try {
+    const workflow = await request("/my-workflow");
+    if (!workflow) { box.textContent = "No planning request yet."; return; }
+    const docs = (workflow.documents_requested || []).join(", ") || "Not selected yet";
+    const consultation = workflow.appointments?.consultation?.scheduled_at || workflow.appointments?.consultation?.requested_at || "Not requested";
+    const signing = workflow.appointments?.signing?.scheduled_at || workflow.appointments?.signing?.requested_at || "Not requested";
+    box.innerHTML = `<h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p><p><strong>Consultation:</strong> ${esc(consultation)}</p><p><strong>Signing:</strong> ${esc(signing)}</p>`;
+  } catch (_) { box.textContent = "Could not load your planning request."; }
+}
+
 function matterOptions(selectId) {
   const sel = el(selectId);
   if (!sel) return;
@@ -87,6 +101,13 @@ document.addEventListener("DOMContentLoaded", () => {
   el("matterSelect")?.addEventListener("change", renderDetail);
   el("changeForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (el("changeType").value === "New will") {
+      try {
+        await request("/workflows", "POST", {related_names:[], demo_mode:false});
+        window.location.href = "intake.html";
+      } catch (error) { el("crOut").textContent = error.message; }
+      return;
+    }
     const body = {
       matter_id: el("crMatter").value,
       requested_by: "client",
@@ -95,8 +116,10 @@ document.addEventListener("DOMContentLoaded", () => {
       impact: el("crImpact").value,
       status: "Open"
     };
-    const result = await request("/change-requests","POST",body);
-    el("crOut").textContent = "Submitted: " + result.id;
+    try {
+      const result = await request("/change-requests","POST",body);
+      el("crOut").textContent = "Submitted: " + result.id;
+    } catch (error) { el("crOut").textContent = error.message; }
   });
   el("bookAppt")?.addEventListener("click", async () => {
     const body = {
