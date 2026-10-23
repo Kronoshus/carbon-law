@@ -321,3 +321,7 @@ body:not(.home-page) .sidebar { width:248px; }
 .intake-tip-button:hover,.intake-tip-button:focus-visible { background:#242424; color:#fff; outline:2px solid #ff4e00; outline-offset:2px; }
 .intake-tip-text { position:absolute; z-index:5; left:50%; bottom:calc(100% + 8px); width:min(260px,80vw); transform:translateX(-50%); padding:10px 12px; border-radius:5px; background:#242424; color:#fff; font-size:13px; font-weight:400; line-height:1.45; box-shadow:0 4px 14px #0003; visibility:hidden; opacity:0; transition:opacity .15s; }
 .intake-tip:hover .intake-tip-text,.intake-tip:focus-within .intake-tip-text { visibility:visible; opacity:1; }
+
+.intake-step-nav { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:20px 0 0; }
+.intake-step-nav span { color:#54595f; font-size:14px; }
+.intake-step-nav button:disabled { opacity:.5; cursor:not-allowed; }
