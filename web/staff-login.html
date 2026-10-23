@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Staff Sign In | Carbon Law Group</title><link rel="stylesheet" href="styles.css"></head>
+<body class="home-page">
+<header class="home-nav"><a class="home-brand" href="index.html"><span class="home-mark">C</span><span>CARBON <i>LAW GROUP</i></span></a><nav></nav><a class="home-nav-cta" href="login.html">Client sign in ↗</a></header>
+<main class="auth-shell"><div class="auth-wrap"><form class="auth-card" id="staffLoginForm">
+<h1>Staff &amp; attorney sign in</h1><p>Use your existing staff account. Staff accounts are provisioned by an administrator; this portal does not offer public staff registration.</p>
+<div class="form-group"><label for="email">Work email</label><input id="email" type="email" autocomplete="username" required></div>
+<div class="form-group"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button class="btn" style="width:100%" id="submit" type="submit">Sign in to staff portal</button><p id="message" role="status" aria-live="polite"></p>
+</form></div></main>
+<footer class="home-footer"><a class="home-brand" href="index.html"><span class="home-mark">C</span><span>CARBON <i>LAW GROUP</i></span></a><span>Authorized staff access only.</span><a href="index.html">Home</a></footer>
+<script src="auth.js"></script><script>
+document.getElementById("staffLoginForm").addEventListener("submit", async event => {
+ event.preventDefault(); const button=document.getElementById("submit"), message=document.getElementById("message"); button.disabled=true; message.textContent="Signing in…";
+ try { const result=await api("/auth/login","POST",{email:document.getElementById("email").value,password:document.getElementById("password").value});
+ if (!["paralegal","attorney","admin"].includes(result.user.role)) { message.textContent="This sign-in is for authorized staff. Use the client sign-in instead."; button.disabled=false; return; }
+ setToken(result.token); setUser(result.user); location.href="admin.html";
+ } catch(error) { message.textContent=error.message; button.disabled=false; }
+});
+</script></body></html>
