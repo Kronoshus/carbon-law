@@ -678,6 +678,21 @@ def client_review_workflow(workflow_id: str, req: WorkflowDecision, authorizatio
     workflow["updated_at"] = now_iso(); save_data(); return workflow
 
 
+@app.post("/workflows/{workflow_id}/demo-attorney-review")
+def demo_attorney_review(workflow_id: str, authorization: Optional[str]=Header(None)):
+    user,_ = require_auth(authorization, {"client"})
+    workflow = workflows.get(workflow_id)
+    if not workflow or workflow["client_user_id"] != user["id"]: raise HTTPException(404, "request not found")
+    if not workflow.get("demo_mode"): raise HTTPException(403, "Demo review is not enabled for this request")
+    if workflow["stage"] != "attorney_review" or not workflow.get("client_approved"): raise HTTPException(409, "Client approval is required first")
+    workflow["attorney_approved"] = True
+    workflow["stage"] = "consultation"
+    workflow["updated_at"] = now_iso()
+    log_audit(user["email"], "demo_review", "workflow", workflow_id, "simulated attorney review; not a real legal review or approval")
+    save_data()
+    return workflow
+
+
 @app.patch("/workflows/{workflow_id}/staff-review")
 def staff_review_workflow(workflow_id: str, req: WorkflowDecision, authorization: Optional[str]=Header(None)):
     user,_ = require_auth(authorization, {"paralegal", "attorney", "admin"})

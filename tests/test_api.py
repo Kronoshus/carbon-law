@@ -200,6 +200,9 @@ def test_demo_conflict_review_is_explicit_and_delayed():
     draft=c.post(f"/workflows/{demo['id']}/drafts",headers=demo_headers)
     assert draft.status_code==200
     assert draft.json()["stage"]=="client_review"
+    assert c.patch(f"/workflows/{demo['id']}/client-review",json={"decision":"approved"},headers=demo_headers).json()["stage"]=="attorney_review"
+    assert c.post(f"/workflows/{demo['id']}/demo-attorney-review",headers=demo_headers).status_code==200
+    assert c.get("/my-workflow",headers=demo_headers).json()["stage"]=="consultation"
 
 
 def test_signup_accepts_six_character_password_and_rejects_five():
