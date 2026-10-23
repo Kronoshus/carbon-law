@@ -174,12 +174,15 @@ def test_all_estate_workflow_outputs_are_attorney_review_summaries():
 
 
 def test_demo_workflow_generates_summary_with_beam_and_keeps_review_labels(monkeypatch):
+    from pathlib import Path
     import app as backend
     called = []
     monkeypatch.setattr(backend, "_beam_review_summary", lambda name, body: called.append((name, body)) or "Generated simulated summary")
     workflow = {"client_name": "Demo Client", "intake": {"general": {}, "documents": {}}, "demo_mode": True}
     content = backend.render_workflow_document(workflow, "Pour-over will")
     assert called and called[0][0] == "Pour-over will"
+    assert backend.BEAM_DOCUMENT_PROMPTS["Pour-over will"] == "pour-over-will-drafter.md"
+    assert (Path(backend.DOCUMENT_PROMPT_ROOT) / backend.BEAM_DOCUMENT_PROMPTS["Pour-over will"]).is_file()
     assert content.startswith("DEMO — SIMULATION ONLY — NOT A CLIENT DOCUMENT\nDRAFT — FOR ATTORNEY REVIEW — NOT FOR SIGNING\n")
     assert content.endswith("Generated simulated summary")
 

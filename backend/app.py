@@ -13,6 +13,7 @@ ROOT_DIR = os.path.dirname(APP_DIR)
 DATA_FILE = os.path.join(APP_DIR, "data.json")
 PROMPT_ROOT = os.path.join(ROOT_DIR, "prompt-library", "prompts", "california")
 TEMPLATE_ROOT = os.path.join(ROOT_DIR, "templates", "california")
+DOCUMENT_PROMPT_ROOT = os.path.join(ROOT_DIR, "prompt-library", "prompts", "california", "carbon-law")
 
 STAGES = [
     "1 Intake", "2 Attorney Scope", "3 Client Data Collection", "4 Drafting",
@@ -823,11 +824,11 @@ WORKFLOW_TEMPLATES = {
 }
 
 
-BEAM_DOCUMENT_GUIDANCE = {
-    "Revocable living trust": "Summarize trust identity, settlors, successor trustees, distribution wishes, and stated funding plan. Flag missing spouse or co-settlor facts and unresolved distribution terms.",
-    "Pour-over will": "Summarize testator, executor, guardian and alternate guardian nominations, and the stated pour-over destination. Flag a missing trust identity or any nomination that is not provided.",
-    "Advance health care directive": "Summarize healthcare agent and alternate, HIPAA status, and stated end-of-life notes. Do not interpret medical wishes or add medical advice.",
-    "Financial power of attorney": "Summarize named financial agent and alternate, stated authority scope, gifting authority, and real-property authority. Flag each item not provided; do not infer powers.",
+BEAM_DOCUMENT_PROMPTS = {
+    "Revocable living trust": "revocable-living-trust-drafter.md",
+    "Pour-over will": "pour-over-will-drafter.md",
+    "Advance health care directive": "advance-health-care-directive-drafter.md",
+    "Financial power of attorney": "financial-power-of-attorney-drafter.md",
 }
 
 
@@ -839,17 +840,15 @@ def _beam_review_summary(name, template_filled):
         raise HTTPException(503, "Beam is not configured for simulated document generation")
     base_url = os.environ.get("BEAM_BASE_URL", "https://api.reflection.ai/openai/v1").rstrip("/")
     model = os.environ.get("BEAM_MODEL", "Beam-1.0-501B-A23B")
-    prompt = (
-        "Create a clearer, client-specific working estate-planning summary from the supplied "
-        "California template and intake values. This is a simulated demonstration, not a legal "
-        "instrument. Preserve the template's headings and supplied facts. Do not add legal terms, "
-        "invent missing facts, claim statutory compliance, or give signing instructions. Mark "
-        "unknowns as Not provided and put unresolved choices in an Attorney review questions section. "
-        "Return only the summary text.\n\n"
-        f"Requested item: {name}\nDocument-specific guidance: {BEAM_DOCUMENT_GUIDANCE[name]}\n\nTemplate with intake values:\n{template_filled}"
-    )
+    prompt_file = os.path.join(DOCUMENT_PROMPT_ROOT, BEAM_DOCUMENT_PROMPTS[name])
+    try:
+        with open(prompt_file, encoding="utf-8") as source:
+            prompt_template = source.read()
+    except (OSError, KeyError) as error:
+        raise HTTPException(503, f"The attorney-review prompt for {name} is unavailable") from error
+    prompt = prompt_template.replace("{{TEMPLATE_AND_INTAKE}}", template_filled)
     payload = json.dumps({"model": model, "messages": [
-        {"role": "system", "content": "You produce simulated attorney-review summaries, never legal instruments."},
+        {"role": "system", "content": "Follow the supplied document-specific drafting prompt. Produce only an attorney-review draft, never a final legal instrument."},
         {"role": "user", "content": prompt}], "temperature": 0.2}).encode()
     request = urllib.request.Request(base_url + "/chat/completions", data=payload,
         headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, method="POST")
