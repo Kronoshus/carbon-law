@@ -572,3 +572,34 @@ def test_attorney_demo_drafts_are_attorney_only_and_do_not_advance_workflow(monk
     assert sorted((d["version"],d["status"]) for d in docs)==[(1,"Superseded"),(2,"Attorney Review")]
     assert next(d for d in docs if d["version"]==1)["replaced_by_version"]==2
     assert second["drafts"]["Pour-over will"]["version"]==2
+
+
+def test_signup_email_webhook_requires_json_ack_and_sends_secret_in_body(monkeypatch, capsys):
+    import io, json
+    import app as backend
+    calls = []
+
+    class Response(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *args): self.close()
+
+    def urlopen(request, timeout):
+        calls.append((request, timeout))
+        return Response(b'{"ok":true}')
+
+    monkeypatch.setenv("EMAIL_WEBHOOK_URL", "https://webhook.invalid/private-path")
+    monkeypatch.setenv("EMAIL_WEBHOOK_SECRET", "test-secret")
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASS", raising=False)
+    monkeypatch.setattr(backend.urllib.request, "urlopen", urlopen)
+
+    assert backend.send_signup_email("client@example.com", "Client") is True
+    request, timeout = calls[0]
+    sent = json.loads(request.data)
+    assert sent["secret"] == "test-secret"
+    assert "X-Webhook-Secret" not in request.headers
+    assert timeout == 20
+
+    monkeypatch.setattr(backend.urllib.request, "urlopen", lambda *args, **kwargs: Response(b"<html>Script function not found</html>"))
+    assert backend.send_signup_email("client@example.com", "Client") is False
+    assert "webhook.invalid" not in capsys.readouterr().out

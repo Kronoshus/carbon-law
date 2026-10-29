@@ -318,14 +318,15 @@ Carbon Law Group
         try:
             import urllib.request, urllib.error, json as _j
             payload = _j.dumps({"to":to_email,"subject":subject,"body":body,
-                "from": os.environ.get("SMTP_FROM", "info@carbonlaw.com")}).encode()
+                "from": os.environ.get("SMTP_FROM", "info@carbonlaw.com"),
+                "secret": os.environ.get("EMAIL_WEBHOOK_SECRET", "")}).encode()
             req = urllib.request.Request(webhook, data=payload, headers={"Content-Type":"application/json"})
-            secret = os.environ.get("EMAIL_WEBHOOK_SECRET")
-            if secret: req.add_header("X-Webhook-Secret", secret)
             with urllib.request.urlopen(req, timeout=20) as resp:
-                return True
+                if _j.loads(resp.read()).get("ok") is True:
+                    return True
+            print("EMAIL WEBHOOK ERROR: unexpected response")
         except Exception as e:
-            print("EMAIL WEBHOOK ERROR:", repr(e))
+            print("EMAIL WEBHOOK ERROR:", type(e).__name__)
     host = os.environ.get("SMTP_HOST","smtp.gmail.com")
     port = int(os.environ.get("SMTP_PORT","587"))
     user = os.environ.get("SMTP_USER"); password = os.environ.get("SMTP_PASS")
