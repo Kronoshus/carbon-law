@@ -1,4 +1,6 @@
 
+import { signal } from '@preact/signals';
+import type { I18nKey } from './i18n-keys';
 import es from '../../i18n/es.json';
 import en from '../../i18n/en.json';
 
@@ -9,43 +11,22 @@ const messages: Record<Lang, Record<string, string>> = {
   en: en as Record<string, string>,
 };
 
-let currentLang: Lang = 'es';
+export const lang = signal<Lang>('es');
 
-export function getLang(): Lang {
-  return currentLang;
-}
-
-export function getLocale(lang: Lang = currentLang): string {
-  return lang === 'es' ? 'es-US' : 'en-US';
-}
-
-export function setLang(lang: Lang): void {
-  currentLang = lang;
+export function setLang(l: Lang): void {
+  lang.value = l;
   if (typeof document !== 'undefined') {
-    document.documentElement.lang = lang;
+    document.documentElement.lang = l;
   }
 }
 
-export function setLanguage(lang: Lang): void {
-  setLang(lang);
+export function getLocale(l: Lang = lang.value): string {
+  return l === 'es' ? 'es-US' : 'en-US';
 }
 
-export const lang = {
-  get value(): Lang {
-    return currentLang;
-  },
-  set value(v: Lang) {
-    setLang(v);
-  },
-};
-
-export function useLang(): Lang {
-  return currentLang;
-}
-
-function formatMoney(cents: number, lang: Lang = currentLang): string {
+export function formatMoney(cents: number): string {
   const n = Number(cents) / 100;
-  return new Intl.NumberFormat(getLocale(lang), {
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
@@ -53,38 +34,42 @@ function formatMoney(cents: number, lang: Lang = currentLang): string {
   }).format(n);
 }
 
-export function plural(count: number, lang: Lang = currentLang): string {
-  return new Intl.PluralRules(getLocale(lang)).select(count);
-}
-
-export function formatDate(date: Date | string | number, lang: Lang = currentLang): string {
+export function formatDate(date: Date | string | number, opts?: Intl.DateTimeFormatOptions): string {
   const d = date instanceof Date ? date : new Date(date);
-  return new Intl.DateTimeFormat(getLocale(lang)).format(d);
+  return new Intl.DateTimeFormat(getLocale(), opts).format(d);
 }
 
-export function formatNumber(value: number, lang: Lang = currentLang): string {
-  return new Intl.NumberFormat(getLocale(lang)).format(value);
-}
+const warned = new Set<string>();
 
-export function t(key: string, vars?: Record<string, unknown>): string {
-  const lang = currentLang;
-  const table = messages[lang] || messages.es;
-  let msg = Object.prototype.hasOwnProperty.call(table, key) ? table[key] : key;
+export function t(key: I18nKey, vars?: Record<string, unknown>): string {
+  const l = lang.value;
+  const table = messages[l] || messages.es;
   const v = vars || {};
-  if (typeof v.cents === 'number') {
-    const money = formatMoney(v.cents as number, lang);
-    msg = msg.replace(/\{cents\}/g, money).replace(/\{money\}/g, money).replace(/\{amount\}/g, money);
+
+  // plural handling: if vars.count is a number and catalog has key.one / key.other
+  let resolvedKey = String(key);
+  if (typeof v.count === 'number') {
+    const oneKey = `${resolvedKey}.one`;
+    const otherKey = `${resolvedKey}.other`;
+    if (Object.prototype.hasOwnProperty.call(table, oneKey) && Object.prototype.hasOwnProperty.call(table, otherKey)) {
+      const cat = new Intl.PluralRules(getLocale(l)).select(v.count as number);
+      const pick = cat === 'one' ? oneKey : otherKey;
+      resolvedKey = pick;
+    }
   }
-  for (const [k, val] of Object.entries(v)) {
-    if (k === 'cents') continue;
-    msg = msg.replace(new RegExp('\\{' + k + '\\}', 'g'), String(val));
+
+  if (!Object.prototype.hasOwnProperty.call(table, resolvedKey)) {
+    if (import.meta.env?.DEV && !warned.has(resolvedKey)) {
+      warned.add(resolvedKey);
+      console.warn(`Missing i18n key: ${resolvedKey}`);
+    }
+    return resolvedKey;
   }
-  if (typeof v.count === 'number' && msg.includes('{plural}')) {
-    msg = msg.replace(/\{plural\}/g, new Intl.PluralRules(getLocale(lang)).select(v.count as number));
-  }
+
+  let msg = table[resolvedKey];
+  msg = msg.replace(/\{(\w+)\}/g, (_m, name: string) => {
+    if (Object.prototype.hasOwnProperty.call(v, name)) return String(v[name]);
+    return `{${name}}`;
+  });
   return msg;
 }
-
-setLang('es');
-
-export default { t, setLang, getLang, setLanguage, lang, plural, formatDate, formatNumber, formatMoney };

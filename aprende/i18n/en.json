@@ -1,5 +1,7 @@
 {
   "app.title": "Aprende y Planea",
   "app.welcome": "Welcome.",
-  "precio": "{cents}"
+  "price.now": "{price}",
+  "lessons.done.one": "1 lesson completed",
+  "lessons.done.other": "{count} lessons completed"
 }
