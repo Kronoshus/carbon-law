@@ -32,9 +32,14 @@ if os.environ.get("APRENDE_INPROCESS_WORKER") == "1":
     @app.on_event("startup")
     def _start_inprocess_worker():
         _worker_mod.start_in_background()
+
+_cors_origins = ["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"]
+_aprende_ext_origin = os.environ.get("APRENDE_EXTENSION_ORIGIN")
+if _aprende_ext_origin:
+    _cors_origins.append(_aprende_ext_origin)
 app.add_middleware(CORSMiddleware,
-                   allow_origins=["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"],
-                   allow_credentials=False, allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+                   allow_origins=_cors_origins,
+                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type"])
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
@@ -150,6 +155,11 @@ def verify_pw(pw, encoded):
         return hmac.compare_digest(actual.hex(), expected)
     return hashlib.sha256(pw.encode()).hexdigest() == encoded
 
+def _session_delta(u):
+    if u and u.get("role") == "client":
+        return datetime.timedelta(days=30)
+    return datetime.timedelta(hours=24)
+
 def get_user_from_token(token):
     s = sessions.get(token)
     if not s: return None
@@ -163,6 +173,9 @@ def get_user_from_token(token):
         del sessions[token]; save_data(); return None
     for u in users.values():
         if u["id"] == uid:
+            # slide session expiry forward on use
+            sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+_session_delta(u)).isoformat()}
+            save_data()
             return u
     return None
 
@@ -284,6 +297,8 @@ class SignupRequest(BaseModel):
     email: str
     password: str
     role: str = "client"
+    adult: bool = False
+    source: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: str
@@ -1250,6 +1265,8 @@ def list_comms(matter_id: Optional[str]=None, authorization: Optional[str]=Heade
 def signup(req: SignupRequest):
     if len(req.password) < 6:
         raise HTTPException(400,"password must be at least 6 characters")
+    if req.source == "aprende" and not req.adult:
+        raise HTTPException(400, "adult consent required")
     req.email = req.email.strip().lower()
     if any(email.strip().lower() == req.email for email in users): raise HTTPException(400,"user already exists")
     if req.role not in ROLES: req.role="client"
@@ -1261,7 +1278,7 @@ def signup(req: SignupRequest):
     users[req.email] = {"id":uid,"name":req.name,"email":req.email,"role":role,
                         "password_hash":hash_pw(req.password),"created_at":now_iso()}
     token = str(uuid.uuid4())
-    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+datetime.timedelta(hours=24)).isoformat()}
+    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+datetime.timedelta(days=30)).isoformat()}
     log_audit(req.email,"signup","user",uid)
     save_data()
     return {"token":token,"user":public_user(users[req.email])}
@@ -1301,7 +1318,9 @@ def login(req: LoginRequest):
     if not u["password_hash"].startswith("scrypt$"):
         u["password_hash"] = hash_pw(req.password)
     token = str(uuid.uuid4())
-    sessions[token] = {"user_id":u["id"],"expires":(datetime.datetime.utcnow()+datetime.timedelta(hours=24)).isoformat()}
+    _days = 30 if u.get("role") == "client" else 1
+    _delta = datetime.timedelta(days=_days) if u.get("role") == "client" else datetime.timedelta(hours=24)
+    sessions[token] = {"user_id":u["id"],"expires":(datetime.datetime.utcnow()+_delta).isoformat()}
     save_data()
     return {"token":token,"user":public_user(u)}
 
