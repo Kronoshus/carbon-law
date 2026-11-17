@@ -1,0 +1,29 @@
+[
+  {"id": "consentimiento", "label": "Consentimiento", "consent": true, "ask": true, "say": "Hola, bienvenido. Soy un asistente virtual de la oficina del abogado Pankaj Raval. No soy el abogado ni una persona real; soy un programa de inteligencia artificial con su imagen. Esta conversación será grabada y transcrita para que el abogado Raval pueda revisarla. Lo que le explico es información general, no asesoría legal. ¿Acepta que grabemos esta conversación? Por favor diga sí o no."},
+
+  {"id": "conflicto", "label": "Revisión de conflictos", "ask": true, "conflict": true, "say": "Gracias. Antes de seguir, la oficina debe revisar que no exista un conflicto de intereses. Por ahora dígame solamente nombres: su nombre completo, el de su cónyuge o pareja, y los de las demás personas que formarían parte de su plan, por ejemplo sus hijos, las personas a quienes dejaría sus bienes, o quien cuidaría de sus hijos. Todavía no me cuente detalles de sus bienes ni de sus deseos."},
+
+  {"id": "que_es", "label": "Qué es un fideicomiso", "say": "Gracias. Hoy le explico, paso a paso, cómo se crea un fideicomiso en vida en California. Un fideicomiso en vida revocable es un documento legal en el que usted pone sus bienes a nombre del fideicomiso. Usted sigue controlando todo mientras viva, y puede cambiarlo o cancelarlo cuando quiera. Cuando usted fallece, la persona que usted eligió entrega los bienes a sus herederos, sin pasar por el tribunal."},
+
+  {"id": "por_que", "label": "Por qué hacerlo", "say": "¿Por qué es importante en California? Porque aquí, cuando una persona fallece con bienes de cierto valor solo a su nombre, por ejemplo una casa, la familia normalmente tiene que pasar por un proceso judicial llamado sucesión, o probate en inglés. Ese proceso suele tardar un año o más, tiene costos fijados por ley que pueden ser de miles de dólares, y es público. Un fideicomiso bien hecho generalmente evita ese proceso. El abogado Raval le confirmará los límites vigentes y si le conviene en su caso."},
+
+  {"id": "paso1", "label": "Paso 1: tipo de fideicomiso", "say": "Paso uno: decidir el tipo de fideicomiso. Una persona soltera hace un fideicomiso individual. Una pareja casada normalmente hace un fideicomiso conjunto, porque en California la mayoría de lo que se adquiere durante el matrimonio es propiedad de los dos."},
+
+  {"id": "paso2", "label": "Paso 2: inventario", "say": "Paso dos: hacer una lista de sus bienes. Casas y terrenos, cuentas de banco, inversiones, negocios, vehículos, seguros de vida y cuentas de retiro. No todo entra al fideicomiso de la misma manera, pero el abogado necesita ver el panorama completo."},
+
+  {"id": "paso3", "label": "Paso 3: personas", "say": "Paso tres: elegir a las personas. Usted normalmente es el primer fiduciario, es decir, quien administra los bienes. Luego elige un fiduciario sucesor, la persona de confianza que tomará su lugar si usted fallece o queda incapacitado. Y elige a sus beneficiarios: quién recibe qué, cuándo y cómo. Por ejemplo, puede decidir que sus hijos reciban su parte a cierta edad, y no todo de una vez."},
+
+  {"id": "paso4", "label": "Paso 4: redacción y firma", "say": "Paso cuatro: redactar y firmar el documento. El abogado prepara el fideicomiso con sus instrucciones. Usted lo revisa, y lo firma, normalmente ante un notario público."},
+
+  {"id": "paso5", "label": "Paso 5: transferir los bienes", "say": "Paso cinco, y es el más importante: transferir sus bienes al fideicomiso. Un fideicomiso vacío no protege nada. Para su casa se prepara una nueva escritura a nombre del fideicomiso y se registra en la oficina del registrador del condado. Pasar su casa a su propio fideicomiso revocable normalmente no cambia sus impuestos de propiedad. Las cuentas de banco e inversiones se cambian al nombre del fideicomiso en cada institución. Las cuentas de retiro y los seguros de vida por lo general no se transfieren; en su lugar se revisa a quién nombró como beneficiario."},
+
+  {"id": "paso6", "label": "Paso 6: documentos de apoyo", "say": "Paso seis: los documentos que acompañan al fideicomiso. Un testamento de respaldo, que envía al fideicomiso cualquier bien que haya quedado fuera y donde se nombra tutor para hijos menores. Un poder notarial para que alguien maneje sus finanzas si usted no puede. Y una directiva anticipada de atención médica, para que alguien de su confianza tome decisiones médicas por usted."},
+
+  {"id": "paso7", "label": "Paso 7: mantenerlo al día", "say": "Paso siete: mantenerlo al día. Revise su fideicomiso cuando haya un cambio importante: un matrimonio, un divorcio, un nacimiento, un fallecimiento, o cuando compre o venda una propiedad. Los bienes nuevos deben comprarse a nombre del fideicomiso."},
+
+  {"id": "preguntas", "label": "Preguntas para el abogado", "ask": true, "say": "Ese es el proceso completo. ¿Qué preguntas tiene para el abogado Raval sobre su situación? Dígamelas ahora y él se las contestará."},
+
+  {"id": "contacto", "label": "Contacto", "ask": true, "say": "¿Cuál es su nombre completo y el mejor número de teléfono o correo electrónico para comunicarnos con usted?"},
+
+  {"id": "cierre", "label": "Cierre", "say": "Muchas gracias. El abogado Raval revisará esta conversación y su oficina se comunicará con usted. Recuerde que esto fue información general; el abogado le dará la recomendación para su caso. Que tenga un excelente día."}
+]
