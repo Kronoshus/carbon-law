@@ -33,6 +33,8 @@ recorded when Carbon Law answers `aprende-questions.md`.
 | F-004 (Q-P1) | No Stripe account yet. | T6-02/T6-03 are built and tested against a mocked Stripe. Real test-mode keys wait for a firm-owned account. The bank account and advance-fee handling are still open. |
 | F-005 (Q-B1) | Token cap raised to 10 B. | Every ticket gets at least 100 M tokens; no ticket grouping (61 tickets ≈ 6.1 B minimum). |
 
+| F-006 | **Phase 1 approved** (Kevin, 2026-11-17). Phase 2 starts. | PR #10 merged. |
+
 ## Findings recorded during discovery
 
 - `backend/app.py`'s client workflow can show drafts to a client before attorney approval (`POST /workflows/{id}/drafts`). Not changed in Phase 1; Q-X1.
