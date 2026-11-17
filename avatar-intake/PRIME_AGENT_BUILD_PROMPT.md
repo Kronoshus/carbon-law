@@ -58,9 +58,9 @@ A fun, Duolingo-style app, Spanish first with full English, that does two things
 2. **Builds their documents while they learn.** Each lesson ends by gathering the person's own facts for that document. After the will lesson, for example: "Who would you want to care for your children?" Those answers fill the client's intake. When the client wants the documents prepared, they pay the firm. The firm then generates the documents, the attorney reviews them, the client signs, and a final lesson teaches how to look after them.
 
 **The whole journey takes two weeks from the first lesson to the final lesson.** The journey, in order (section 2.5 has the day-by-day timeline):
-1. Four free core lessons.
-2. Intake and conflict check.
-3. Payment.
+1. Sign-up, consent and the names-only conflict check.
+2. Four free core lessons, each lowering the will price.
+3. The rest of the intake, then payment.
 4. Documents generated.
 5. Attorney review.
 6. Client review.
@@ -107,6 +107,8 @@ The free part of the app is **four core lessons**, one per document in the firm'
    - why banks may ask for it.
 
 Each core lesson ends with **"Tus datos" (your details)**: the character gathers the client's own facts for that document, using the prototype's questions in `guion-plan.json` for that document, and saves them to the intake. These steps are optional until the client decides to buy that document.
+
+"Tus datos" opens only after the client has given recording consent and the names-only conflict check on day 1 (section 2.5): the firm's rule is conflict check before any personal details.
 
 After the documents are signed, the app unlocks the **final lesson: "Cuida tus documentos" (look after your documents).** It teaches how to keep the originals safe and who to give what to:
 - **storing the signed originals:** in a fireproof place at home or a safe place the firm recommends, not somewhere only the client can open (a safe-deposit box can be hard for others to reach after a death);
@@ -182,22 +184,63 @@ Use the existing calavera pipeline (`avatar-intake/calavera_art.py` and `avatar-
 
 ### 2.5 Payment, documents, signing: the two-week journey
 
-**Timeline.** The app shows the client a progress tracker with the day and the next step. Staff see the same dates in the backend and are alerted when a step is late. The plan below fits the firm's turnaround standards (`docs/scope-and-review-standards.md`); Opus may adjust days, never the order.
+**Timeline, day by day.** The app shows the client a progress tracker with the day and the next step. Staff see the same dates in the backend and are alerted when a step is late. The plan fits the firm's turnaround standards (`docs/scope-and-review-standards.md`). Days are calendar days; the attorney-review and revision steps are business days, so when a weekend falls in the middle, the later days shift and the tracker says so. Opus may adjust days, never the order.
 
-| Day | Step | Firm stage |
-|---|---|---|
-| 1 to 4 | The four core lessons, one a day, with their "Tus datos" steps | (learning) |
-| 4 | Consent, names-only conflict check, document choice, rest of the intake | 1 Intake |
-| 5 | Conflict cleared by the firm; engagement letter and fee agreement sent, signed in the app; **payment** | 1 to 2 |
-| 5 | Documents generated in the background right after payment | 4 Drafting |
-| 5 to 8 | Attorney review (3 business days) | 5 Review Queue |
-| 8 to 10 | Client reviews the attorney-approved documents in the app and asks for changes; revisions done | 6 Client Review |
-| 10 to 13 | Signing appointment booked; signing guide; witnesses or notary arranged | 7 Signing Preparation |
-| 13 or 14 | Signing; executed documents scanned and uploaded | 8 Execution |
-| 14 | Final lesson "Cuida tus documentos" unlocks; funding checklist delivered | 9 Funding Follow-Up |
+- **Day 1: Bienvenida + El testamento** (La Calavera). Firm stage: 1 Intake.
+  - Sign-up with an age check (adults only).
+  - La Calavera introduces himself and says he is an AI program, not the attorney.
+  - Consent to record and transcribe.
+  - Names-only conflict check: the client, spouse or partner, children, and the people they would name. The firm clears it in the background over the next days.
+  - Core lesson 1, the will, then its quiz and "Tus datos": family, children, guardians, executor, gifts, who inherits.
+  - Will price $3,000 → **$2,900**.
+- **Day 2: El fideicomiso en vida** (La Calavera, with Piñata running the games). Stage 1.
+  - Core lesson 2, the living trust: games and "Tus datos" (individual or joint trust, successor trustee, what goes into the trust, ages for young beneficiaries).
+  - Price → **$2,800**.
+- **Day 3: La directiva de salud** (El Oso). Stage 1.
+  - Core lesson 3, the advance health care directive, with "Tus datos" (health care agent and alternates, end-of-life wishes in the client's own words, pain relief, organ donation, release of medical information).
+  - Price → **$2,700**.
+- **Day 4: Los poderes notariales** (La Calavera and Piñata). Stage 1.
+  - Core lesson 4, financial powers of attorney, with "Tus datos" (agent and alternates, starts now or on incapacity, scope, gifts).
+  - Price → **$2,600**.
+  - The client reviews the summary of everything they gave and fills any gaps with La Calavera (contact details, assets).
+  - Finishing the intake brings the price to **$2,500** (see Pricing).
+  - Optional: book a short consultation with the attorney.
+- **Day 5: Firmar el acuerdo y pagar.** Stage 2 Attorney Scope.
+  - The firm has cleared the conflict.
+  - The client chooses the documents to prepare and receives the attorney-approved engagement letter and fee agreement, signs them in the app, and pays.
+  - Payment starts generation: full-length first drafts are ready in minutes, for the attorney only (stage 4 Drafting).
+  - La Calavera explains what happens next.
+- **Days 6 to 8: El abogado revisa.** Stage 5 Review Queue (3 business days).
+  - The attorney reviews and edits the drafts. The client sees "the attorney is reviewing your documents".
+  - Meanwhile the app keeps the streak alive with short refreshers, and a "get ready" list: deeds and recent account statements for trust funding, the IDs needed at signing, and thinking about where the originals will be kept.
+- **Day 9: Revisa tus documentos.** Stage 6 Client Review.
+  - The attorney-approved documents are released to the client.
+  - La Calavera walks through each one in plain words, section by section, without giving new legal advice. The client confirms or asks for changes in the app.
+- **Day 10: Cambios y cita de firma.** Stage 6 into Stage 7.
+  - Requested changes go back to the attorney (2 business days for revisions) and the revised documents come back for confirmation.
+  - The client books the signing appointment for day 13.
+- **Days 11 and 12: Prepárate para firmar.** Stage 7 Signing Preparation.
+  - A signing guide: who signs what; that the will needs two witnesses and the powers of attorney and health care directive need witnesses or a notary; who cannot be a witness (no one who inherits under the will, not the agent named in the document); what to bring.
+  - Reminders the day before.
+- **Day 13: La firma.** Stage 8 Execution.
+  - The signing appointment.
+  - Staff upload the executed documents, which the client can then download.
+  - A celebration in the app.
+- **Day 14: Cuida tus documentos.** Stage 9 Funding Follow-Up.
+  - The final lesson unlocks (section 2.2): storing the originals, who gets copies (executor, successor trustee, agents, doctors), finishing trust funding with the firm's funding checklist, beneficiary designations, and when to update.
+  - "Plan complete" badge and an annual check-in reminder.
+  - The matter moves to stage 10 Closed when funding follow-up is done.
+
+**Pricing (settings the firm controls; these are the starting values):**
+- **Will: starts at $3,000.** Each completed core lesson takes **$100** off, down to a floor of **$2,500**.
+- Four lessons give $400 off ($2,600). To reach the $2,500 floor, the starting settings add one more $100 step for finishing the intake summary on day 4. Carbon Law decides whether to keep that step or use a different one; build it as a setting.
+- The price shown always says what was earned ("$3,000 − $400 for completing 4 lessons").
+- Build the rules as settings in the backend: base price per document and per package, the discount per lesson, which steps earn a discount, and the floor. A discount, once earned, stays earned.
+- Prices for the trust, the powers of attorney, the health care directive and packages are set by the firm (placeholders until then).
+- The attorney approves how discounts are described in the app and in any advertising.
 
 **Payment:**
-- After the four core lessons and the intake, the client chooses the documents they want prepared and sees the firm's price for each and for the package.
+- After the four core lessons and the intake, the client chooses the documents they want prepared and sees the price for each and for the package, with the discounts they earned.
 - The client pays in the app (for example Stripe Checkout through the backend; card details never touch the firm's servers or the extension).
 - Payment is taken only after the conflict check is cleared and the client has signed the engagement letter and fee agreement that the attorney approved. California requires a written fee agreement in many cases, and the attorney decides its wording.
 - Prices, refunds, packages and which bank account receives the money are the firm's decisions. The attorney decides how advance fees are held under the State Bar rules. Build the settings for these; do not choose them.
@@ -221,7 +264,7 @@ Extend the existing carbon-law FastAPI backend and its staff pages (`web/admin.h
   - Any change to legal wording must be approved by an attorney before it publishes. Record who approved it and when.
 - **Characters:** turn characters on or off; assign them to units; preview their voice.
 - **Learners and clients:** progress, streaks, intake status, conflict status, payment status, where each client is on the two-week timeline (with late steps flagged), questions logged for the attorney, drafts awaiting review, appointments.
-- **Payments:** prices per document and package, engagement letter and fee agreement templates (attorney-approved), refunds, receipts, and the payment provider's settings (test mode until the firm approves live).
+- **Payments:** prices per document and package, the lesson-discount rules (amount per step, which steps count, the floor), engagement letter and fee agreement templates (attorney-approved), refunds, receipts, and the payment provider's settings (test mode until the firm approves live).
 - **Firm controls:** office hours and appointment availability; conflict list upload (CSV, as in the prototype); data-retention settings; on/off switches for voice recording, AI chat, and the extension.
 - **Analytics** without client content: lesson completion, drop-off points, quiz accuracy per question (to find confusing lessons), how many learners pay, and how many finish the two weeks on time.
 - **Audit log** for every staff and client action, plus role-based access (client, paralegal, attorney, admin), as the portal spec requires.
