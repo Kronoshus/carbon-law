@@ -1,25 +1,11 @@
-import os, sys, glob, contextlib
+import os, sys, glob
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 import db
 
-
-class MigrationResult(list):
-    def __eq__(self, other):
-        if isinstance(other, bool):
-            return bool(self) == other
-        if isinstance(other, int):
-            return len(self) == other
-        if other is None:
-            return len(self) == 0
-        if isinstance(other, (list, tuple)):
-            return list(self) == list(other)
-        return super().__eq__(other)
-
-    def __bool__(self):
-        return len(self) > 0
+# Migration files must not contain ';' inside a statement (naive splitter).
 
 
 def _migrations_dir():
@@ -35,12 +21,7 @@ def _applied_versions():
 
 
 def _split_sql(sql):
-    out = []
-    for chunk in sql.split(";"):
-        chunk = chunk.strip()
-        if chunk:
-            out.append(chunk)
-    return out
+    return [chunk.strip() for chunk in sql.split(";") if chunk.strip()]
 
 
 def _version_from_path(path):
@@ -49,9 +30,8 @@ def _version_from_path(path):
 
 def run():
     applied = _applied_versions()
-    newly = MigrationResult()
-    mig_dir = _migrations_dir()
-    for path in sorted(glob.glob(os.path.join(mig_dir, "*.sql"))):
+    newly = []
+    for path in sorted(glob.glob(os.path.join(_migrations_dir(), "*.sql"))):
         version = _version_from_path(path)
         if version in applied:
             continue
@@ -60,22 +40,10 @@ def run():
         with db.transaction() as conn:
             for stmt in _split_sql(sql):
                 conn.execute(stmt)
-            db.execute("INSERT INTO schema_migrations(version) VALUES (?)", (version,))
+            conn.execute("INSERT INTO schema_migrations(version) VALUES (?)", (version,))
         newly.append(version)
         applied.add(version)
     return newly
-
-
-def migrate():
-    return run()
-
-
-def apply_migrations():
-    return run()
-
-
-def run_migrations():
-    return run()
 
 
 def pending():
@@ -90,7 +58,7 @@ def pending():
 
 def main():
     res = run()
-    print(f"applied {len(res)} migration(s): {list(res)}")
+    print(f"applied {len(res)} migration(s): {res}")
     return res
 
 

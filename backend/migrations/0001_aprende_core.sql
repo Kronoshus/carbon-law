@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS journey_events (
   payload_json TEXT,
   actor TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  dedupe_key TEXT,
+  dedupe_key TEXT NOT NULL DEFAULT '',
   UNIQUE (journey_id, type, dedupe_key)
 );
 

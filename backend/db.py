@@ -1,35 +1,24 @@
 import os, json, sqlite3, threading, contextlib
 
-_configured_key = None
-DATABASE_URL = None
-POSTGRES = False
-PLACEHOLDER = "?"
-RECONNECT_ERRORS = ()
+DATABASE_URL = os.environ.get("DATABASE_URL")
+POSTGRES = bool(DATABASE_URL and DATABASE_URL.startswith("postgres"))
+PLACEHOLDER = "%s" if POSTGRES else "?"
 
-def _refresh_config():
-    global DATABASE_URL, POSTGRES, PLACEHOLDER, RECONNECT_ERRORS, _configured_key
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    POSTGRES = bool(DATABASE_URL and DATABASE_URL.startswith("postgres"))
-    PLACEHOLDER = "%s" if POSTGRES else "?"
-    if POSTGRES:
-        import psycopg
-        RECONNECT_ERRORS = (psycopg.OperationalError, psycopg.InterfaceError)
-    else:
-        RECONNECT_ERRORS = ()
-
-_refresh_config()
+if POSTGRES:
+    import psycopg
+    # Hosted Postgres (Neon, Supabase) closes idle connections; reconnect once when that happens.
+    RECONNECT_ERRORS = (psycopg.OperationalError, psycopg.InterfaceError)
+else:
+    RECONNECT_ERRORS = ()
 
 # The request lock in app.py already serializes callers; this keeps db.py safe on its own.
-# RLock so transaction() and execute()/query() can nest.
+# RLock so transaction() and execute()/query() can nest within one thread.
 _lock = threading.RLock()
 _conn = None
-_configured = None
 _last_saved = {}
-_in_tx = False
 
 
 def _connect():
-    _refresh_config()
     if POSTGRES:
         import psycopg
         # prepare_threshold=None: transaction-mode poolers (e.g. Supabase port 6543) reject prepared statements.
@@ -39,77 +28,76 @@ def _connect():
 
 
 def _ensure_conn():
-    global _conn, _configured
-    _refresh_config()
-    key = (os.environ.get("DATABASE_URL"), os.environ.get("CARBON_DB_PATH"))
-    if _conn is not None and _configured != key:
-        try:
-            _conn.close()
-        except Exception:
-            pass
-        _conn = None
+    global _conn
     if _conn is None:
         _conn = _connect()
-        _configured = key
-        try:
-            init_db()
-        except Exception:
-            pass
     return _conn
 
 
-def _translate(sql):
-    _refresh_config()
-    if POSTGRES:
-        return sql.replace("?", "%s")
-    return sql
-
-
-def _exec_cursor(sql, params=()):
-    global _conn
-    _ensure_conn()
+def _run(sql, params=()):
     global _conn
     try:
-        cur = _conn.cursor()
-        cur.execute(_translate(sql), params)
-        return cur
+        conn = _ensure_conn()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone() if cur.description else None
     except RECONNECT_ERRORS:
-        try:
-            _conn.close()
-        except Exception:
-            pass
         _conn = None
-        _ensure_conn()
-        cur = _conn.cursor()
-        cur.execute(_translate(sql), params)
-        return cur
-
-
-def _run(sql, params=()):
-    cur = _exec_cursor(sql, params)
-    return cur.fetchone() if cur.description else None
+        conn = _ensure_conn()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone() if cur.description else None
 
 
 def _execute(sql, params=()):
-    cur = _exec_cursor(sql, params)
-    return cur.fetchone() if cur.description else None
-
-
-_run = _execute
+    global _conn
+    try:
+        conn = _ensure_conn()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone() if cur.description else None
+    except RECONNECT_ERRORS:
+        _conn = None
+        conn = _ensure_conn()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone() if cur.description else None
 
 
 def execute(sql, params=()):
     """Execute a statement with `?` placeholders (translated for Postgres). Returns rowcount."""
-    cur = _exec_cursor(sql, params)
-    return cur.rowcount
+    translated = sql.replace("?", "%s") if POSTGRES else sql
+    with _lock:
+        global _conn
+        try:
+            conn = _ensure_conn()
+            cur = conn.cursor()
+            cur.execute(translated, params)
+            return cur.rowcount
+        except RECONNECT_ERRORS:
+            _conn = None
+            conn = _ensure_conn()
+            cur = conn.cursor()
+            cur.execute(translated, params)
+            return cur.rowcount
 
 
 def query(sql, params=()):
     """Run a SELECT with `?` placeholders; return list of rows."""
-    cur = _exec_cursor(sql, params)
-    if cur.description is None:
-        return []
-    return cur.fetchall()
+    translated = sql.replace("?", "%s") if POSTGRES else sql
+    with _lock:
+        global _conn
+        try:
+            conn = _ensure_conn()
+            cur = conn.cursor()
+            cur.execute(translated, params)
+            return cur.fetchall() if cur.description else []
+        except RECONNECT_ERRORS:
+            _conn = None
+            conn = _ensure_conn()
+            cur = conn.cursor()
+            cur.execute(translated, params)
+            return cur.fetchall() if cur.description else []
 
 
 class _TxConn:
@@ -119,8 +107,9 @@ class _TxConn:
         self._conn = conn
 
     def execute(self, sql, params=()):
+        translated = sql.replace("?", "%s") if POSTGRES else sql
         cur = self._conn.cursor()
-        cur.execute(_translate(sql), params)
+        cur.execute(translated, params)
         return cur
 
     def cursor(self):
@@ -138,8 +127,6 @@ class _TxConn:
 
 @contextlib.contextmanager
 def transaction():
-    global _in_tx
-    _refresh_config()
     conn = _ensure_conn()
     with _lock:
         if POSTGRES:
@@ -147,10 +134,8 @@ def transaction():
             conn.autocommit = False
         else:
             conn.execute("BEGIN")
-        _in_tx = True
-        wrapped = _TxConn(conn)
         try:
-            yield wrapped
+            yield _TxConn(conn)
             conn.commit()
         except Exception:
             try:
@@ -159,7 +144,6 @@ def transaction():
                 pass
             raise
         finally:
-            _in_tx = False
             if POSTGRES:
                 try:
                     conn.autocommit = prev_autocommit
