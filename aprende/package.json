@@ -1,0 +1,32 @@
+{
+  "name": "aprende",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build:web": "vite build --mode web",
+    "build:ext": "vite build --mode extension",
+    "dev": "vite",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "preact": "^10.25.4",
+    "@preact/signals": "^2.0.4"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7",
+    "@preact/preset-vite": "^2.9.3",
+    "typescript": "^5.7.3",
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.19.1",
+    "@eslint/js": "^9.17.0",
+    "vitest": "^2.1.8",
+    "jsdom": "^25.0.1",
+    "@testing-library/preact": "^3.2.4",
+    "@types/node": "^22.10.5",
+    "@types/chrome": "^0.0.287"
+  }
+}
