@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="text-scale" content="scale">
+<title>Mapa del curso — Aprende y Planea (maqueta)</title>
+<!-- Mockup only: the app self-hosts these fonts (no third-party font request in production). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { background: var(--paper); }
+  .topbar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: var(--s2);
+            padding: var(--s3) var(--s4); background: var(--paper); border-bottom: var(--stroke) solid var(--outline); }
+  .topbar .chip svg { inline-size: 1.4rem; block-size: 1.4rem; }
+  .day { font: 800 var(--step-0)/1 var(--font-display); }
+  main { padding: var(--s4); display: grid; gap: var(--s3); padding-block-end: 6rem; }
+  .host { display: grid; grid-template-columns: 4rem 1fr; gap: var(--s3); align-items: center; }
+  .host img { inline-size: 4rem; block-size: 4rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
+  .host .bubble::before { content: ""; position: absolute; inset-inline-start: -0.6rem; inset-block-start: 1.2rem; inline-size: 1rem; block-size: 1rem;
+            background: var(--card); border-inline-start: var(--stroke) solid var(--outline); border-block-end: var(--stroke) solid var(--outline); rotate: 45deg; }
+  .price { display: grid; gap: var(--s2); background: color-mix(in oklab, var(--gold) 22%, var(--card)); }
+  .price .row { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
+  .price h2 { font: 700 var(--step-0) var(--font-display); margin-inline-end: auto; }
+  .price .between { justify-content: space-between; align-items: center; }
+  .price .now { font: 800 var(--step-2)/1 var(--font-display); }
+  .price s { color: var(--text-soft); font-weight: 600; }
+  .seals { display: flex; gap: var(--s1); color: var(--teal-deep); }
+  .seals svg { inline-size: 1.6rem; block-size: 1.6rem; }
+  .seals .empty { color: var(--ink-soft); }
+  .small { font-size: var(--step--1); color: var(--text-soft); }
+  .banner { position: relative; padding: var(--s3) var(--s4) var(--s4); color: #fff; background: var(--night); border-radius: var(--radius);
+            border: var(--stroke) solid var(--outline); font: 700 var(--step-1)/1.1 var(--font-display); overflow: clip; }
+  .banner small { display: block; font: 500 var(--step--1)/1.3 var(--font-body); color: #E9DDF7; margin-top: var(--s1); }
+  /* papel picado edge: a row of little flags along the top, drawn with gradients, decorative only */
+  .banner::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 0.6rem;
+            background: repeating-linear-gradient(90deg, var(--rosa) 0 1.5rem, var(--marigold) 1.5rem 3rem, var(--teal) 3rem 4.5rem, var(--gold) 4.5rem 6rem, var(--purple) 6rem 7.5rem);
+            mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, #000 0.37rem) 0 0 / 1.5rem 100%; }
+  .banner { padding-top: calc(var(--s3) + 0.6rem); }
+  ol.path { list-style: none; margin: 0; padding: var(--s2) 0; display: grid; gap: var(--s3); position: relative; }
+  ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 50%; translate: -50% 0; inline-size: 0.5rem;
+            background: radial-gradient(circle, var(--marigold) 45%, transparent 50%) 0 0 / 0.5rem 1rem repeat-y; opacity: .7; }
+  .node { position: relative; display: flex; align-items: center; gap: var(--s3); inline-size: fit-content; }
+  .node:nth-child(odd) { margin-inline-start: 18%; }  .node:nth-child(even) { margin-inline-start: 42%; }
+  .disc { position: relative; display: grid; place-items: center; inline-size: 4.5rem; block-size: 4.5rem; flex: none; border-radius: 50%;
+          border: var(--stroke) solid var(--outline); background: var(--card); box-shadow: var(--ledge); }
+  .disc svg { inline-size: 2.25rem; block-size: 2.25rem; }
+  .done .disc { background: color-mix(in oklab, var(--teal) 40%, var(--card)); }
+  .badge { position: absolute; inset-block-start: -0.4rem; inset-inline-end: -0.4rem; inline-size: 1.75rem; block-size: 1.75rem; color: var(--teal-deep); background: var(--paper); border-radius: 50%; }
+  .locked .disc { background: var(--paper-2); box-shadow: none; } .locked .disc > svg { opacity: .55; }
+  .locked .badge { color: var(--ink-soft); }
+  .label { background: var(--paper); padding: var(--s1) var(--s2); border-radius: var(--s2); }
+  .current .label { background: none; padding: 0; }
+  .label b { display: block; font: 700 var(--step-0)/1.15 var(--font-display); }
+  .label span { font-size: var(--step--1); color: var(--text-soft); }
+  .current { margin-inline-start: 6% !important; }
+  .current .disc { inline-size: 5.5rem; block-size: 5.5rem; background: var(--marigold); padding: 0; overflow: clip; }
+  .current .disc img { inline-size: 100%; block-size: 100%; }
+  .current .card { padding: var(--s3); display: grid; gap: var(--s2); inline-size: 13.5rem; box-shadow: var(--ledge); }
+  .current .btn { padding-block: var(--s2); }
+  nav.tabs { position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--card);
+             border-top: var(--stroke) solid var(--outline); padding-bottom: env(safe-area-inset-bottom); }
+  nav.tabs a { display: grid; justify-items: center; gap: 2px; min-block-size: 3.75rem; padding-top: var(--s2); color: var(--text-soft);
+               font: 600 var(--step--1)/1.1 var(--font-body); text-decoration: none; }
+  nav.tabs a[aria-current="page"] { color: var(--text); font-weight: 800; box-shadow: inset 0 3px 0 var(--marigold); }
+  nav.tabs svg { inline-size: 1.75rem; block-size: 1.75rem; }
+</style>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-vela" viewBox="0 0 24 24"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-petalo" viewBox="0 0 24 24"><g fill="#FF8C1A" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="4"/><circle cx="18" cy="11" r="4"/><circle cx="15.5" cy="18" r="4"/><circle cx="8.5" cy="18" r="4"/><circle cx="6" cy="11" r="4"/></g><circle cx="12" cy="12.5" r="3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-sello" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="currentColor"/><path d="m8.5 11.5 2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sello-vacio" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/></symbol>
+    <symbol id="i-testamento" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9h6M9 12.5h6M9 16h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="17" r="2.6" fill="#FF4F9A" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="14" r="2.3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/><path d="M12 16.3V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-salud" viewBox="0 0 24 24"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.8C20 15.4 12 20 12 20Z" fill="#FF4F9A" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 11.5h5M12 9v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5" fill="#FFB627" stroke="currentColor" stroke-width="1.8"/><path d="M11.2 11.2 20 20M16 16l2-2M18.2 18.2l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pluma" viewBox="0 0 24 24"><path d="M4 20c4-1 7-3 10-6l6-9-9 6c-3 3-5 6-6 10Z" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20 11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="m15 15 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-caja" viewBox="0 0 24 24"><path d="M3 8h18v12H3Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M2 4h20v4H2ZM9.5 12h5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pendiente" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3"/></symbol>
+    <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-volumen" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-atras" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pregunta" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-4 4v-4H4Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 9a2 2 0 1 1 2.5 2c-.4.2-.5.5-.5 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-perfil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0 1 16 0" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+  </defs>
+</svg>
+<header class="topbar">
+  <span class="chip" title="Racha"><svg aria-hidden="true"><use href="#i-vela"/></svg> 3 <span class="visually-hidden">días seguidos</span></span>
+  <span class="day">Día 3 de 14</span>
+  <span class="chip" title="Pétalos"><svg aria-hidden="true"><use href="#i-petalo"/></svg> 120 <span class="visually-hidden">pétalos</span></span>
+</header>
+<main>
+  <section class="host" aria-label="La Calavera">
+    <img src="img/calavera-face.png" alt="">
+    <p class="bubble">¡Buenos días, Ana! Hoy El Oso le explica la directiva de salud. Son unos 15 minutos, con calma.</p>
+  </section>
+
+  <section class="card price" aria-labelledby="precio">
+    <div class="row"><h2 id="precio">Su testamento</h2><span class="now">$2,800</span><s>$3,000</s></div>
+    <div class="row between">
+      <div class="seals" role="img" aria-label="2 de 5 pasos con descuento completados">
+        <svg><use href="#i-sello"/></svg><svg><use href="#i-sello"/></svg>
+        <svg class="empty"><use href="#i-sello-vacio"/></svg><svg class="empty"><use href="#i-sello-vacio"/></svg><svg class="empty"><use href="#i-sello-vacio"/></svg>
+      </div>
+      <p class="small">$3,000 − $200 por 2 lecciones</p>
+    </div>
+  </section>
+
+  <h2 class="banner">Aprenda<small>Días 1 a 4 · una lección al día</small></h2>
+  <ol class="path">
+    <li class="node done"><span class="disc"><svg aria-hidden="true"><use href="#i-testamento"/></svg><svg class="badge" aria-hidden="true"><use href="#i-sello"/></svg></span>
+      <span class="label"><b>El testamento</b><span>Día 1 · completada</span></span></li>
+    <li class="node done"><span class="disc"><svg aria-hidden="true"><use href="#i-casa"/></svg><svg class="badge" aria-hidden="true"><use href="#i-sello"/></svg></span>
+      <span class="label"><b>El fideicomiso en vida</b><span>Día 2 · completada</span></span></li>
+    <li class="node current"><span class="disc pulse"><img src="img/oso-face.png" alt=""></span>
+      <div class="card"><span class="label"><b>La directiva de salud</b><span>Día 3 · con El Oso · 15 min</span></span>
+        <a class="btn" href="leccion.html">Empezar</a></div></li>
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-llave"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>Los poderes notariales</b><span>Día 4 · se abre mañana</span></span></li>
+  </ol>
+
+  <h2 class="banner">Firme y pague<small>Día 5 · cuando la oficina apruebe su revisión de conflictos</small></h2>
+  <ol class="path">
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-pluma"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>Su plan y su pago</b><span>Día 5</span></span></li>
+  </ol>
+
+  <h2 class="banner">El abogado revisa<small>Días 6 a 8 · repasos cortos con Piñata</small></h2>
+  <ol class="path">
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-lupa"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>Revisión del abogado</b><span>3 días hábiles</span></span></li>
+  </ol>
+
+  <h2 class="banner">Revise, firme y cuide<small>Días 9 a 14</small></h2>
+  <ol class="path">
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-plan"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>Revise sus documentos</b><span>Día 9</span></span></li>
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-pluma"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>La firma</b><span>Día 13</span></span></li>
+    <li class="node locked"><span class="disc"><svg aria-hidden="true"><use href="#i-caja"/></svg><svg class="badge" aria-hidden="true"><use href="#i-candado"/></svg></span>
+      <span class="label"><b>Cuide sus documentos</b><span>Día 14</span></span></li>
+  </ol>
+</main>
+<nav class="tabs" aria-label="Principal">
+  <a href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-mapa"/></svg>Aprender</a>
+  <a href="#"><svg aria-hidden="true"><use href="#i-plan"/></svg>Mi plan</a>
+  <a href="#"><svg aria-hidden="true"><use href="#i-pregunta"/></svg>Preguntas</a>
+  <a href="#"><svg aria-hidden="true"><use href="#i-perfil"/></svg>Perfil</a>
+</nav>
+</body>
+</html>

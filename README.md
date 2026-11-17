@@ -7,6 +7,7 @@ Carbon Law is a workflow prototype for California estate-planning matter operati
 - `web/` — static client and staff interface, deployed with GitHub Pages.
 - `backend/` — FastAPI service and persistence layer.
 - `docs/` — product behavior, workflow stages, implementation and deployment notes.
+  - `docs/aprende-*.md` — *Aprende y Planea*, the bilingual estate-planning learning app (Phase 1: spec, design, architecture, backlog, questions).
 - `prompt-library/` — drafting prompt specifications and prompts.
 - `templates/` — illustrative sample documents; not approved for execution.
 - `tests/` — backend/API behavior checks.

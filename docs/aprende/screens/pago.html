@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="text-scale" content="scale">
+<title>Su plan y su pago — Aprende y Planea (maqueta)</title>
+<!-- Mockup only: the app self-hosts these fonts (no third-party font request in production). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { background: var(--paper); padding-block-end: 10.5rem; }
+  .bar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); border-bottom: var(--stroke) solid var(--outline); }
+  .bar h1 { font-size: var(--step-1); }
+  .icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); border: 0; background: none; color: var(--text); padding: 0; }
+  .icon-btn svg { inline-size: 1.6rem; block-size: 1.6rem; }
+  main { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); }
+  .host { display: grid; grid-template-columns: 3.5rem 1fr; gap: var(--s3); align-items: start; }
+  .host img { inline-size: 3.5rem; block-size: 3.5rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
+  .gates { display: grid; gap: var(--s2); list-style: none; margin: 0; padding: var(--s3) var(--s4); }
+  .gates li { display: flex; gap: var(--s2); align-items: center; font-weight: 600; }
+  .gates svg { inline-size: 1.5rem; block-size: 1.5rem; flex: none; }
+  .gates a { font-weight: 600; font-size: var(--step--1); margin-inline-start: auto; }
+  h2.sec { font-size: var(--step-0); margin-block-start: var(--s1); }
+  .doc { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s1) var(--s3); align-items: center; padding: var(--s3); }
+  .doc input { inline-size: 1.4rem; block-size: 1.4rem; accent-color: var(--teal-deep); margin: 0; }
+  .doc .name { font: 700 var(--step-0)/1.2 var(--font-display); }
+  .doc .amt { font: 800 var(--step-1)/1 var(--font-display); }
+  .doc.off { background: var(--paper-2); }
+  .doc.off .amt { color: var(--text-soft); font-weight: 700; }
+  .ledger { grid-column: 2 / -1; display: grid; gap: 2px; margin: var(--s1) 0 0; font-size: var(--step--1); color: var(--text-soft); }
+  .ledger .r { display: flex; justify-content: space-between; }
+  .ledger .earned { color: var(--teal-deep); font-weight: 700; }
+  .note { grid-column: 2 / -1; font-size: var(--step--1); color: var(--text-soft); }
+  .example { font: 700 0.7rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; color: var(--rosa-deep);
+             border: 1.5px dashed var(--rosa-deep); border-radius: var(--pill); padding: 2px 6px; vertical-align: middle; }
+  .pay { position: fixed; inset: auto 0 0 0; background: var(--card); border-top: var(--stroke) solid var(--outline); padding: var(--s3) var(--s4) var(--s4);
+         display: grid; gap: var(--s2); box-shadow: 0 -6px 18px rgb(46 22 64 / .12); }
+  .total { display: flex; justify-content: space-between; align-items: baseline; font: 700 var(--step-0) var(--font-display); }
+  .total b { font-size: var(--step-2); }
+  .test { justify-self: start; }
+  .fine { font-size: var(--step--1); color: var(--text-soft); display: flex; gap: var(--s2); align-items: start; }
+  .fine svg { inline-size: 1.2rem; block-size: 1.2rem; flex: none; margin-top: 2px; }
+</style>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-vela" viewBox="0 0 24 24"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-petalo" viewBox="0 0 24 24"><g fill="#FF8C1A" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="4"/><circle cx="18" cy="11" r="4"/><circle cx="15.5" cy="18" r="4"/><circle cx="8.5" cy="18" r="4"/><circle cx="6" cy="11" r="4"/></g><circle cx="12" cy="12.5" r="3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-sello" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="currentColor"/><path d="m8.5 11.5 2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sello-vacio" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/></symbol>
+    <symbol id="i-testamento" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9h6M9 12.5h6M9 16h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="17" r="2.6" fill="#FF4F9A" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="14" r="2.3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/><path d="M12 16.3V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-salud" viewBox="0 0 24 24"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.8C20 15.4 12 20 12 20Z" fill="#FF4F9A" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 11.5h5M12 9v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5" fill="#FFB627" stroke="currentColor" stroke-width="1.8"/><path d="M11.2 11.2 20 20M16 16l2-2M18.2 18.2l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pluma" viewBox="0 0 24 24"><path d="M4 20c4-1 7-3 10-6l6-9-9 6c-3 3-5 6-6 10Z" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20 11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="m15 15 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-caja" viewBox="0 0 24 24"><path d="M3 8h18v12H3Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M2 4h20v4H2ZM9.5 12h5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pendiente" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3"/></symbol>
+    <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-volumen" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-atras" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pregunta" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-4 4v-4H4Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 9a2 2 0 1 1 2.5 2c-.4.2-.5.5-.5 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-perfil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0 1 16 0" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+  </defs>
+</svg>
+<header class="bar">
+  <button class="icon-btn" aria-label="Volver"><svg aria-hidden="true"><use href="#i-atras"/></svg></button>
+  <h1>Día 5 · Su plan y su pago</h1>
+</header>
+<main>
+  <section class="host" aria-label="La Calavera">
+    <img src="img/calavera-face.png" alt="">
+    <p class="bubble">Esto es lo que eligió. Cuando esté listo, paga aquí mismo y la oficina empieza a preparar sus documentos.</p>
+  </section>
+
+  <ul class="card gates" aria-label="Antes de pagar">
+    <li><svg aria-hidden="true"><use href="#i-check"/></svg> Revisión de conflictos aprobada</li>
+    <li><svg aria-hidden="true"><use href="#i-check"/></svg> Carta de compromiso firmada <a href="#">Ver</a></li>
+    <li><svg aria-hidden="true"><use href="#i-pendiente"/></svg> Pago</li>
+  </ul>
+
+  <h2 class="sec">Documentos que va a preparar</h2>
+  <label class="card doc">
+    <input type="checkbox" checked><span class="name">Testamento</span><span class="amt">$2,500</span>
+    <span class="ledger" aria-label="Cómo se calcula">
+      <span class="r"><span>Precio base</span><span>$3,000</span></span>
+      <span class="r earned"><span>4 lecciones completadas</span><span>− $400</span></span>
+      <span class="r earned"><span>Terminó sus datos</span><span>− $100</span></span>
+    </span>
+  </label>
+  <label class="card doc">
+    <input type="checkbox" checked><span class="name">Directiva de salud</span><span class="amt">$400 <span class="example">ejemplo</span></span>
+  </label>
+  <label class="card doc">
+    <input type="checkbox" checked><span class="name">Poder notarial financiero</span><span class="amt">$400 <span class="example">ejemplo</span></span>
+  </label>
+  <label class="card doc off">
+    <input type="checkbox"><span class="name">Fideicomiso en vida</span><span class="amt">$— <span class="example">ejemplo</span></span>
+    <span class="note">Si lo agrega, su testamento se prepara como testamento complementario («pour-over»).</span>
+  </label>
+</main>
+
+<section class="pay" aria-label="Pagar">
+  <div class="total"><span>Total <span class="chip test">Modo de prueba</span></span><b>$3,300</b></div>
+  <button class="btn" type="button"><svg aria-hidden="true" style="inline-size:1.3rem;block-size:1.3rem"><use href="#i-candado"/></svg> Pagar con tarjeta</button>
+  <p class="fine"><svg aria-hidden="true"><use href="#i-candado"/></svg>Paga en la página segura de Stripe. Carbon Law nunca ve ni guarda su tarjeta. El abogado revisa sus borradores antes de que usted los vea.</p>
+</section>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="text-scale" content="scale">
+<title>Lección con La Calavera — Aprende y Planea (maqueta)</title>
+<!-- Mockup only: the app self-hosts these fonts (no third-party font request in production). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { background: var(--paper); padding-block-end: 13rem; }
+  .lessonbar { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); }
+  .icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); flex: none; border: 0; background: none; color: var(--text); padding: 0; }
+  .icon-btn svg { inline-size: 1.6rem; block-size: 1.6rem; }
+  .stage { position: relative; margin-inline: var(--s4); border-radius: var(--radius-lg); overflow: clip; border: var(--stroke) solid var(--outline);
+           aspect-ratio: 16 / 7.2; background: var(--night) url(img/calavera-stage.webp) center 42% / 100% auto no-repeat; }
+  .stage .who { position: absolute; inset: var(--s3) auto auto var(--s3); color: #fff; background: rgb(28 16 48 / .78);
+                border-radius: var(--pill); padding: var(--s1) var(--s3); font: 600 var(--step--1)/1.3 var(--font-body); }
+  .stage .replay { position: absolute; inset: auto var(--s3) var(--s3) auto; inline-size: auto; padding-inline: var(--s3); background: var(--card); color: var(--text); }
+  .stage .replay svg { inline-size: 1.4rem; block-size: 1.4rem; }
+  .talk { padding: var(--s3) var(--s4) 0; }
+  .talk .bubble { display: flex; align-items: center; gap: var(--s2); padding-block: var(--s1); }
+  .talk .listen { margin-inline-start: auto; }
+  .talk .bubble::before { content: ""; position: absolute; inset-block-start: -0.6rem; inset-inline-start: 2.5rem; inline-size: 1rem; block-size: 1rem;
+            background: var(--card); border-inline-start: var(--stroke) solid var(--outline); border-block-start: var(--stroke) solid var(--outline); rotate: 45deg; }
+  .q { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; }
+  .q h1 { font-size: var(--step-1); }
+  .kind { font: 700 var(--step--1)/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--s2); }
+  .option input { position: absolute; opacity: 0; }
+  .option .mark { margin-inline-start: auto; inline-size: 1.6rem; block-size: 1.6rem; }
+  .feedback { position: fixed; inset: auto 0 0 0; box-shadow: 0 -6px 18px rgb(46 22 64 / .18); }
+  .feedback { gap: var(--s2); padding-block: var(--s3); }
+  .feedback h2 { display: flex; align-items: center; gap: var(--s2); font-size: var(--step-1); }
+  .feedback h2 svg { inline-size: 1.8rem; block-size: 1.8rem; }
+  .feedback .source a { font-weight: 600; }
+  .gain { display: inline-flex; align-items: center; gap: var(--s1); font-weight: 700; }
+  .gain svg { inline-size: 1.3rem; block-size: 1.3rem; }
+</style>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-vela" viewBox="0 0 24 24"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-petalo" viewBox="0 0 24 24"><g fill="#FF8C1A" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="4"/><circle cx="18" cy="11" r="4"/><circle cx="15.5" cy="18" r="4"/><circle cx="8.5" cy="18" r="4"/><circle cx="6" cy="11" r="4"/></g><circle cx="12" cy="12.5" r="3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-sello" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="currentColor"/><path d="m8.5 11.5 2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sello-vacio" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9.8 2.9-2.6 1.6-1 2.8-3-.2L12 20l-2.4-1.8-3 .2-1-2.8L3 14l.8-2.9L3 8.2l2.6-1.6 1-2.8 3 .2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/></symbol>
+    <symbol id="i-testamento" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9h6M9 12.5h6M9 16h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="17" r="2.6" fill="#FF4F9A" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="14" r="2.3" fill="#FFB627" stroke="currentColor" stroke-width="1.5"/><path d="M12 16.3V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-salud" viewBox="0 0 24 24"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.8C20 15.4 12 20 12 20Z" fill="#FF4F9A" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 11.5h5M12 9v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5" fill="#FFB627" stroke="currentColor" stroke-width="1.8"/><path d="M11.2 11.2 20 20M16 16l2-2M18.2 18.2l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pluma" viewBox="0 0 24 24"><path d="M4 20c4-1 7-3 10-6l6-9-9 6c-3 3-5 6-6 10Z" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20 11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="m15 15 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-caja" viewBox="0 0 24 24"><path d="M3 8h18v12H3Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M2 4h20v4H2ZM9.5 12h5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pendiente" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3"/></symbol>
+    <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-volumen" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-atras" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pregunta" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-4 4v-4H4Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 9a2 2 0 1 1 2.5 2c-.4.2-.5.5-.5 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-perfil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0 1 16 0" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8"/></symbol>
+  </defs>
+</svg>
+<header class="lessonbar">
+  <button class="icon-btn" aria-label="Salir de la lección"><svg aria-hidden="true"><use href="#i-cerrar"/></svg></button>
+  <label class="visually-hidden" for="avance">Avance de la lección</label>
+  <progress id="avance" class="lesson" max="12" value="7"></progress>
+  <span class="chip"><svg aria-hidden="true" style="inline-size:1.2rem;block-size:1.2rem"><use href="#i-vela"/></svg> 1</span>
+</header>
+
+<section class="stage" aria-label="La Calavera, asistente virtual con inteligencia artificial">
+  <span class="who">Programa de IA · no es el abogado</span>
+</section>
+<div class="talk"><p class="bubble" aria-live="polite">Su testamento lo firman usted y unos testigos. ¿Cuántos?
+  <button class="icon-btn listen" type="button" aria-label="Escuchar otra vez"><svg aria-hidden="true"><use href="#i-volumen"/></svg></button></p></div>
+
+<form class="q" aria-labelledby="pregunta">
+  <span class="kind">Elija una respuesta</span>
+  <h1 id="pregunta">¿Cuántos testigos necesita un testamento que no está escrito a mano?</h1>
+  <fieldset>
+    <legend class="visually-hidden">Respuestas</legend>
+    <label class="option"><input type="radio" name="r"><span class="key">A</span> Ninguno</label>
+    <label class="option"><input type="radio" name="r"><span class="key">B</span> Uno, si es notario</label>
+    <label class="option correct"><input type="radio" name="r" checked><span class="key">C</span> Dos, presentes al mismo tiempo
+      <svg class="mark" aria-hidden="true"><use href="#i-check"/></svg><span class="visually-hidden">(correcta)</span></label>
+  </fieldset>
+</form>
+
+<section class="feedback correct" role="status">
+  <h2><svg aria-hidden="true"><use href="#i-check"/></svg> ¡Muy bien!</h2>
+  <p>Así es: dos testigos, juntos, cuando usted firma o reconoce su firma.</p>
+  <p class="source">Fuente: <a href="#">Código de Sucesiones de Calif., sección 6110</a> · Información general, no asesoría legal.</p>
+  <div style="display:flex;gap:var(--s3);align-items:center"><p class="gain" style="flex:none"><svg aria-hidden="true"><use href="#i-petalo"/></svg> +10</p><button class="btn" type="button">Continuar</button></div>
+</section>
+</body>
+</html>
