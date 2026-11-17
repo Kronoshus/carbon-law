@@ -1,0 +1,61 @@
+[
+  {"id": "consentimiento", "label": "Consent", "ask": true, "consent": true, "say": "Hello, and welcome. I am a virtual assistant for the office of attorney Pankaj Raval. I am not the attorney or a real person; I am an artificial intelligence program that uses his likeness. This conversation will be recorded and transcribed so that attorney Raval can review your answers and prepare your documents. What I explain is general information, not legal advice. Do you agree to have this conversation recorded? Please say yes or no."},
+
+  {"id": "conflicto", "label": "Conflict check", "ask": true, "conflict": true, "say": "Thank you. Before we go on, the office must check that there is no conflict of interest. For now, please tell me only names: your full name, your spouse's or partner's name, and the names of the other people who would be part of your plan, such as your children, the people you would leave things to, or the people who would make decisions for you. Please do not tell me details about your property or your wishes yet."},
+
+  {"id": "explicacion", "label": "Explanation", "say": "Thank you. The office prepares four main documents. A will says who receives your property and who would care for your minor children. A living trust holds your property so your family can receive it without the court process called probate. A financial power of attorney names a trusted person to manage your money and property if you cannot. And an advance health care directive names who would make medical decisions for you and puts your wishes in writing. Attorney Raval will explain which ones fit you."},
+
+  {"id": "documentos", "label": "Documents wanted", "ask": true, "choose": true, "say": "Which of these documents would you like to prepare: a will, a living trust, a financial power of attorney, a health care directive? You can choose one, several, or all of them."},
+
+  {"id": "nombre", "label": "Legal name", "ask": true, "say": "What is your full legal name? If you can, please spell your last name."},
+
+  {"id": "nacimiento", "label": "Date of birth", "ask": true, "say": "What is your date of birth?"},
+
+  {"id": "domicilio", "label": "Residence", "ask": true, "say": "What city, county and state do you live in now?"},
+
+  {"id": "estado_civil", "label": "Marital status", "ask": true, "say": "What is your marital status? If you are married or have a partner, please tell me the full name of your spouse or partner."},
+
+  {"id": "hijos", "label": "Children", "ask": true, "say": "Do you have children? Please tell me the full name and age of each one, including children from earlier relationships."},
+
+  {"id": "bienes", "label": "Assets", "ask": true, "say": "Tell me about your main assets. For example: houses or land, here or in another country, bank accounts, retirement accounts, vehicles, businesses and life insurance. I do not need exact amounts, only a general idea."},
+
+  {"id": "herederos", "label": "Beneficiaries", "ask": true, "doc": ["will", "trust"], "say": "Who would you like to leave your property to, and in what shares? And if that person passed away before you, who would receive it?"},
+
+  {"id": "legados", "label": "Specific gifts", "ask": true, "doc": ["will", "trust"], "say": "Is there any specific item or amount you want to leave to a particular person or organization?"},
+
+  {"id": "tutor", "label": "Guardian for minor children", "ask": true, "doc": ["will", "trust"], "say": "If you have minor children, who would you like to name as guardian to care for them, and who would be your second choice? If you have no minor children, just say not applicable."},
+
+  {"id": "albacea", "label": "Executor", "ask": true, "doc": ["will"], "say": "Who do you want to name as executor, the trusted person who will carry out your will? And who would be your second choice?"},
+
+  {"id": "fid_tipo", "label": "Trust: individual or joint", "ask": true, "doc": ["trust"], "say": "About the trust: would it be a trust just for you, or a joint trust with your spouse or partner?"},
+
+  {"id": "fid_sucesor", "label": "Successor trustee", "ask": true, "doc": ["trust"], "say": "While you are alive and able, you manage your own trust. Who do you want to name to manage it when you no longer can, or after you pass away? And who would be your second choice?"},
+
+  {"id": "fid_bienes", "label": "Property for the trust", "ask": true, "doc": ["trust"], "say": "Which of your assets would you like to put into the trust? For example your home, other real estate, or your bank accounts."},
+
+  {"id": "fid_menores", "label": "Young beneficiaries", "ask": true, "doc": ["trust"], "say": "If one of your beneficiaries is still young when it is time to receive their share, would you want them to receive everything at once, or have the trust hold it until a certain age? If so, until what age?"},
+
+  {"id": "poder_agente", "label": "Power of attorney: agent", "ask": true, "doc": ["poa"], "say": "About the financial power of attorney: who do you want to name as your agent, the person who would manage your money and property if you cannot? And who would be your second choice?"},
+
+  {"id": "poder_inicio", "label": "Power of attorney: when it starts", "ask": true, "doc": ["poa"], "say": "Do you want your agent to be able to act as soon as you sign the document, or only if you can no longer make your own decisions?"},
+
+  {"id": "poder_alcance", "label": "Power of attorney: scope", "ask": true, "doc": ["poa"], "say": "Do you want your agent to be able to handle all of your financial matters, including selling or mortgaging real estate, or is there anything you do not want them to be able to do?"},
+
+  {"id": "poder_regalos", "label": "Power of attorney: gifts", "ask": true, "doc": ["poa"], "say": "Do you want your agent to be able to make gifts of your money or property, for example to family members? Or would you rather they not be able to give anything away?"},
+
+  {"id": "salud_agente", "label": "Health care: agent", "ask": true, "doc": ["ahcd"], "say": "About the health care directive: who do you want to name to make medical decisions for you if you cannot? And who would be your second choice?"},
+
+  {"id": "salud_vida", "label": "Health care: end of life", "ask": true, "doc": ["ahcd"], "say": "If you were very seriously ill and the doctors believed you would not recover, what would you want? Some people want everything possible done to prolong their life, and others prefer not to be kept on machines. Please tell me in your own words."},
+
+  {"id": "salud_donacion", "label": "Health care: organ donation", "ask": true, "doc": ["ahcd"], "say": "Would you like to donate your organs when you pass away? You can say yes, no, or that you would rather decide later."},
+
+  {"id": "salud_info", "label": "Health care: medical information", "ask": true, "doc": ["ahcd"], "say": "Do you want doctors to be able to share your medical information with the person you named starting now, or only once you can no longer decide for yourself?"},
+
+  {"id": "salud_otros", "label": "Health care: other wishes", "ask": true, "doc": ["ahcd"], "say": "Do you have any other wishes about your medical care? For example about pain relief, your religious beliefs, or whether you prefer burial or cremation."},
+
+  {"id": "otros", "label": "Other wishes and questions", "ask": true, "say": "Do you have any other wishes, or any question you would like attorney Raval to answer?"},
+
+  {"id": "contacto", "label": "Contact", "ask": true, "say": "Finally, what is the best phone number and email address to reach you?"},
+
+  {"id": "cierre", "label": "Closing", "say": "Thank you very much. Attorney Raval will review your answers and his office will contact you about next steps. Nothing is final until you review and sign your documents with the attorney. Have a wonderful day."}
+]

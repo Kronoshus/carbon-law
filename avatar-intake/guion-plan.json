@@ -1,0 +1,61 @@
+[
+  {"id": "consentimiento", "label": "Consentimiento", "ask": true, "consent": true, "say": "Hola, bienvenido. Soy un asistente virtual de la oficina del abogado Pankaj Raval. No soy el abogado ni una persona real; soy un programa de inteligencia artificial con su imagen. Esta conversación será grabada y transcrita para que el abogado Raval pueda revisar sus respuestas y preparar sus documentos. Lo que le explico es información general, no asesoría legal. ¿Acepta que grabemos esta conversación? Por favor diga sí o no."},
+
+  {"id": "conflicto", "label": "Revisión de conflictos", "ask": true, "conflict": true, "say": "Gracias. Antes de seguir, la oficina debe revisar que no exista un conflicto de intereses. Por ahora dígame solamente nombres: su nombre completo, el de su cónyuge o pareja, y los de las demás personas que formarían parte de su plan, por ejemplo sus hijos, las personas a quienes dejaría sus bienes, o las personas que tomarían decisiones por usted. Todavía no me cuente detalles de sus bienes ni de sus deseos."},
+
+  {"id": "explicacion", "label": "Explicación", "say": "Gracias. La oficina prepara cuatro documentos principales. El testamento dice quién recibe sus bienes y quién cuidaría de sus hijos menores. El fideicomiso en vida guarda sus bienes para que su familia pueda recibirlos sin el proceso judicial de sucesión. El poder notarial para asuntos financieros nombra a una persona de confianza para manejar su dinero y sus bienes si usted no puede hacerlo. Y la directiva anticipada de atención médica nombra a quien tomaría decisiones médicas por usted y deja escritos sus deseos. El abogado Raval le explicará cuáles le convienen."},
+
+  {"id": "documentos", "label": "Documentos que desea", "ask": true, "choose": true, "say": "¿Cuáles de estos documentos le gustaría preparar: el testamento, el fideicomiso en vida, el poder notarial para asuntos financieros, la directiva de atención médica? Puede elegir uno, varios o todos."},
+
+  {"id": "nombre", "label": "Nombre legal", "ask": true, "say": "¿Cuál es su nombre legal completo? Si puede, deletree sus apellidos."},
+
+  {"id": "nacimiento", "label": "Fecha de nacimiento", "ask": true, "say": "¿Cuál es su fecha de nacimiento?"},
+
+  {"id": "domicilio", "label": "Domicilio", "ask": true, "say": "¿En qué ciudad, condado y estado vive actualmente?"},
+
+  {"id": "estado_civil", "label": "Estado civil", "ask": true, "say": "¿Cuál es su estado civil? Si está casado o tiene pareja, dígame el nombre completo de su cónyuge o pareja."},
+
+  {"id": "hijos", "label": "Hijos", "ask": true, "say": "¿Tiene hijos? Por favor dígame el nombre completo y la edad de cada uno, incluyendo hijos de relaciones anteriores."},
+
+  {"id": "bienes", "label": "Bienes", "ask": true, "say": "Cuénteme de sus bienes principales. Por ejemplo: casas o terrenos, aquí o en otro país, cuentas de banco, cuentas de retiro, vehículos, negocios y seguros de vida. No necesito cantidades exactas, solo una idea general."},
+
+  {"id": "herederos", "label": "Herederos", "ask": true, "doc": ["will", "trust"], "say": "¿A quién le gustaría dejar sus bienes, y en qué proporción? Y si esa persona falleciera antes que usted, ¿quién los recibiría?"},
+
+  {"id": "legados", "label": "Regalos específicos", "ask": true, "doc": ["will", "trust"], "say": "¿Hay algún objeto o cantidad específica que quiera dejar a una persona u organización en particular?"},
+
+  {"id": "tutor", "label": "Tutor de hijos menores", "ask": true, "doc": ["will", "trust"], "say": "Si tiene hijos menores de edad, ¿a quién le gustaría nombrar como tutor para cuidarlos, y quién sería la segunda opción? Si no tiene hijos menores, solo diga no aplica."},
+
+  {"id": "albacea", "label": "Albacea", "ask": true, "doc": ["will"], "say": "¿A quién quiere nombrar como albacea, la persona de confianza que se encargará de cumplir su testamento? ¿Y quién sería la segunda opción?"},
+
+  {"id": "fid_tipo", "label": "Fideicomiso: individual o conjunto", "ask": true, "doc": ["trust"], "say": "Sobre el fideicomiso: ¿sería un fideicomiso solo suyo, o uno conjunto con su cónyuge o pareja?"},
+
+  {"id": "fid_sucesor", "label": "Fideicomisario sucesor", "ask": true, "doc": ["trust"], "say": "Mientras usted viva y pueda, usted maneja su fideicomiso. ¿A quién quiere nombrar para manejarlo cuando usted ya no pueda o haya fallecido? ¿Y quién sería la segunda opción?"},
+
+  {"id": "fid_bienes", "label": "Bienes para el fideicomiso", "ask": true, "doc": ["trust"], "say": "¿Cuáles de sus bienes le gustaría poner en el fideicomiso? Por ejemplo su casa, otras propiedades o sus cuentas de banco."},
+
+  {"id": "fid_menores", "label": "Entrega a beneficiarios jóvenes", "ask": true, "doc": ["trust"], "say": "Si uno de sus beneficiarios todavía es joven cuando le toque recibir, ¿prefiere que reciba todo de una vez, o que el fideicomiso se lo guarde hasta cierta edad? Si es así, ¿hasta qué edad?"},
+
+  {"id": "poder_agente", "label": "Poder: apoderado", "ask": true, "doc": ["poa"], "say": "Sobre el poder para asuntos financieros: ¿a quién quiere nombrar como apoderado, la persona que manejaría su dinero y sus bienes si usted no puede? ¿Y quién sería la segunda opción?"},
+
+  {"id": "poder_inicio", "label": "Poder: cuándo empieza", "ask": true, "doc": ["poa"], "say": "¿Quiere que su apoderado pueda actuar desde que usted firme el documento, o solamente si usted ya no puede tomar sus propias decisiones?"},
+
+  {"id": "poder_alcance", "label": "Poder: alcance", "ask": true, "doc": ["poa"], "say": "¿Quiere que su apoderado pueda encargarse de todos sus asuntos financieros, incluyendo vender o hipotecar una propiedad, o hay algo que no quiere que pueda hacer?"},
+
+  {"id": "poder_regalos", "label": "Poder: regalos", "ask": true, "doc": ["poa"], "say": "¿Quiere que su apoderado pueda hacer regalos de su dinero o de sus bienes, por ejemplo a sus familiares? ¿O prefiere que no pueda regalar nada?"},
+
+  {"id": "salud_agente", "label": "Salud: agente", "ask": true, "doc": ["ahcd"], "say": "Sobre la directiva de atención médica: ¿a quién quiere nombrar para tomar decisiones médicas por usted si usted no puede? ¿Y quién sería la segunda opción?"},
+
+  {"id": "salud_vida", "label": "Salud: final de la vida", "ask": true, "doc": ["ahcd"], "say": "Si usted estuviera muy grave y los médicos creyeran que no se va a recuperar, ¿qué le gustaría? Algunas personas quieren que se haga todo lo posible por prolongar su vida, y otras prefieren no seguir conectadas a máquinas. Dígamelo con sus propias palabras."},
+
+  {"id": "salud_donacion", "label": "Salud: donación de órganos", "ask": true, "doc": ["ahcd"], "say": "¿Le gustaría donar sus órganos al fallecer? Puede decir sí, no, o que prefiere decidirlo después."},
+
+  {"id": "salud_info", "label": "Salud: información médica", "ask": true, "doc": ["ahcd"], "say": "¿Quiere que los médicos puedan compartir su información médica con la persona que nombró desde ahora, o solamente cuando usted ya no pueda decidir?"},
+
+  {"id": "salud_otros", "label": "Salud: otros deseos", "ask": true, "doc": ["ahcd"], "say": "¿Tiene algún otro deseo sobre su atención médica? Por ejemplo sobre el alivio del dolor, sus creencias religiosas, o si prefiere entierro o cremación."},
+
+  {"id": "otros", "label": "Otros deseos y preguntas", "ask": true, "say": "¿Tiene algún otro deseo, o alguna pregunta que quiera que el abogado Raval le conteste?"},
+
+  {"id": "contacto", "label": "Contacto", "ask": true, "say": "Por último, ¿cuál es el mejor número de teléfono y correo electrónico para comunicarnos con usted?"},
+
+  {"id": "cierre", "label": "Cierre", "say": "Muchas gracias. El abogado Raval revisará sus respuestas y su oficina se comunicará con usted para los siguientes pasos. Nada es definitivo hasta que usted revise y firme sus documentos con el abogado. Que tenga un excelente día."}
+]
