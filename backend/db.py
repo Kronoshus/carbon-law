@@ -34,70 +34,39 @@ def _ensure_conn():
     return _conn
 
 
-def _run(sql, params=()):
+def _cursor(sql, params):
+    """Run one statement on the shared connection, reconnecting once if the server dropped it."""
     global _conn
     try:
-        conn = _ensure_conn()
-        cur = conn.cursor()
+        cur = _ensure_conn().cursor()
         cur.execute(sql, params)
-        return cur.fetchone() if cur.description else None
     except RECONNECT_ERRORS:
         _conn = None
-        conn = _ensure_conn()
-        cur = conn.cursor()
+        cur = _ensure_conn().cursor()
         cur.execute(sql, params)
-        return cur.fetchone() if cur.description else None
+    return cur
 
 
 def _execute(sql, params=()):
-    global _conn
-    try:
-        conn = _ensure_conn()
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchone() if cur.description else None
-    except RECONNECT_ERRORS:
-        _conn = None
-        conn = _ensure_conn()
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchone() if cur.description else None
+    cur = _cursor(sql, params)
+    return cur.fetchone() if cur.description else None
+
+
+def _translate(sql):
+    return sql.replace("?", "%s") if POSTGRES else sql
 
 
 def execute(sql, params=()):
     """Execute a statement with `?` placeholders (translated for Postgres). Returns rowcount."""
-    translated = sql.replace("?", "%s") if POSTGRES else sql
     with _lock:
-        global _conn
-        try:
-            conn = _ensure_conn()
-            cur = conn.cursor()
-            cur.execute(translated, params)
-            return cur.rowcount
-        except RECONNECT_ERRORS:
-            _conn = None
-            conn = _ensure_conn()
-            cur = conn.cursor()
-            cur.execute(translated, params)
-            return cur.rowcount
+        return _cursor(_translate(sql), params).rowcount
 
 
 def query(sql, params=()):
     """Run a SELECT with `?` placeholders; return list of rows."""
-    translated = sql.replace("?", "%s") if POSTGRES else sql
     with _lock:
-        global _conn
-        try:
-            conn = _ensure_conn()
-            cur = conn.cursor()
-            cur.execute(translated, params)
-            return cur.fetchall() if cur.description else []
-        except RECONNECT_ERRORS:
-            _conn = None
-            conn = _ensure_conn()
-            cur = conn.cursor()
-            cur.execute(translated, params)
-            return cur.fetchall() if cur.description else []
+        cur = _cursor(_translate(sql), params)
+        return cur.fetchall() if cur.description else []
 
 
 class _TxConn:
@@ -107,9 +76,8 @@ class _TxConn:
         self._conn = conn
 
     def execute(self, sql, params=()):
-        translated = sql.replace("?", "%s") if POSTGRES else sql
         cur = self._conn.cursor()
-        cur.execute(translated, params)
+        cur.execute(_translate(sql), params)
         return cur
 
     def cursor(self):
