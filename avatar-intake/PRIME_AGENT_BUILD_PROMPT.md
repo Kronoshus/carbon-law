@@ -14,6 +14,7 @@ You are a build team for Carbon Law Group (attorney Pankaj Raval, Los Angeles, C
 
 ### Tools and budget
 
+- **Modern web guidance skill:** Opus 5.5 should use the skill at `/home/dkkm10/.agents/skills/modern-web-guidance/SKILL.md` for the web app, the PWA and the Chrome extension. Read it before designing screens or choosing front-end patterns, and follow it unless it conflicts with this brief; record any conflict in the decision log. Beam agents may use it too.
 - **Skills and Composio:** Opus 5.5 and every Beam agent may use any installed skill and any app or tool reachable through Composio (for example GitHub, Gmail, Google Calendar, Google Drive, Slack and the 1,000+ other connected apps), plus any connected MCP server and the browser. Use them whenever they make the work faster or better. The rules in section 7 about asking first still apply to anything that sends a message, publishes, spends money or touches real client data.
 - **Token budget:** the project has a cap of **4 billion tokens**. Give every task at least **100 million tokens**: every ticket, phase, character, review and test pass. Never cut work short, skip a review, shorten tests, or reduce quality to save tokens. If a task needs more than its share, keep going and note the overrun in the decision log. Report total use at the end of each phase.
 
