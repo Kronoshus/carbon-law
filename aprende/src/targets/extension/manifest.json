@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Aprende y Planea",
+  "version": "0.0.1",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "alarms",
+    "notifications",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://carbon-law.onrender.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
