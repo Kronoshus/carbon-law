@@ -55,7 +55,17 @@ You are a build team for Carbon Law Group (attorney Pankaj Raval, Los Angeles, C
 A fun, Duolingo-style app, Spanish first with full English, that does two things at once:
 
 1. **Teaches estate planning.** Short daily lessons, games and quizzes take a person from "what is a will?" to understanding a California estate plan: will, revocable living trust, financial power of attorney, advance health care directive, guardians for minor children, probate, community property, beneficiary designations, funding a trust, and signing with witnesses or a notary.
-2. **Builds their documents while they learn.** Each lesson ends by gathering the person's own facts for that topic. After the guardian lesson, for example: "Who would you want to care for your children?" Those answers fill the client's intake, which flows into the firm's matter workflow. Once the client finishes and enters their information, they can book an appointment with the firm, and the attorney gets first drafts to review.
+2. **Builds their documents while they learn.** Each lesson ends by gathering the person's own facts for that document. After the will lesson, for example: "Who would you want to care for your children?" Those answers fill the client's intake. When the client wants the documents prepared, they pay the firm. The firm then generates the documents, the attorney reviews them, the client signs, and a final lesson teaches how to look after them.
+
+**The whole journey takes two weeks from the first lesson to the final lesson.** The journey, in order (section 2.5 has the day-by-day timeline):
+1. Four free core lessons.
+2. Intake and conflict check.
+3. Payment.
+4. Documents generated.
+5. Attorney review.
+6. Client review.
+7. Signing.
+8. The final lesson on keeping and sharing the documents.
 
 The characters are interactive AI agents (Beam via the backend) who teach, answer general questions, play the games with the client, and guide the client through the intake conversation.
 
@@ -68,27 +78,58 @@ The characters are interactive AI agents (Beam via the backend) who teach, answe
   - Package it for the Chrome Web Store with a privacy policy page.
 - Build as one front end (for example Vite with TypeScript and three.js) with two build targets. No duplicated business logic.
 
-### 2.2 The learning path
+### 2.2 The learning path: four core lessons and a final lesson
 
-Base the course map on the firm's stages and core scope. Suggested units, which Opus refines:
+The free part of the app is **four core lessons**, one per document in the firm's core scope. Each can be finished in a day (about 15 to 20 minutes, split into 3 to 5 minute steps).
 
-1. ¿Por qué planear? (why plan; what happens without a plan; myths)
-2. Tu familia y tus bienes (family, community and separate property, what passes outside a will)
-3. El testamento (will: executor, gifts, residue, guardians)
-4. El fideicomiso en vida (living trust: trustee, successor trustee, probate avoided, funding)
-5. Poder financiero (durable financial power of attorney: agent, when it starts, gifts)
-6. Directiva de salud (advance health care directive: agent, end-of-life wishes, HIPAA)
-7. Firmar y guardar (signing, witnesses and notary, storing, funding follow-up, when to update: the change-request triggers)
-8. Tu cita con el abogado (what to bring, what happens next: the firm's stages 1 to 10 in plain words)
+1. **El testamento (the will):**
+   - what a will does;
+   - executor, gifts and the residue;
+   - guardians for minor children;
+   - what happens without a will;
+   - what passes outside a will (retirement accounts, life insurance, joint accounts);
+   - community property.
+2. **El fideicomiso en vida (the revocable living trust):**
+   - what a trust is and how it avoids probate;
+   - settlor, trustee and successor trustee, beneficiaries;
+   - funding the trust (putting the house and accounts in it);
+   - the pour-over will that goes with it.
+3. **La directiva anticipada de atención médica (the advance health care directive):**
+   - the health care agent and alternates;
+   - end-of-life wishes;
+   - pain relief, organ donation;
+   - HIPAA release of medical information.
+4. **Los poderes notariales (financial powers of attorney):**
+   - the agent and alternates;
+   - when it starts (right away, or only on incapacity);
+   - what the agent can and cannot do;
+   - gifts;
+   - why banks may ask for it.
 
-Each unit has lessons of 3 to 5 minutes. Exercise types:
+Each core lesson ends with **"Tus datos" (your details)**: the character gathers the client's own facts for that document, using the prototype's questions in `guion-plan.json` for that document, and saves them to the intake. These steps are optional until the client decides to buy that document.
+
+After the documents are signed, the app unlocks the **final lesson: "Cuida tus documentos" (look after your documents).** It teaches how to keep the originals safe and who to give what to:
+- **storing the signed originals:** in a fireproof place at home or a safe place the firm recommends, not somewhere only the client can open (a safe-deposit box can be hard for others to reach after a death);
+- **who gets a copy or must know where the originals are:**
+  - the **executor** (will);
+  - the **successor trustee** (trust; keep the trust's funding records with it);
+  - the **agent** under the financial power of attorney (and possibly the client's bank);
+  - the **health care agent** and the client's doctors (health care directive).
+- **Trust funding:** how to finish putting assets into the trust, and the funding checklist from the firm (Stage 9).
+- **Beneficiary designations:** keep retirement accounts and life insurance in line with the plan.
+- **When to update:** the firm's change-request triggers (marriage, divorce, a new child, new property or business, a change of fiduciary or of who gets what, a beneficiary's death or incapacity). Show how to send a change request in the app.
+- A short closing quiz, a "plan complete" celebration, and an annual check-in reminder.
+
+Exercise types in every lesson:
 - multiple choice, true or false, match pairs, put the steps in order;
 - "what would happen if…" scenarios, listening exercises using the character's voice, and spoken answers;
-- a boss conversation with the character at the end of each unit.
+- a short conversation with the character at the end of each lesson.
 
 Add Duolingo-style motivation, tuned to stay respectful about a serious subject:
-- XP, a daily streak with a freeze, levels, badges and a weekly goal;
-- hearts or retries, lesson-complete celebrations, and gentle reminders that the person can switch off.
+- XP, a daily streak (a natural fit for the one-lesson-a-day pace), levels and badges (one per lesson, plus "plan complete");
+- retries, lesson-complete celebrations, and gentle reminders that the person can switch off.
+
+Opus may add optional bonus lessons (for example probate, community property, or "what to bring to your appointment"). They must not lengthen the core path or delay the two-week journey.
 
 ### 2.3 The characters
 
@@ -109,14 +150,14 @@ Starting cast:
     - he discloses that he is an AI program, not the attorney and not a person, and never claims to be the attorney's likeness;
     - he runs the full estate plan conversation: consent, conflict check, document choice, each document in turn, contact details;
     - he steers wandering clients back to the next open question.
-  - **His roles in the app:** main guide; host of the course map, the will and trust units and the intake conversation; he celebrates finished units and appears in the daily reminder.
+  - **His roles in the app:** main guide; host of the course map, the will and trust lessons, the intake conversation and the final "Cuida tus documentos" lesson; he celebrates finished lessons and appears in the daily reminder.
   - **Name:** Opus proposes a warm name (for example "Don Calavera" or "Calaquita") and Carbon Law chooses.
   - **Opus's work on him:**
     - add the extra states (celebrating, thinking, waving, a happy dance for a finished unit) and a small set of costume variants for the units (for example reading glasses for the documents unit);
     - make sure he looks crisp on phones and in the extension's side panel;
     - all of it in Blender, keeping his shape-key rig.
 - **Piñata**: a colorful burro piñata. Hosts the games and quizzes, bursts into confetti on a correct streak.
-- **El Oso**: a big, happy bear. The gentle guide for health care and the hard conversations (incapacity, end of life). Calm and kind.
+- **El Oso**: a big, happy bear. The gentle guide for the health care directive lesson and the hard conversations (incapacity, end of life). Calm and kind.
 - Opus may add more, for example a hummingbird (colibrí) for daily reminders, or a grandmother (abuelita) figure who explains family topics. Each new character needs Opus's design and a note on why it fits.
 
 Use the existing calavera pipeline (`avatar-intake/calavera_art.py` and `avatar-intake/make_calavera.py`) as the pattern for every new character: art drawn in code, Blender script, GLB with the shared shape keys. Keep source art, the `.blend` file and the build script in the repo, so a character can be rebuilt with one command.
@@ -135,22 +176,42 @@ Use the existing calavera pipeline (`avatar-intake/calavera_art.py` and `avatar-
 - Intake mode, in this order:
   1. AI disclosure, and consent to record and transcribe.
   2. Conflict check on names only, before anything else.
-  3. The person chooses their documents.
-  4. Each chosen document is covered in turn.
-  5. Contact details, then appointment booking.
+  3. The person chooses the documents they want prepared.
+  4. Each chosen document is covered in turn: anything not already given in the lessons' "Tus datos" steps.
+  5. Contact details, then payment (section 2.5).
 
-### 2.5 From learning to documents to appointment
+### 2.5 Payment, documents, signing: the two-week journey
 
-- Answers gathered in lessons and conversations are saved to the client's intake on the backend, using the existing `/intake` and `/workflows` shapes. The client can review and edit everything before submitting.
-- On submission:
-  - the matter enters the firm's workflow at Stage 1 (Intake);
-  - the conflict status is recorded;
-  - first drafts of the chosen documents are generated in the background by the ported drafters (full-length, the same standard as the prototype);
-  - the drafts go to the attorney's review queue (Stage 5). **The client never sees a draft until the attorney approves it**, as the client-portal spec requires.
-- Appointment booking: available only after intake is submitted and the conflict check is clear.
-  - The client picks a slot from the firm's availability, set by staff in the backend, and can cancel or reschedule.
-  - Use the backend's appointment endpoints; Cal.com is an optional adapter.
-  - Send confirmations by email, and ntfy push to staff.
+**Timeline.** The app shows the client a progress tracker with the day and the next step. Staff see the same dates in the backend and are alerted when a step is late. The plan below fits the firm's turnaround standards (`docs/scope-and-review-standards.md`); Opus may adjust days, never the order.
+
+| Day | Step | Firm stage |
+|---|---|---|
+| 1 to 4 | The four core lessons, one a day, with their "Tus datos" steps | (learning) |
+| 4 | Consent, names-only conflict check, document choice, rest of the intake | 1 Intake |
+| 5 | Conflict cleared by the firm; engagement letter and fee agreement sent, signed in the app; **payment** | 1 to 2 |
+| 5 | Documents generated in the background right after payment | 4 Drafting |
+| 5 to 8 | Attorney review (3 business days) | 5 Review Queue |
+| 8 to 10 | Client reviews the attorney-approved documents in the app and asks for changes; revisions done | 6 Client Review |
+| 10 to 13 | Signing appointment booked; signing guide; witnesses or notary arranged | 7 Signing Preparation |
+| 13 or 14 | Signing; executed documents scanned and uploaded | 8 Execution |
+| 14 | Final lesson "Cuida tus documentos" unlocks; funding checklist delivered | 9 Funding Follow-Up |
+
+**Payment:**
+- After the four core lessons and the intake, the client chooses the documents they want prepared and sees the firm's price for each and for the package.
+- The client pays in the app (for example Stripe Checkout through the backend; card details never touch the firm's servers or the extension).
+- Payment is taken only after the conflict check is cleared and the client has signed the engagement letter and fee agreement that the attorney approved. California requires a written fee agreement in many cases, and the attorney decides its wording.
+- Prices, refunds, packages and which bank account receives the money are the firm's decisions. The attorney decides how advance fees are held under the State Bar rules. Build the settings for these; do not choose them.
+- Test with the payment provider's test mode only, until the firm approves going live.
+
+**Documents:**
+- Payment starts generation: the ported drafters write full-length first drafts of the documents paid for, to the prototype's standard. A trust together with a will gives a pour-over will.
+- Drafts go to the attorney's review queue (Stage 5). **The client never sees a draft until the attorney approves it**, as the client-portal spec requires.
+- After approval, the client reviews in the app, can ask for changes, and confirms.
+
+**Appointments:**
+- The client books the signing appointment, and any consultation, from the firm's availability, set by staff in the backend; they can cancel or reschedule.
+- A consultation can be booked any time after the core lessons if the client wants to talk to the attorney first.
+- Use the backend's appointment endpoints; Cal.com is an optional adapter. Send confirmations by email, and ntfy push to staff.
 
 ## 3. The backend Carbon Law controls
 
@@ -159,9 +220,10 @@ Extend the existing carbon-law FastAPI backend and its staff pages (`web/admin.h
   - Draft, review and publish states.
   - Any change to legal wording must be approved by an attorney before it publishes. Record who approved it and when.
 - **Characters:** turn characters on or off; assign them to units; preview their voice.
-- **Learners and clients:** progress, streaks, intake status, conflict status, questions logged for the attorney, drafts awaiting review, appointments.
+- **Learners and clients:** progress, streaks, intake status, conflict status, payment status, where each client is on the two-week timeline (with late steps flagged), questions logged for the attorney, drafts awaiting review, appointments.
+- **Payments:** prices per document and package, engagement letter and fee agreement templates (attorney-approved), refunds, receipts, and the payment provider's settings (test mode until the firm approves live).
 - **Firm controls:** office hours and appointment availability; conflict list upload (CSV, as in the prototype); data-retention settings; on/off switches for voice recording, AI chat, and the extension.
-- **Analytics** without client content: lesson completion, drop-off points, quiz accuracy per question (to find confusing lessons), and how often learners become booked clients.
+- **Analytics** without client content: lesson completion, drop-off points, quiz accuracy per question (to find confusing lessons), how many learners pay, and how many finish the two weeks on time.
 - **Audit log** for every staff and client action, plus role-based access (client, paralegal, attorney, admin), as the portal spec requires.
 
 ## 4. Suggested architecture (Opus decides)
@@ -179,14 +241,18 @@ Work in phases. Each phase ends with a demo, a short written report, and passing
 1. **Discovery (Opus):** read every source in section 1; write the product spec, information architecture, design system and the ticket backlog. Show 3 screen designs and the character lineup sketches to Carbon Law before building.
 2. **Foundations (Beam, Opus reviewing):** repo layout, both build targets, backend routers and migrations, auth for the new screens, i18n, CI with tests.
 3. **Characters (Opus only):** port the calavera; design and build the piñata and the bear in Blender with the shared rig; one animation engine drives all three.
-4. **Learning (Opus designs the lessons, Beam builds the engine):** units 1 to 3 complete in Spanish and English with all exercise types, XP, streaks and badges.
+4. **Learning (Opus designs the lessons, Beam builds the engine):** the four core lessons and the final lesson, complete in Spanish and English with all exercise types, XP, streaks and badges.
 5. **Conversation and intake (shared):** port the conversation engine, consent, conflict check, document choice, the steering checklist, and voice in and out. Wire lessons to intake.
-6. **Documents and appointments (Beam builds, Opus reviews the legal outputs):** port the drafters, the attorney review queue, availability, booking, cancel and reschedule, notifications.
+6. **Payment, documents and appointments (Beam builds, Opus reviews the legal outputs):**
+   - engagement letter and fee agreement signing, then payment in test mode;
+   - port the drafters, generation on payment, the attorney review queue, client review;
+   - availability, booking, cancel and reschedule, notifications;
+   - the two-week timeline tracker for the client and staff.
 7. **Staff controls:** content management with attorney approval, characters, learners, firm controls, analytics, audit log.
 8. **Extension and polish:** Chrome side panel and popup, PWA install, accessibility audit, performance on a mid-range phone, Store package.
 
 The release is done when:
-- a new user can go from first open to a booked appointment, in Spanish, in under 45 minutes, on a phone;
+- a new test user can go through the whole journey in Spanish on a phone: the four core lessons, intake, conflict check, engagement letter, test payment, generated drafts in the attorney queue, attorney approval, client review, booked signing appointment, signing recorded, and the final lesson unlocked. Each step lands on the day the timeline shows, and staff are alerted when a step is late;
 - the same works in the Chrome side panel;
 - conflict is checked before any detail is collected, and a possible conflict stops the flow without saying why;
 - a refusal to record keeps nothing;
@@ -203,6 +269,7 @@ The release is done when:
 - **AI disclosure:** every character says it is an AI program, not the attorney and not a person, before any conversation. A character that is not the attorney's likeness never claims to be.
 - **Order of collection:** consent, then names-only conflict check, then everything else. Nothing more is collected or sent to Beam after a possible conflict or a refusal.
 - **Drafts** are for attorney review only. Never show them to the client before approval; never include signature, witness or notary blocks; keep the yellow and green markers.
+- **Payment:** never take payment before the conflict check is cleared and the engagement letter and fee agreement are signed. Never store card details. Prices and payment handling are set by the firm and the attorney.
 - **Scope:** respect the firm's default exclusions (probate administration, trust administration after death, advanced tax, business succession, foreign assets, special-needs trusts, title review) and the attorney-reserved decisions. Characters say these need the attorney.
 - **Data:**
   - Client interviews may go to Beam: the firm approved this on 2026-11-15 for this tool; confirm it covers the new app.
