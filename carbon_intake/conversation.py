@@ -120,8 +120,7 @@ def chat(guion, lang, messages, covered=(), docs=(), avatar="avatar", *, complet
                 msgs[-1]["reasoning_content"] = str(m["reasoning_content"])[:50000]
         else:
             msgs.append({"role": "user", "content": str(m["content"])[:4000]})
-    res = complete(system_prompt(guion, lang, covered, docs, avatar), msgs, 400)
-    text, reasoning = (res[0], res[1]) if isinstance(res, tuple) else (res, "")
+    text, reasoning = complete(system_prompt(guion, lang, covered, docs, avatar), msgs, 400)
     picked = re.findall(r"\[DOCS:([^\]]*)\]", text)
     if picked:
         docs = [k for k in DOCS if k in {x.strip().lower() for x in picked[-1].split(",")}] or docs

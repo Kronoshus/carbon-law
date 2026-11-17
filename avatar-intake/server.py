@@ -12,9 +12,14 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
 ROOT = Path(__file__).parent
-import sys as _sys
-_sys.path.insert(0, str(ROOT.parent))
-from carbon_intake import *
+import sys
+sys.path.insert(0, str(ROOT.parent))
+from carbon_intake import (
+    BANNER, DOCS, DraftResult, NOTICE, UNTRUSTED, VERIFIED, WORDS, chat, checklist,
+    conflict_hits, docx, drafter, draft_parts, fold, instrument_words,
+    looping, questions, sentences, spoken, system_prompt, unverified_cites,
+)
+from carbon_intake.conversation import GUIONES
 SESSIONS = ROOT / "sessions"
 CONFLICTS = ROOT / "conflicts.csv"   # the firm's conflict list: one name per row (clients, former clients, adverse parties)
 API = "https://api.elevenlabs.io/v1"
@@ -192,19 +197,17 @@ def instrument_words(text):
 
 
 def draft(d, kind, docs=None, strict=False):
-    """sessions/<id>/answers.json -> draft-<kind>.md, .docx and .ai-record.json for one document.
-    Labels and the citation check are added outside the model's text, so the model cannot remove them.
-    A malformed reply writes nothing; strict=True also rejects a draft shorter than a full instrument."""
+    """sessions/<id>/answers.json -> draft-<kind>.md, .docx and .ai-record.json for one document."""
     docs = docs or [kind]
     n = len(DOCS[kind]["articles"])
-    k = -(-n // 6)
-    bounds = [(n * j // k + 1, n * (j + 1) // k) for j in range(k)]
-    systems = [drafter(kind, a, b) for a, b in bounds]
 
     def complete(system, messages, max_tokens):
-        return llm(system, messages, max_tokens, DRAFT_MODEL)
+        return (llm(system, messages, max_tokens, DRAFT_MODEL), "")
 
-    text = draft_parts(kind, docs, transcript(d), complete=complete)
+    result = draft_parts(kind, docs, transcript(d), complete=complete)
+    text = result.text
+    systems = result.systems
+    ask = result.messages
     missing = [w for w in WORDS[:n] if not re.search(rf"^## ARTICLE {w}\b", text, re.M)]
     if strict and missing:
         raise RuntimeError(f"the {kind} draft is missing Article {', '.join(missing)}; nothing was written")
@@ -220,7 +223,7 @@ def draft(d, kind, docs=None, strict=False):
               "model": REFLECTION_MODEL if REFLECTION else DRAFT_MODEL,
               "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "workflow": f"avatar-intake/draft-{kind}",
-              "request_hash": sha(json.dumps({"system": systems, "messages": [{"role": "user", "content": transcript(d)}]}, sort_keys=True, ensure_ascii=False).encode()),
+              "request_hash": sha(json.dumps({"system": systems, "messages": ask}, sort_keys=True, ensure_ascii=False).encode()),
               "response_hash": sha(text.encode()), "build_id": sha("".join(systems).encode())[:16]}
     out = {f"draft-{kind}.md": md.encode(), f"draft-{kind}.docx": docx(md, DOCS[kind]["name"]),
            f"draft-{kind}.ai-record.json": json.dumps(record, indent=2).encode()}
@@ -305,6 +308,18 @@ class H(SimpleHTTPRequestHandler):
         # client recordings and the key stay off the web server
         if self.path.startswith(("/sessions", "/.env")):
             return self.send_error(404)
+        from urllib.parse import unquote, urlparse
+        name = unquote(urlparse(self.path).path.lstrip("/"))
+        if name.startswith("guion") and name.endswith(".json"):
+            f = GUIONES / name
+            if f.is_file():
+                data = f.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
         super().do_GET()
 
     def reply(self, code, body, ctype="application/json"):
@@ -330,7 +345,9 @@ class H(SimpleHTTPRequestHandler):
                 if not (REFLECTION or ANTHROPIC):
                     return self.reply(503, json.dumps({"error": NO_MODEL}).encode())
                 d = json.loads(body)
-                return self.reply(200, json.dumps(chat(d.get("guion"), d.get("lang"), d["messages"], d.get("covered") or [], d.get("docs") or [], d.get("avatar") or "avatar")).encode())
+                def _complete(system, messages, max_tokens):
+                    return llm(system, messages, max_tokens, full=True)
+                return self.reply(200, json.dumps(chat(d.get("guion"), d.get("lang"), d["messages"], d.get("covered") or [], d.get("docs") or [], d.get("avatar") or "avatar", complete=_complete)).encode())
             if u.path == "/summary":
                 if not (REFLECTION or ANTHROPIC):
                     return self.reply(503, json.dumps({"error": NO_MODEL}).encode())
