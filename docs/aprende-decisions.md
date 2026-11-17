@@ -48,3 +48,10 @@ recorded when Carbon Law answers `aprende-questions.md`.
 
 Phase 1 ran in one head-engineer session (no sub-agents). The harness does not report cumulative token spend;
 the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on will include the builder agents' use.
+
+## T2-09 Worker and job queue
+- Jobs stored in existing `jobs` table; statuses pending/running/done/failed.
+- claim() increments attempts; stale running jobs older than 10 min reclaimed.
+- Postgres uses SELECT ... FOR UPDATE SKIP LOCKED inside a transaction.
+- Backoff 2/4/8 seconds, max 3 attempts then failed.
+- Worker polls every 1s and dispatches via jobs.HANDLERS registry.
