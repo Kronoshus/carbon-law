@@ -233,7 +233,7 @@ Use the existing calavera pipeline (`avatar-intake/calavera_art.py` and `avatar-
 
 **Pricing (settings the firm controls; these are the starting values):**
 - **Will: starts at $3,000.** Each completed core lesson takes **$100** off, down to a floor of **$2,500**.
-- Four lessons give $400 off ($2,600). To reach the $2,500 floor, the starting settings add one more $100 step for finishing the intake summary on day 4. Carbon Law decides whether to keep that step or use a different one; build it as a setting.
+- Five steps earn $100 each: the four core lessons ($2,600) and **finishing the intake** on day 4 ($2,500). Carbon Law chose this on 2026-11-17. Keep the steps as backend settings so the firm can change them later.
 - The price shown always says what was earned ("$3,000 − $400 for completing 4 lessons").
 - Build the rules as settings in the backend: base price per document and per package, the discount per lesson, which steps earn a discount, and the floor. A discount, once earned, stays earned.
 - Prices for the trust, the powers of attorney, the health care directive and packages are set by the firm (placeholders until then).
