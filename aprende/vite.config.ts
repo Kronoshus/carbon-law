@@ -1,27 +1,19 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { resolve } from 'node:path';
+import { makeManifest } from './src/targets/extension/manifest';
 import { mkdirSync, existsSync, writeFileSync, readdirSync, renameSync, rmSync } from 'node:fs';
 
 export default defineConfig(({ mode }) => {
   const isExt = mode === 'extension';
-  const plugins = [preact()];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugins: any[] = [preact()];
   if (isExt) {
     plugins.push({
       name: 'copy-manifest',
       closeBundle() {
         const origin = process.env.API_ORIGIN || 'https://carbon-law.onrender.com';
-        const host = origin.replace(/\/+$/, '');
-        const manifest = {
-          manifest_version: 3,
-          name: 'Aprende y Planea',
-          version: '0.0.1',
-          permissions: ['sidePanel', 'storage', 'alarms', 'notifications', 'offscreen'],
-          host_permissions: [`${host}/*`],
-          background: { service_worker: 'background.js', type: 'module' },
-          side_panel: { default_path: 'sidepanel.html' },
-          action: { default_popup: 'popup.html' }
-        };
+        const manifest = makeManifest(origin);
         const out = resolve(__dirname, 'dist/extension');
         if (!existsSync(out)) mkdirSync(out, { recursive: true });
         const htmlDir = resolve(out, 'src/targets/extension');

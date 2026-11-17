@@ -23,7 +23,8 @@ export function getPlatform(): Platform {
 
 export const platform = new Proxy({} as Platform, {
   get(_target, prop) {
-    const p = getPlatform() as Record<string, unknown>;
-    return p[prop as string];
+    const p = getPlatform() as unknown as Record<string, unknown>;
+    const v = p[prop as string];
+    return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(p) : v;
   },
 });
