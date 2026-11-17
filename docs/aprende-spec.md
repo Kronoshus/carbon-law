@@ -21,7 +21,7 @@ the repo `README.md`; `docs/legal-workflow-stages.md`, `scope-and-review-standar
 A Spanish-first, fully bilingual, Duolingo-style app in which a cast of warm Day of the Dead and fiesta characters
 teaches a person how a California estate plan works, one short lesson a day, and **gathers that person's own facts for
 each document while they learn**. When they are ready they sign the firm's engagement letter, pay, and the firm drafts,
-reviews, signs and closes the plan with them. The whole path is two weeks.
+reviews, signs and closes the plan with them. The whole path takes about two weeks (firm decision F-001).
 
 **Who it is for**
 
@@ -261,8 +261,8 @@ the timeline ticket (T5-04) turns into a tested function:
 | Sunday | Thursday | Tuesday | 17 | 17 |
 
 So **"two weeks" holds only for a Wednesday or Thursday start with no change requests**; otherwise the journey is 15–19
-days. The app will say this honestly from day 1 ("Su plan termina alrededor del …"). Options for the firm (question Q-W1):
-shorten attorney review to 2 business days, offer Saturday signings, or market the journey as "about two weeks".
+days. The app will say this honestly from day 1 ("Su plan termina alrededor del …"). **Firm decision (F-001, 2026-11-17): the app and
+marketing promise "about two weeks".**
 
 ---
 

@@ -261,7 +261,7 @@ Money is integer cents everywhere.
 - **Depends:** T2-09, T5-02
 - **Goal:** D9. `voice/` service (Piper, Kokoro, faster-whisper) with the prototype's `local_tts` / `rough_alignment` / `local_stt` moved from `server.py`; backend `/voice/tts`, `/voice/stt`; audio encrypted in `audio_blobs` with retention; browser `speechSynthesis` fallback; microphone requested only after a click (extension: offscreen document).
 - **Acceptance tests:** no `webkitSpeechRecognition`/`SpeechRecognition` anywhere in the bundle (lint rule); audio rows are unreadable without the key; retention sweep deletes past the setting; with the voice service down the character still speaks (browser voice) and the client can type; the microphone permission is never requested on page load.
-- **Needs before merge:** the firm's answer to Q-S1 (where the voice service runs). Part a can merge without hosting.
+- **Firm answer F-003 (2026-11-17): start without server voice.** Build only part c's browser-voice fallback, the lint ban on browser speech recognition, and typed answers. Parts a and b (voice container, server audio) are deferred until the firm approves hosting.
 
 ### T5-07 · Persona prompts and scripted lines
 - **Owner:** Opus · **Size:** M · **Depends:** T5-01
@@ -287,6 +287,7 @@ Money is integer cents everywhere.
 
 ### T6-02 · Checkout ★
 - **Owner:** Beam · **Size:** M · **Depends:** T6-01
+- **Firm answer F-004:** no Stripe account yet. Build and test against a mocked Stripe; real test-mode keys come from the firm's own account later.
 - **Goal:** D11. `POST /payments/checkout` creates a Stripe Checkout Session for the quoted amount (test keys only; `STRIPE_MODE=test` enforced unless the firm's approval flag is set in settings by an admin).
 - **Acceptance tests (Stripe mocked):** refused unless `may_pay`; the amount equals `/payments/quote` (server-computed, not from the client); test mode shows "Modo de prueba" in the UI; no card field exists in the app (DOM assertion).
 
@@ -418,6 +419,4 @@ Phase 8:  T8-01 ─ T8-02 ; T8-03 ─ T8-05 ; T8-04 ; T8-06 ─ T8-07
 Phases 3 and 4 overlap: Opus draws characters while Beam builds the lesson engine on placeholder art.
 
 **Count:** 61 tickets (Beam 49, Opus 10, shared 2). At the brief's minimum of 100 M tokens per task, the plan
-commits at least 6.1 B tokens, **more than the project's 4 B cap**. To stay within the cap and still give each task
-its full share, related S-size tickets will be run as one task where noted in the decision log (for example
-T2-04 + T2-10, T3-06 + T7-03, T7-02 + T7-01), or the firm raises the cap (question Q-B1).
+commits at least 6.1 B tokens, within the 10 B cap Kevin set on 2026-11-17 (F-005). Every ticket runs as its own task.

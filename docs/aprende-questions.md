@@ -11,6 +11,8 @@ change requests; otherwise 15–19 days (table in `aprende-spec.md` 6.3).
 *Recommend:* promise "about two weeks", show the real projected date from day 1. *Alternatives:* attorney review in 2
 business days, or Saturday signings. *Blocks:* marketing copy and the timeline wording (T5-04).
 
+> **Answered 2026-11-17 (Kevin):** "about two weeks". The app shows each client's real projected dates.
+
 **Q-W2. How fast does the firm clear a conflict?** The app assumes 2 business days from the names step.
 *Blocks:* the day-5 payment gate's expected date (T5-04). *Phase 5.*
 
@@ -22,6 +24,8 @@ tentative document choice to day 2 so a per-client scope review fits before day 
 **● Q-D1. Does the 2026-11-15 approval for Beam (Reflection AI) cover the new app?** The app sends lesson questions,
 "Tus datos" answers and the intake conversation (text only, never audio) to Beam, only after consent and a clear
 conflict check. *Blocks:* every AI call in production (T5-01). Tests use a stub, so Phase 2 can start without it.
+
+> **Answered 2026-11-17 (Kevin):** yes, the Beam approval covers Aprende.
 
 **Q-D2. Retention periods and Reflection's data settings.** How long to keep transcripts, audio, datos answers, drafts
 of clients who never pay, and accounts of people who only did lessons; and the Reflection account's retention and
@@ -39,6 +43,8 @@ adverse parties and former clients? Without a list the app waits for a person to
 **● Q-P1. Stripe.** Does the firm have a Stripe account (or another processor it prefers)? Which bank account
 receives payments, and how must advance fees be held under the State Bar rules (the attorney's decision)? Test mode
 needs only test keys from the firm's own account. *Blocks:* T6-02 (Phase 6); the account owner should be the firm.
+
+> **Answered 2026-11-17 (Kevin):** no Stripe account yet. Payment work is built and tested against a mocked Stripe until the firm opens an account. Still open: which bank account receives payments and how advance fees are held (attorney).
 
 **Q-P2. Wording of prices and discounts.** The attorney approves how discounts are described in the app and in any
 advertising ("$3,000 − $400 por 4 lecciones"). *Phase 4.*
@@ -90,6 +96,8 @@ does not have it. Options: a paid Render instance (about $25/month at today's pr
 machine, or no server voice (browser voice, typed answers). *Recommend:* start without it; add it when the firm
 approves the cost. **This spends money: I will not set it up without your yes.**
 
+> **Answered 2026-11-17 (Kevin):** start without server voice. Browser voice and typed answers for now; no hosting is set up.
+
 **Q-S2. An API address under the firm's domain** (e.g. `api.carbon.bailment.tech` pointing to Render) lets the web app
 use a secure HttpOnly cookie instead of a token in browser storage. Needs one DNS record. *Phase 2.*
 
@@ -107,3 +115,5 @@ wording, or make the consultation part of the path?
 
 **Q-B1. Token budget.** The backlog has 61 tasks; at the brief's minimum of 100 M tokens each that is 6.1 B, above the
 4 B cap. Raise the cap, or accept grouping small related tickets into one task (listed in the decision log)?
+
+> **Answered 2026-11-17 (Kevin):** the cap is raised to 10 B tokens. Every ticket gets its full 100 M; no grouping needed.

@@ -23,6 +23,16 @@ recorded when Carbon Law answers `aprende-questions.md`.
 | D-014 | The modern-web-guidance skill was followed for every screen decision; no conflict with the brief found. | Brief section 0 asks for the record. | Opus |
 | D-015 | No Beam builder agents were used in Phase 1. | Phase 1 is discovery and design, which the brief assigns to Opus; Beam starts with Phase 2 tickets. | Opus |
 
+## Firm answers (2026-11-17, Kevin by phone)
+
+| # | Answer | Effect on the plan |
+|---|---|---|
+| F-001 (Q-W1) | Promise "about two weeks". | Copy says "unas dos semanas"; the tracker shows each client's real dates (T5-04, T6-09). |
+| F-002 (Q-D1) | The Beam approval of 2026-11-15 covers Aprende. | Production AI calls are allowed after the consent and conflict gates. |
+| F-003 (Q-S1) | Start without server voice. | No voice hosting. The characters speak with the browser's own voice and clients type their answers. T5-06 shrinks to the browser fallback and the ban on browser speech recognition; the voice container is deferred. |
+| F-004 (Q-P1) | No Stripe account yet. | T6-02/T6-03 are built and tested against a mocked Stripe. Real test-mode keys wait for a firm-owned account. The bank account and advance-fee handling are still open. |
+| F-005 (Q-B1) | Token cap raised to 10 B. | Every ticket gets at least 100 M tokens; no ticket grouping (61 tickets ≈ 6.1 B minimum). |
+
 ## Findings recorded during discovery
 
 - `backend/app.py`'s client workflow can show drafts to a client before attorney approval (`POST /workflows/{id}/drafts`). Not changed in Phase 1; Q-X1.
