@@ -1,0 +1,33 @@
+[
+  {"id": "consentimiento", "label": "Consentimiento", "consent": true, "ask": true, "say": "Hola, bienvenido. Soy un asistente virtual de la oficina del abogado Pankaj Raval. No soy el abogado ni una persona real; soy un programa de inteligencia artificial con su imagen. Esta conversación será grabada y transcrita para que el abogado Raval pueda revisar sus respuestas y preparar su testamento. Lo que le explico es información general, no asesoría legal. ¿Acepta que grabemos esta conversación? Por favor diga sí o no."},
+
+  {"id": "conflicto", "label": "Revisión de conflictos", "ask": true, "conflict": true, "say": "Gracias. Antes de seguir, la oficina debe revisar que no exista un conflicto de intereses. Por ahora dígame solamente nombres: su nombre completo, el de su cónyuge o pareja, y los de las demás personas que formarían parte de su plan, por ejemplo sus hijos, las personas a quienes dejaría sus bienes, o quien cuidaría de sus hijos. Todavía no me cuente detalles de sus bienes ni de sus deseos."},
+
+  {"id": "explicacion", "label": "Explicación", "say": "Gracias. Primero, una breve explicación. La planificación patrimonial es decidir, por escrito, qué pasará con sus bienes y quién cuidará de sus seres queridos cuando usted fallezca o si no puede tomar decisiones. El documento básico es el testamento. En él usted nombra a las personas que recibirán sus bienes, nombra un albacea, que es la persona encargada de cumplir sus deseos, y, si tiene hijos menores, nombra un tutor para cuidarlos. Si una persona fallece sin testamento, la ley del estado decide quién recibe sus bienes, y un juez decide quién cuida a sus hijos. Otra herramienta común es el fideicomiso en vida, que puede ayudar a su familia a evitar el proceso judicial de sucesión. El abogado Raval le explicará qué opción le conviene. Ahora le haré algunas preguntas. Responda con calma; cuando termine de hablar, espere un momento y pasaré a la siguiente."},
+
+  {"id": "nombre", "label": "Nombre legal", "ask": true, "say": "¿Cuál es su nombre legal completo? Si puede, deletree sus apellidos."},
+
+  {"id": "nacimiento", "label": "Fecha de nacimiento", "ask": true, "say": "¿Cuál es su fecha de nacimiento?"},
+
+  {"id": "domicilio", "label": "Domicilio", "ask": true, "say": "¿En qué ciudad, condado y estado vive actualmente?"},
+
+  {"id": "estado_civil", "label": "Estado civil", "ask": true, "say": "¿Cuál es su estado civil? Si está casado o tiene pareja, dígame el nombre completo de su cónyuge o pareja."},
+
+  {"id": "hijos", "label": "Hijos", "ask": true, "say": "¿Tiene hijos? Por favor dígame el nombre completo y la edad de cada uno, incluyendo hijos de relaciones anteriores."},
+
+  {"id": "tutor", "label": "Tutor de hijos menores", "ask": true, "say": "Si tiene hijos menores de edad, ¿a quién le gustaría nombrar como tutor para cuidarlos, y quién sería la segunda opción? Si no tiene hijos menores, solo diga no aplica."},
+
+  {"id": "bienes", "label": "Bienes", "ask": true, "say": "Cuénteme de sus bienes principales. Por ejemplo: casas o terrenos, aquí o en otro país, cuentas de banco, cuentas de retiro, vehículos, negocios y seguros de vida. No necesito cantidades exactas, solo una idea general."},
+
+  {"id": "herederos", "label": "Herederos", "ask": true, "say": "¿A quién le gustaría dejar sus bienes, y en qué proporción? Y si esa persona falleciera antes que usted, ¿quién los recibiría?"},
+
+  {"id": "legados", "label": "Regalos específicos", "ask": true, "say": "¿Hay algún objeto o cantidad específica que quiera dejar a una persona u organización en particular?"},
+
+  {"id": "albacea", "label": "Albacea", "ask": true, "say": "¿A quién quiere nombrar como albacea, la persona de confianza que se encargará de cumplir su testamento? ¿Y quién sería la segunda opción?"},
+
+  {"id": "otros", "label": "Otros deseos y preguntas", "ask": true, "say": "¿Tiene algún otro deseo, por ejemplo sobre su funeral, o alguna pregunta que quiera que el abogado Raval le conteste?"},
+
+  {"id": "contacto", "label": "Contacto", "ask": true, "say": "Por último, ¿cuál es el mejor número de teléfono y correo electrónico para comunicarnos con usted?"},
+
+  {"id": "cierre", "label": "Cierre", "say": "Muchas gracias. El abogado Raval revisará sus respuestas y su oficina se comunicará con usted para los siguientes pasos. Nada es definitivo hasta que usted revise y firme su testamento con el abogado. Que tenga un excelente día."}
+]

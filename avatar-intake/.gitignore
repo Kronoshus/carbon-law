@@ -1,0 +1,17 @@
+# Secrets and client data never go in the repository
+.env
+sessions/
+conflicts.csv
+# The photo-based avatar of the attorney (his likeness) is kept out of this public repository;
+# prep_photo.py and make_avatar.py rebuild it from a photo the firm supplies privately
+photos/
+pankaj*.png
+pankaj*.jpg
+pankaj*.json
+avatar.glb
+avatar.blend
+avatar.ico
+# Large or regenerable files
+voice-samples/
+*.blend1
+__pycache__/
