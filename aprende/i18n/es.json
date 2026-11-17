@@ -1,4 +1,5 @@
 {
   "app.title": "Aprende y Planea",
-  "app.welcome": "Bienvenido."
+  "app.welcome": "Bienvenido.",
+  "precio": "{cents}"
 }
