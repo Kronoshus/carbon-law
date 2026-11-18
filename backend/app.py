@@ -1510,6 +1510,10 @@ app.include_router(_rj.router)
 from aprende import routes_characters as _rc
 app.include_router(_rc.router)
 
+# Aprende payments routes (T4-08)
+from aprende import routes_payments as _rp
+app.include_router(_rp.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

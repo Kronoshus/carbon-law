@@ -32,7 +32,7 @@ def test_migrate_from_empty_sqlite():
     names = {r[0] for r in rows}
     for t in TABLES:
         assert t in names, t
-    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 3
 
 
 def test_migrate_is_idempotent():
@@ -117,9 +117,9 @@ assert applied == ['0001_aprende_core', '0002_characters']
 tables = {{r[0] for r in db.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")}}
 for t in {tables!r}:
     assert t in tables, t
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 3
 assert migrate.run() == []
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 3
 print("postgres migration ok")
 """.format(url=pg_url, backend=BACKEND, tables=sorted(TABLES))
     r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)

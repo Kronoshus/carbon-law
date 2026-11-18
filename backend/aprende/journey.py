@@ -227,4 +227,22 @@ def apply(journey_id, event_type, payload=None, actor="system"):
         mid = legacy.ensure_matter(get_journey(j["id"]))
         if mid:
             db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (mid, j["id"]))
+    # Record earned discounts (discounts rows are facts) at the moment the event is applied.
+    try:
+        from aprende import pricing as _pricing
+        settings = _pricing.load_settings("pricing")
+        if settings:
+            for doc, cfg in (settings.get("discounts") or {}).items():
+                if event_type in (cfg.get("events") or []):
+                    amount = int(cfg.get("amount", 0) or 0)
+                    with db.transaction() as conn:
+                        exists = conn.execute(
+                            "SELECT 1 FROM discounts WHERE journey_id = ? AND document = ? AND event = ?",
+                            (j["id"], doc, event_type)).fetchone()
+                        if not exists:
+                            conn.execute(
+                                "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) VALUES (?, ?, ?, ?, ?, ?)",
+                                (str(uuid.uuid4()), j["id"], doc, event_type, amount, _now_iso()))
+    except Exception:
+        pass
     return get_journey(j["id"])
