@@ -84,7 +84,4 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 | T4-08 | Discounts are recorded in the same transaction as the event that earns them and keep the amount of that moment. Prices for the trust, POA and health care directive are placeholders shown as "ejemplo" until the firm sets them (Q-P4). |
 | Process | Beam builders wrote first versions of T4-02…T4-06; several ended their sessions without committing, and most needed real rewrites (SQLite-only SQL, bypassing `journey.apply`, no tests, no styles). Opus finished or rewrote each one and reviewed every screen from screenshots. |
 | T5-03 | Conflict status: firm "flagged" → hold; firm "cleared" → clear (releases a possible match or no_list after review); otherwise auto "possible" → hold, auto "no_list" or nothing → pending, auto "clear" → clear. The firm's latest decision wins. Names/matches are stored only in `conflict_checks` (staff-only); `conflict_auto` carries only `{result}`. |
-
-## T5-02
-- Consent event stores only {answer}; all other payload keys dropped server-side.
-- Gate screens render as <section> inside Shell to avoid duplicate <main> landmarks.
+| T5-02 | The `consent` event keeps only `{answer}`. A typed answer is classified by one shared phrase table in Python and TypeScript: an explicit refusal wins, uncertainty is asked once more, unclear twice counts as no (changeable later). The day-1 gate shows the header (sign out) without tabs, and adds "El abogado Raval revisa y decide todo" to the disclosure (research: make the human role visible). |
