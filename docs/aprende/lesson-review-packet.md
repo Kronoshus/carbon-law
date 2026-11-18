@@ -6,6 +6,55 @@ Every legal statement in the five lessons (the four core lessons and «Cuide sus
 
 How to answer: for each item, *approve*, or write the change you want. Items marked (non-legal) are general guidance and copy; please read them too.
 
+## Changes after the research review (2026-11-18)
+
+New or changed after reading the research in `docs/aprende-research.md`. These replace the versions below.
+
+- **will.1.0** — (non-legal)
+  - ES: Un testamento no es solo para quien tiene mucho. Es para que su familia sepa qué hacer con lo que usted deja, aunque sea una casa, un carro o una cuenta.
+  - EN: A will is not only for people who have a lot. It tells your family what to do with what you leave, even if it is a house, a car or one account.
+  - [ ] approve   changes: 
+
+- **will.1.3** — Probate Code § 6111 (read 2026-11-15): a will not meeting section 6110 is valid as a holographic will if the signature and material provisions are in the testator's handwriting. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6111)
+  - ES: También existe el testamento escrito a mano: si la firma y las partes importantes son de su puño y letra, puede ser válido sin testigos. Pero si no tiene fecha y hay otro testamento, puede causar dudas sobre cuál vale.
+  - EN: There is also the handwritten will: if the signature and the important parts are in your own handwriting, it can be valid without witnesses. But if it has no date and there is another will, it can cause doubt about which one counts.
+  - [ ] approve   changes: 
+
+- **trust.1.2** — California Courts self-help, “Formal probate” (read 2026-11-18). [page](https://selfhelp.courts.ca.gov/probate/formal-probate)
+  - ES: Un proceso completo en el tribunal, llamado sucesión o probate, suele tardar de 9 a 18 meses en California, a veces más, y tiene costos.
+  - EN: A full court process, called probate, usually takes 9 to 18 months in California, sometimes longer, and has costs.
+  - [ ] approve   changes: 
+
+- **probate.3.1** — Probate Code § 13151 (read 2026-11-18): a successor may petition for an order determining succession to the decedent's primary residence when its gross value does not exceed $750,000, as adjusted under section 890, after 40 days. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=13151)
+  - ES: Si la casa donde vivía la persona valía $750,000 o menos, sus herederos pueden pedirle al juez una orden más sencilla, sin un proceso completo, 40 días después del fallecimiento. La ley ajusta esa cantidad cada pocos años.
+  - EN: If the home the person lived in was worth $750,000 or less, the heirs can ask the court for a simpler order instead of a full probate, 40 days after the death. The law adjusts that amount every few years.
+  - [ ] approve   changes: 
+
+- **probate.3.2** — Probate Code § 13100 (read 2026-11-18): a successor may collect a decedent's personal property by affidavit, without administration, after 40 days when the gross value of the estate in this state does not exceed the amount set there, as adjusted under section 890. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=13100)
+  - ES: Si los demás bienes suman poco, la familia puede recibirlos con una declaración firmada, sin ir al juez. La ley fija esa cantidad y también la ajusta.
+  - EN: If the other property adds up to a small amount, the family can collect it with a signed statement, without going to court. The law sets that amount and adjusts it too.
+  - [ ] approve   changes: 
+
+- **probate.3.3** — Probate Code § 13151 (read 2026-11-18): a successor may petition for an order determining succession to the decedent's primary residence when its gross value does not exceed $750,000, as adjusted under section 890, after 40 days. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=13151)
+  - ES: En California, toda casa tiene que pasar por un proceso completo de sucesión. Falso. Una casa de menor valor puede pasar con una orden más sencilla del juez.
+  - EN: In California, every home has to go through a full probate. False. A lower-value home can pass with a simpler court order.
+  - [ ] approve   changes: 
+
+- **probate.3.4** — Probate Code § 10810 (read 2026-11-18): the same statutory schedule for the attorney for the personal representative, also without reference to encumbrances. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=10810)
+  - ES: En un proceso completo, la ley fija lo que cobran el albacea y su abogado. Se calcula sobre el valor total de los bienes, sin restar lo que se debe de la casa.
+  - EN: In a full probate, the law sets what the executor and their attorney are paid. It is figured on the total value of the property, without subtracting what is still owed on the home.
+  - [ ] approve   changes: 
+
+- **probate.3.5** — Probate Code § 10800 (read 2026-11-18): the personal representative's statutory compensation: 4% of the first $100,000, 3% of the next $100,000, 2% of the next $800,000 ..., on the estate's appraised value without reference to encumbrances. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=10800)
+  - ES: Por ejemplo: con bienes de $500,000, el albacea puede cobrar $13,000 y su abogado otros $13,000, aunque la casa todavía tenga hipoteca.
+  - EN: For example: with property worth $500,000, the executor can be paid $13,000 and their attorney another $13,000, even if the home still has a mortgage.
+  - [ ] approve   changes: 
+
+- **probate.3.6** — (non-legal)
+  - ES: Cuál camino le toca a su familia depende de sus bienes. Esa es una pregunta para el abogado Raval.
+  - EN: Which route fits your family depends on your property. That is a question for attorney Raval.
+  - [ ] approve   changes: 
+
 ## Día 1 — El testamento / The will
 
 ### ¿Qué hace un testamento?

@@ -28,11 +28,11 @@ steps:
   - id: trust.1.2
     kind: explain
     legal: true
-    source: cc-legal-documents
+    source: cc-formal-probate
     es:
-      text: El proceso del tribunal, llamado sucesión o probate, suele tardar por lo menos 9 meses en California y tiene costos.
+      text: Un proceso completo en el tribunal, llamado sucesión o probate, suele tardar de 9 a 18 meses en California, a veces más, y tiene costos.
     en:
-      text: The court process, called probate, usually takes at least 9 months in California and has costs.
+      text: A full court process, called probate, usually takes 9 to 18 months in California, sometimes longer, and has costs.
   - id: trust.1.3
     kind: explain
     legal: true

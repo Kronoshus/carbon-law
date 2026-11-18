@@ -137,7 +137,7 @@
   kind: probate_code
   cite: '6111'
   url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6111
-  read_on: '2026-11-15'
+  read_on: '2026-11-18'
 - id: pc-6120
   kind: probate_code
   cite: '6120'
@@ -253,3 +253,28 @@
   cite: '6112'
   url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6112
   read_on: '2026-11-15'
+- id: pc-10800
+  kind: probate_code
+  cite: '10800'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=10800
+  read_on: '2026-11-18'
+- id: pc-10810
+  kind: probate_code
+  cite: '10810'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=10810
+  read_on: '2026-11-18'
+- id: pc-13100
+  kind: probate_code
+  cite: '13100'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=13100
+  read_on: '2026-11-18'
+- id: pc-13151
+  kind: probate_code
+  cite: '13151'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=13151
+  read_on: '2026-11-18'
+- id: cc-formal-probate
+  kind: courts_selfhelp
+  cite: Formal probate
+  url: https://selfhelp.courts.ca.gov/probate/formal-probate
+  read_on: '2026-11-18'

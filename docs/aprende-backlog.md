@@ -256,6 +256,8 @@ Money is integer cents everywhere.
 - **Acceptance tests (stub model):** `covered` only grows; a client who wanders gets steered back (fixture conversation from the prototype's steering test); skipping is recorded as `skipped`, not empty; `intake_completed` emitted once and triggers the fifth discount in `/payments/quote`; no datos route works before `may_collect_details`.
 - **Web guidance:** `forms`, `accessibility`.
 
+- **Research additions (2026-11-18, `aprende-research.md`):** new question ids `casa_titulo` (how the home is titled, who is on the deed, including a relative who has died), `cuentas_beneficiarios` (each account with a beneficiary form, who is named), `documentos_previos` (any earlier will, trust or handwritten note, and where), `salud_residencia` (lives in or may move to a nursing facility); family questions do not assume marriage (partner, children of another relationship, grandchildren being raised at home); `tutor` takes a first choice, an alternate, or "todavía no decido" without blocking. No question about immigration status.
+
 ### T5-06 · Voice in and out on the firm's servers
 - **Owner:** Beam · **Size:** L (a: voice container; b: backend proxy + audio storage; c: front end + extension offscreen mic)
 - **Depends:** T2-09, T5-02
@@ -267,10 +269,14 @@ Money is integer cents everywhere.
 - **Owner:** Opus · **Size:** M · **Depends:** T5-01
 - **Goal:** three characters × two modes, in Spanish and English, derived from the prototype's `system_prompt`; El Oso's calm rules; Piñata's quiz voice; scripted lines for every gate screen. Stored as content items (attorney approval required).
 
+- **Research additions:** frame around protecting family and the house, not death; scripted answers to "no tengo suficiente" and "confío en mi familia"; never ask about immigration status; never sell (payment is the firm's screens); never pair a trust with insurance or annuities; say "el abogado Raval revisa y decide todo" when the client asks who decides.
+
 ### T5-08 · Conversation test set ★
 - **Owner:** Opus writes, Beam automates · **Size:** M · **Depends:** T5-05, T5-07
 - **Goal:** 40 scripted client conversations (20 ES, 20 EN): pushing for advice about their own case, tangents, fee questions, withdrawal of consent mid-way, distress, prompt injection in an answer, scope exclusions (foreign property, special-needs child, business), a client who cannot decide documents.
 - **Acceptance tests:** with the stub, the server-side guards hold for all 40; a recorded live run with Beam (cost approved by Kevin first) has no advice, no fee quote, no claim to be a person, one question per turn; failures become new tests.
+
+- **Research additions:** Spanglish and code-switching, speech-to-text errors in names and amounts, a client who repeats themselves, a client afraid of immigration questions, "no tengo suficiente para un testamento", "¿usted es notario?".
 
 ### T5-09 · Document interest, summary and confirmation
 - **Owner:** Beam · **Size:** M · **Depends:** T5-05, T4-08
@@ -322,6 +328,8 @@ Money is integer cents everywhere.
 ### T6-08 · Signing, downloads, final lesson unlock
 - **Owner:** Beam · **Size:** S · **Depends:** T6-07
 - **Acceptance tests:** staff upload of executed documents records `signed`, moves the matter to 8 then 9, unlocks `#/cuida`; executed documents and the funding checklist (`templates/california/funding-checklist.md`, filled) are downloadable by the client only through authenticated, non-guessable URLs; funding done by staff → stage 10.
+
+- **Research additions (T6-08):** after the final lesson, funding check-ins at 2, 6 and 12 weeks until staff record `funding_done`, then a yearly review reminder; a "Plan completo" seal only when funding is done; the signing guide lists who may witness each document (no one who inherits under the will, § 6112; not the agent, §§ 4122, 4674; for the health care directive at least one witness neither related nor an heir, and a nursing-facility resident needs the ombudsman as a witness — attorney to confirm before use).
 
 ### T6-09 · "Mi plan" timeline, client and staff
 - **Owner:** Beam · **Size:** M · **Depends:** T5-04
