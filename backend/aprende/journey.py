@@ -196,7 +196,7 @@ def get_or_create_for_user(user_id):
 def _insert_event(journey_id, event_type, payload, actor, created_at):
     """Record an event unless it repeats the latest one of its type (a resend is a no-op). For consent and the conflict
     results only an unchanged answer is a repeat, so a changed decision is always recorded. Read and insert happen in one
-    transaction, so concurrent requests cannot both insert."""
+    transaction, so concurrent requests cannot both insert. Earned discounts are recorded in the same transaction."""
     with db.transaction() as conn:
         row = conn.execute(
             "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
@@ -211,6 +211,14 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
         conn.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
+        r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
+        settings = json.loads(r[0]) if r else {}
+        for doc, cfg in (settings.get("discounts") or {}).items():
+            if event_type in (cfg.get("events") or []):
+                conn.execute(
+                    "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
+                    (str(uuid.uuid4()), journey_id, doc, event_type, int(cfg["amount"]), created_at))
     return True
 
 
