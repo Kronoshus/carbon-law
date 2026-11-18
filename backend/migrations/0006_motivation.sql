@@ -12,11 +12,11 @@ CREATE TABLE IF NOT EXISTS petal_awards (
 CREATE TABLE IF NOT EXISTS reminders (
   journey_id TEXT PRIMARY KEY,
   enabled INTEGER NOT NULL DEFAULT 0,
-  local_time TEXT NOT NULL DEFAULT '09:00',
+  local_time TEXT NOT NULL,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_sent_on TEXT
 );
 
 INSERT INTO settings (key, value_json, updated_by, updated_at)
-VALUES ('levels', '{"Aprendiz":0,"Conocedor":300,"Planeador":800,"Guardián":1500}', 'migration', CURRENT_TIMESTAMP)
+VALUES ('levels', '{"aprendiz":0,"conocedor":300,"planeador":800,"guardian":1500}', 'migration', CURRENT_TIMESTAMP)
 ON CONFLICT (key) DO NOTHING;

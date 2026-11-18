@@ -55,7 +55,6 @@ def set_stage(journey, stage):
     with backend_app._request_lock:
         if stage not in backend_app.STAGES:
             raise ValueError("invalid stage")
-        old = backend_app.matters[mid].get("stage")
         backend_app.matters[mid]["stage"] = stage
         backend_app.matters[mid]["updated_at"] = backend_app.now_iso()
         backend_app.stage_history.setdefault(mid, []).append(

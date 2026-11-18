@@ -3,7 +3,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
 import app as backend_app
-from aprende import journey, progress as P
+from aprende import journey, motivation
 
 router = APIRouter()
 
@@ -26,11 +26,12 @@ def _journey(authorization):
 
 @router.get("/progress")
 def get_progress(authorization: str = Header(None)):
-    j = _journey(authorization)
-    return P.progress(j)
+    return motivation.progress(_journey(authorization))
 
 
 @router.put("/progress/reminders")
 def put_reminders(body: ReminderBody, authorization: str = Header(None)):
-    j = _journey(authorization)
-    return P.set_reminder(j["id"], body.enabled, body.local_time)
+    try:
+        return motivation.set_reminder(_journey(authorization)["id"], body.enabled, body.local_time)
+    except ValueError as error:
+        raise HTTPException(422, str(error))
