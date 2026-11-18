@@ -45,31 +45,31 @@ export function CuentaNueva() {
     <main class="screen cuenta">
       <h1>{t('cuenta.title')}</h1>
       <form onSubmit={onSubmit} autocomplete="on">
-        <label>
+        <label class="field">
           {t('cuenta.name')}
           <input name="name" autocomplete="name" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} required aria-invalid={!!error} aria-describedby={error ? "signup-error" : undefined} />
         </label>
-        <label>
+        <label class="field">
           {t('cuenta.email')}
           <input type="email" name="email" autocomplete="email" value={email} onInput={(e) => setEmail((e.target as HTMLInputElement).value)} required aria-invalid={!!error} aria-describedby={error ? "signup-error" : undefined} />
         </label>
-        <label>
+        <label class="field">
           {t('cuenta.password')}
           <input type="password" name="password" autocomplete="new-password" value={password} onInput={(e) => setPassword((e.target as HTMLInputElement).value)} required aria-invalid={!!error} aria-describedby={error ? "signup-error" : undefined} />
         </label>
-        <label>
+        <label class="check">
           <input type="checkbox" name="adult" checked={adult} onChange={(e) => setAdult((e.target as HTMLInputElement).checked)} />
           {t('cuenta.adult')}
         </label>
-        <label>
+        <label class="field">
           {t('cuenta.lang')}
           <select value={lang.value} onChange={(e) => setLang((e.target as HTMLSelectElement).value as 'es' | 'en')}>
             <option value="es">{'Español'}</option>
             <option value="en">{'English'}</option>
           </select>
         </label>
-        {error ? <p id="signup-error" role="alert">{error}</p> : null}
-        <button type="submit" disabled={submitting || !adult}>{t('cuenta.submit')}</button>
+        {error ? <p id="signup-error" class="error" role="alert">{error}</p> : null}
+        <button class="btn" type="submit" disabled={submitting}>{t('cuenta.submit')}</button>
       </form>
     </main>
   );

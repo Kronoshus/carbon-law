@@ -10,9 +10,8 @@
   "nav.perfil": "Perfil",
   "top.title": "Aprende y Planea",
   "top.signout": "Cerrar sesión",
-  "bienvenida.title": "Bienvenido a Aprende y Planea",
-  "bienvenida.what": "¿Qué es esto?",
-  "bienvenida.what.body": "Información general, no asesoría legal.",
+  "bienvenida.title": "Aprende y Planea",
+  "bienvenida.what.body": "¡Hola! Soy un programa de inteligencia artificial, no el abogado. En lecciones cortas le explico cómo funciona un plan patrimonial en California, y usted prepara sus datos mientras aprende.",
   "bienvenida.signup": "Crear cuenta",
   "bienvenida.signin": "Iniciar sesión",
   "cuenta.title": "Crear cuenta",
@@ -29,5 +28,7 @@
   "placeholder.title": "Próximamente",
   "error.required": "Este campo es obligatorio",
   "error.adult": "Debe confirmar que es mayor de 18 años.",
-  "error.invalid": "Correo o contraseña incorrectos."
+  "error.invalid": "Correo o contraseña incorrectos.",
+  "bienvenida.host": "La Calavera, programa de inteligencia artificial",
+  "bienvenida.note": "Información general, no asesoría legal. Carbon Law Group, Los Ángeles."
 }

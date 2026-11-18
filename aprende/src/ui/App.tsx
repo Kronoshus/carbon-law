@@ -1,4 +1,11 @@
 import { h } from 'preact';
+import '@fontsource/work-sans/400.css';
+import '@fontsource/work-sans/600.css';
+import '@fontsource/work-sans/700.css';
+import '@fontsource/league-spartan/700.css';
+import '@fontsource/league-spartan/800.css';
+import './tokens.css';
+import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';
 import { getToken } from '../core/api';

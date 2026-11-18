@@ -3,13 +3,13 @@ import { route, navigate } from '../core/router';
 import { t } from '../core/i18n';
 import type { I18nKey } from '../core/i18n-keys';
 import { clearToken } from '../core/api';
-import './shell.css';
+import { Icon, IconSprite, type IconName } from './Icons';
 
-const TABS: { path: string; key: I18nKey }[] = [
-  { path: '/aprender', key: 'nav.aprender' },
-  { path: '/plan', key: 'nav.plan' },
-  { path: '/preguntas', key: 'nav.preguntas' },
-  { path: '/perfil', key: 'nav.perfil' },
+const TABS: { path: string; key: I18nKey; icon: IconName }[] = [
+  { path: '/aprender', key: 'nav.aprender', icon: 'mapa' },
+  { path: '/plan', key: 'nav.plan', icon: 'plan' },
+  { path: '/preguntas', key: 'nav.preguntas', icon: 'pregunta' },
+  { path: '/perfil', key: 'nav.perfil', icon: 'perfil' },
 ];
 
 function isActive(tabPath: string): boolean {
@@ -27,6 +27,7 @@ export function Shell({ children }: { children: ComponentChildren }) {
   }
   return (
     <div class="shell">
+      <IconSprite />
       <header class="topbar">
         <span class="topbar-title">{t('top.title')}</span>
         <button type="button" class="topbar-signout" onClick={() => void signOut()}>
@@ -40,9 +41,9 @@ export function Shell({ children }: { children: ComponentChildren }) {
               key={tab.path}
               href={'#' + tab.path}
               class="rail-link"
-              aria-current={isActive(tab.path) ? 'page' : 'false'}
+              aria-current={isActive(tab.path) ? 'page' : undefined}
             >
-              {t(tab.key)}
+              <Icon name={tab.icon} />{t(tab.key)}
             </a>
           ))}
         </nav>
@@ -54,9 +55,9 @@ export function Shell({ children }: { children: ComponentChildren }) {
             key={tab.path}
             href={'#' + tab.path}
             class="tab-link"
-            aria-current={isActive(tab.path) ? 'page' : 'false'}
+            aria-current={isActive(tab.path) ? 'page' : undefined}
           >
-            {t(tab.key)}
+            <Icon name={tab.icon} />{t(tab.key)}
           </a>
         ))}
       </nav>

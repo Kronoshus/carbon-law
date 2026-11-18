@@ -10,9 +10,8 @@
   "nav.perfil": "Profile",
   "top.title": "Aprende y Planea",
   "top.signout": "Sign out",
-  "bienvenida.title": "Welcome to Aprende y Planea",
-  "bienvenida.what": "What is this?",
-  "bienvenida.what.body": "General information, not legal advice.",
+  "bienvenida.title": "Aprende y Planea",
+  "bienvenida.what.body": "Hi! I'm an artificial intelligence program, not the attorney. In short lessons I'll explain how a California estate plan works, and you'll get your details ready while you learn.",
   "bienvenida.signup": "Create account",
   "bienvenida.signin": "Sign in",
   "cuenta.title": "Create account",
@@ -29,5 +28,7 @@
   "placeholder.title": "Coming soon",
   "error.required": "This field is required",
   "error.adult": "You must confirm you are over 18.",
-  "error.invalid": "Incorrect email or password."
+  "error.invalid": "Incorrect email or password.",
+  "bienvenida.host": "La Calavera, an artificial intelligence program",
+  "bienvenida.note": "General information, not legal advice. Carbon Law Group, Los Angeles."
 }

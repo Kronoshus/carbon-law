@@ -43,16 +43,16 @@ export function Entrar() {
     <main class="screen entrar">
       <h1>{t('entrar.title')}</h1>
       <form onSubmit={onSubmit} autocomplete="on">
-        <label>
+        <label class="field">
           {t('entrar.email')}
           <input type="email" name="email" autocomplete="username" value={email} onInput={(e) => setEmail((e.target as HTMLInputElement).value)} required aria-invalid={!!error} aria-describedby={error ? "signin-error" : undefined} />
         </label>
-        <label>
+        <label class="field">
           {t('entrar.password')}
           <input type="password" name="password" autocomplete="current-password" value={password} onInput={(e) => setPassword((e.target as HTMLInputElement).value)} required aria-invalid={!!error} aria-describedby={error ? "signin-error" : undefined} />
         </label>
-        {error ? <p id="signin-error" role="alert">{error}</p> : null}
-        <button type="submit" disabled={submitting}>{t('entrar.submit')}</button>
+        {error ? <p id="signin-error" class="error" role="alert">{error}</p> : null}
+        <button class="btn" type="submit" disabled={submitting}>{t('entrar.submit')}</button>
       </form>
     </main>
   );
