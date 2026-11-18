@@ -1518,6 +1518,10 @@ app.include_router(_rp.router)
 from aprende import routes_learn as _rl
 app.include_router(_rl.router)
 
+# Aprende progress routes (T4-06)
+from aprende import routes_progress as _rpr
+app.include_router(_rpr.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
