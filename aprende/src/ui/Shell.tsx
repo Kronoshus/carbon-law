@@ -20,7 +20,8 @@ function isActive(tabPath: string): boolean {
   return false;
 }
 
-export function Shell({ children }: { children: ComponentChildren }) {
+/** `bare`: the header only — for the day-1 gate, where the client does one thing at a time. */
+export function Shell({ children, bare = false }: { children?: ComponentChildren; bare?: boolean }) {
   async function signOut() {
     await clearToken();
     navigate('/entrar');
@@ -33,6 +34,7 @@ export function Shell({ children }: { children: ComponentChildren }) {
           {t('top.signout')}
         </button>
       </header>
+      {bare ? <main class="shell-main">{children}</main> : <>
       <div class="shell-body">
         <nav class="rail" aria-label={t('top.title')}>
           {TABS.map((tab) => (
@@ -60,6 +62,7 @@ export function Shell({ children }: { children: ComponentChildren }) {
           </a>
         ))}
       </nav>
+      </>}
     </div>
   );
 }
