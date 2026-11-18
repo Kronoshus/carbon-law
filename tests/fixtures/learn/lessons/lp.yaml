@@ -1,0 +1,91 @@
+id: lp
+unit: poa
+day: 4
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Lección lp
+  en: Lesson lp
+steps:
+- id: lp.1
+  title:
+    es: Paso
+    en: Step
+  items:
+  - id: lp.1.1
+    kind: explain
+    legal: true
+    source: pc-6110
+    es:
+      text: Explicación.
+    en:
+      text: Explanation.
+  - id: lp.1.2
+    kind: choice
+    legal: true
+    source: pc-6110
+    answer: 2
+    es:
+      prompt: ¿Cuántos?
+      options:
+      - Cero
+      - Uno
+      - Dos
+      explain: Dos.
+    en:
+      prompt: How many?
+      options:
+      - Zero
+      - One
+      - Two
+      explain: Two.
+  - id: lp.1.3
+    kind: truefalse
+    answer: false
+    es:
+      statement: Necesita notario.
+      explain: No.
+    en:
+      statement: Needs a notary.
+      explain: No.
+  - id: lp.1.4
+    kind: match
+    character: pinata
+    es:
+      prompt: Una
+      pairs:
+      - - A
+        - uno
+      - - B
+        - dos
+      - - C
+        - tres
+      explain: Bien.
+    en:
+      prompt: Match
+      pairs:
+      - - A
+        - one
+      - - B
+        - two
+      - - C
+        - three
+      explain: Good.
+  - id: lp.1.5
+    kind: order
+    character: pinata
+    es:
+      prompt: Ordene
+      steps:
+      - Primero
+      - Segundo
+      - Tercero
+      explain: Así.
+    en:
+      prompt: Order
+      steps:
+      - First
+      - Second
+      - Third
+      explain: Like that.
