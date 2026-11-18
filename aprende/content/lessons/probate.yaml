@@ -1,0 +1,100 @@
+id: probate
+unit: bonus
+day: null
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: ¿Qué es la sucesión (probate)?
+  en: What is probate?
+steps:
+- id: probate.1
+  title:
+    es: El proceso del tribunal
+    en: The court process
+  items:
+  - id: probate.1.1
+    kind: explain
+    legal: true
+    source: cc-probate
+    es:
+      text: La sucesión, o probate, es el proceso legal para pasar o heredar los bienes de una persona después de su fallecimiento.
+    en:
+      text: Probate is the legal process to transfer or inherit a person's property after they die.
+  - id: probate.1.2
+    kind: explain
+    legal: true
+    source: cc-probate
+    es:
+      text: 'Un juez nombra a un representante: la persona que reúne los bienes, paga las deudas y entrega lo que queda a los herederos o beneficiarios.'
+    en:
+      text: 'A judge appoints a representative: the person who gathers the property, pays the debts and gives what remains to the heirs or beneficiaries.'
+  - id: probate.1.3
+    kind: explain
+    legal: true
+    source: pc-8420
+    es:
+      text: La persona nombrada como albacea en el testamento tiene derecho a ser ese representante.
+    en:
+      text: The person named as executor in the will has the right to be that representative.
+  - id: probate.1.4
+    kind: truefalse
+    legal: true
+    source: cc-probate
+    answer: true
+    es:
+      statement: Un patrimonio puede tener que pasar por el tribunal aunque la persona tuviera testamento.
+      explain: Cierto. Tener testamento no siempre evita el tribunal.
+    en:
+      statement: An estate may have to go through court even if the person had a will.
+      explain: True. Having a will does not always avoid court.
+- id: probate.2
+  title:
+    es: El testamento original
+    en: The original will
+  items:
+  - id: probate.2.1
+    kind: explain
+    legal: true
+    source: cc-probate
+    es:
+      text: Quien encuentre el testamento original debe entregarlo al tribunal.
+    en:
+      text: Whoever finds the original will must deliver it to the court.
+  - id: probate.2.2
+    kind: explain
+    legal: true
+    source: pc-8200
+    es:
+      text: Tiene 30 días desde que sabe del fallecimiento, y también entrega una copia al albacea.
+    en:
+      text: They have 30 days from learning of the death, and also give a copy to the executor.
+  - id: probate.2.3
+    kind: scenario
+    legal: true
+    source: pc-8200
+    answer: 2
+    es:
+      story: Mateo encuentra el testamento original de su tía en un cajón, una semana después de su fallecimiento.
+      prompt: ¿Qué debe hacer con el testamento original?
+      options:
+      - Guardarlo en su casa
+      - Dárselo al banco
+      - Entregarlo al tribunal del condado
+      explain: El original va al tribunal, dentro de los 30 días.
+    en:
+      story: Mateo finds his aunt's original will in a drawer, a week after she died.
+      prompt: What should they do with the original will?
+      options:
+      - Keep it at home
+      - Give it to the bank
+      - Deliver it to the county court
+      explain: The original goes to the court, within 30 days.
+  - id: probate.2.4
+    kind: explain
+    legal: true
+    source: cc-legal-documents
+    es:
+      text: Un fideicomiso en vida bien fondeado ayuda a que su familia no tenga que pasar por este proceso.
+    en:
+      text: A well-funded living trust helps your family avoid this process.

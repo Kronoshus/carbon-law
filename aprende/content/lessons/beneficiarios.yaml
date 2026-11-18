@@ -1,0 +1,78 @@
+id: beneficiarios
+unit: bonus
+day: null
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Beneficiarios de cuentas y seguros
+  en: Account and insurance beneficiaries
+steps:
+- id: beneficiarios.1
+  title:
+    es: Lo que pasa fuera del testamento
+    en: What passes outside the will
+  items:
+  - id: beneficiarios.1.1
+    kind: explain
+    legal: true
+    source: pc-5000
+    es:
+      text: Los seguros de vida, los planes de retiro y las cuentas con beneficiario se pagan a quien usted nombró en ese formulario, sin seguir las reglas de un testamento.
+    en:
+      text: Life insurance, retirement plans and accounts with a beneficiary are paid to whoever you named on that form, without following the rules for a will.
+  - id: beneficiarios.1.2
+    kind: explain
+    legal: true
+    source: pc-5302
+    es:
+      text: En una cuenta conjunta, el dinero queda normalmente para la otra persona de la cuenta. En una cuenta con beneficiario (P.O.D.), pasa a ese beneficiario.
+    en:
+      text: In a joint account, the money usually goes to the other person on the account. In an account with a payable-on-death beneficiary, it goes to that beneficiary.
+  - id: beneficiarios.1.3
+    kind: match
+    character: pinata
+    es:
+      prompt: Una cada bien con quien lo recibe
+      pairs:
+      - - Seguro de vida
+        - El beneficiario del seguro
+      - - Cuenta conjunta
+        - La otra persona de la cuenta
+      - - Casa en el fideicomiso
+        - Los beneficiarios del fideicomiso
+      explain: ¡Muy bien! Por eso conviene revisar cada formulario.
+    en:
+      prompt: Match each asset with who receives it
+      pairs:
+      - - Life insurance
+        - The policy's beneficiary
+      - - Joint account
+        - The other person on the account
+      - - House in the trust
+        - The trust's beneficiaries
+      explain: Well done! That is why it helps to check every form.
+- id: beneficiarios.2
+  title:
+    es: Después de un divorcio
+    en: After a divorce
+  items:
+  - id: beneficiarios.2.1
+    kind: explain
+    legal: true
+    source: pc-5040
+    es:
+      text: Si usted se divorcia, la ley normalmente anula lo que un formulario de beneficiario hecho antes o durante el matrimonio le dejaba a su excónyuge. Hay excepciones; revise sus formularios.
+    en:
+      text: If you divorce, the law usually cancels what a beneficiary form made before or during the marriage left to your former spouse. There are exceptions; review your forms.
+  - id: beneficiarios.2.2
+    kind: truefalse
+    legal: true
+    source: pc-5040
+    answer: true
+    es:
+      statement: Después de un divorcio conviene revisar todos sus formularios de beneficiario.
+      explain: Cierto. Así su plan dice lo que usted quiere hoy.
+    en:
+      statement: After a divorce, it is wise to review all your beneficiary forms.
+      explain: True. That way your plan says what you want today.
