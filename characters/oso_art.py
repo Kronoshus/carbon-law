@@ -12,7 +12,7 @@ SWEATER, SWEATER_D = (38, 120, 128), (28, 92, 100)                         # dee
 SARAPE = [(214, 76, 96), (246, 196, 82), (46, 160, 150), (250, 238, 214), (123, 44, 191), (232, 120, 40)]
 EYE = (120, 66, 30)
 
-L = {"band": [0.556, 0.566], "jaw": [0.41, 0.59, 0.566, 0.615], "eyes": [[0.415, 0.385], [0.585, 0.385]],
+L = {"jawDrop": 0.05, "jawFade": 0.03, "band": [0.552, 0.568], "jaw": [0.44, 0.56, 0.568, 0.6], "eyes": [[0.415, 0.385], [0.585, 0.385]],
      "socket": [0.043, 0.047], "pupil": 0.024, "brows": [[0.415, 0.315], [0.585, 0.315]], "neck": [0.655, 0.73]}
 
 
@@ -81,13 +81,13 @@ def draw(jaw=0.0, blink=0.0, look=0.0, hug=False):
     a.line([(0.5, 0.528), (0.5, 0.556)], LINE, 0.006)
     b0, b1 = L["band"]
     gap = (b1 - b0) + jaw * 0.045
-    mouth = [(0.445, b0), (0.555, b0), (0.54, b0 + gap * 0.8), (0.5, b0 + gap), (0.46, b0 + gap * 0.8)]
-    if jaw > 0.1:
-        a.shape(mouth, LINE, w=0.003)
-        a.blob(0.5, b0 + gap * 0.7, 0.028, gap * 0.28, (230, 110, 130), w=0)
-    for side in (-1, 1):                                      # the smile: two soft curves from the nose line
-        a.line([(0.5 + side * 0.06 * t, b0 + 0.01 * math.sin(t * math.pi) - 0.012 * t ** 2) for t in [i / 20 for i in range(21)]],
-               LINE, 0.007)
+    a.d.rounded_rectangle([*a.P(0.462, b0), *a.P(0.538, b0 + gap)], radius=a.w(0.006), fill=(70, 30, 50),
+                          outline=LINE, width=a.w(0.004))                      # a small dark mouth: the jaw key opens it
+    if gap > 0.02:
+        a.blob(0.5, b0 + gap * 0.72, 0.024, gap * 0.26, (230, 110, 130), w=0)    # tongue, when open
+    for side in (-1, 1):                                                       # the smile curls up from its corners
+        x0 = 0.5 + side * 0.036
+        a.line([(x0 + side * 0.035 * t, b0 + 0.004 - 0.022 * t ** 1.6) for t in [i / 16 for i in range(17)]], LINE, 0.007)
     if hug:                                                   # paws up, as if offering a hug (the "comfort" state)
         for side in (-1, 1):
             a.blob(0.5 + side * 0.22, 0.86, 0.08, 0.07, FUR)
@@ -127,6 +127,15 @@ def backdrop():
     a.img = a.img.filter(ImageFilter.GaussianBlur(S * 0.003))
     return a
 
+
+
+def rig():
+    """Where the moving parts are, as fractions of the 2048 picture (the K, OY of the drawing applied)."""
+    X, Y = (lambda x: 0.5 + (x - 0.5) * 0.86), (lambda y: 0.14 + y * 0.86)
+    return {"band": [Y(v) for v in L["band"]], "jaw": [X(L["jaw"][0]), X(L["jaw"][1]), Y(L["jaw"][2]), Y(L["jaw"][3])],
+            "eyes": [[X(x), Y(y)] for x, y in L["eyes"]], "socket": [v * 0.86 for v in L["socket"]], "pupil": L["pupil"] * 0.86,
+            "brows": [[X(x), Y(y)] for x, y in L["brows"]], "neck": [Y(v) for v in L["neck"]],
+            "jawDrop": L.get("jawDrop", 0.07), "jawFade": L.get("jawFade", 0.035)}
 
 if __name__ == "__main__":
     draw().save("oso.png")

@@ -57,12 +57,15 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 | T2-09 | Worker loop runs in-process in the web service (daemon thread) gated by `APRENDE_INPROCESS_WORKER=1`; `render.yaml` has no paid worker service. `backend/worker.py` exposes `run_forever(stop_event)` and `start_in_background()`. `python -m backend.worker` still works for a separate process. Backoff 60/300/1800s. |
 | T2-12 | Popup is a separate tiny Preact view (`src/targets/extension/Popup.tsx`), not `App`; no three.js/character stage in the popup bundle. Streak shows 0 until Phase 4. Today's step = journey `day` plus the first gate in `GATE_ORDER` that is false, mapped via a typed `Record<Gate, I18nKey>`. Token storage uses `chrome.storage.session` only; `local`/`sync` are never touched. Side panel opens via `chrome.sidePanel.open({ windowId })` from the popup button. |
 
+## Phase 3
 
-## T3-06 Characters API
-- `name_key` convention: `character.{id}.name` (i18n key; actual names pending Q-C1).
-- `GET /characters` returns a JSON array of enabled characters.
-- Calavera cannot be disabled (409); `character_for(unit)` falls back to calavera.
-## T3-05 CharacterEngine
-- Pinned `three` to 0.160.0 (prototype version) to match avatar-intake; no types shipped, ambient module declarations added in `aprende/src/three.d.ts`.
-- Firm decision F-003 honored: no server voice; `speak(text, lang)` uses browser speechSynthesis; second path `speakAudio({audio_base64, mime, alignment})` retained for future voice service.
-- `three` is a dynamic import inside `CharacterEngine.mount()` only; not in initial bundle.
+| Ticket | Decision |
+|---|---|
+| T3-01 | One build for every character: `python characters/build.py` (art in code → atlas → Blender `make_character.py` → `aprende/public/characters/`). Lighter than the prototype's sheet: 140-cell grid, fully transparent cells dropped, sparse morph targets, no normals, WebP textures, JPEG backdrop. La Calavera's GLB went from 11 MB to 1.3 MB; rendered against the old one in four frozen poses it differs in 0.00 % (base), 0.25 % (jaw), 0.03 % (blink), 0.04 % (turn) of pixels. Piñata 0.7 MB, El Oso 0.8 MB. |
+| T3-01 | States are overlays inside the one mesh and texture: each state's art (the pixels that differ from the base) is folded to a point in the basis and opened by its own shape key, and the head keys move it too. So one engine, one draw call, no texture swaps. Costumes (glasses, pen) are overlays toggled by one key each, not a material switch (the backlog said material switch; a key is simpler for the engine). |
+| T3-01 | Bug found in the prototype pipeline: Blender exported every shape key with a default weight of 1 (`make_calavera.py` never set `value = 0`). The prototype hid it by setting all eight keys every frame. `make_character.py` sets every key to 0; the prototype's own GLB is unchanged. |
+| T3-02/03 | Piñata's teeth moved above the mouth band and El Oso given a small dark mouth, so `jawOpen` opens a mouth instead of stretching a line. `jawDrop`/`jawFade` are per-character in the rig map. |
+| T3-04 | La Calavera: base art unchanged (`avatar-intake/calavera.png`); new layers `celebrate` (happy closed eyes), `wave` (+ `waveSwing`, a raised skeletal hand in his sleeve, swinging from the shoulder), costumes `glasses` (day 9) and `pen` (signing day). The happy dance is engine motion over `celebrate`, not new art. |
+| T3-07 | Cultural review of the final art (Opus): Day of the Dead imagery kept as an *ofrenda* (marigolds, candles, papel picado), no realistic bones or gore; the one sombrero stays La Calavera's; no moustaches, no costume clichés on Piñata or El Oso; the sarape stripes are generic; El Oso's comfort pose reads as kind at 160 px. Still needed: the firm's native-speaker review of names, lines and art (Q-C2). |
+| T3-06 | Characters API: `GET /characters` lists the enabled characters with `name_key` = `character.<id>.name` (an i18n key; the names wait for Q-C1); staff `PATCH` is audited; La Calavera cannot be disabled (409); `character_for(unit)` falls back to La Calavera. |
+| T3-05 | `CharacterEngine` ports the prototype's animation (same constants, camera, unlit materials, body group) with states `idle, talking, thinking, listening, celebrating, comforting, waving, dancing` and costumes; overlay keys ease in. `three` 0.160.0 (the prototype's version, with `@types/three`) is loaded only when a stage mounts. No server voice (F-003): `speak()` uses the browser's speech synthesis with word-timed lip sync; `speakAudio()` keeps the prototype's server shape for later. Canvas at the device pixel ratio (capped at 2). |
