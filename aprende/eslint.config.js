@@ -10,7 +10,16 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{ group: ['**/targets/**'], message: 'core/ui must not import targets' }]
-      }]
+      }],
+      'no-restricted-syntax': ['error', {
+        selector: 'JSXText[value=/\\S/]',
+        message: 'No hard-coded text in JSX; use t(key).',
+      }],
     }
   }
+,
+  {
+    files: ['scripts/**/*.{mjs,js}'],
+    languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
+  },
 );
