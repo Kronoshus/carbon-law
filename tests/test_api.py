@@ -429,14 +429,10 @@ def test_signup_accepts_six_character_password_and_rejects_five():
     assert c.post("/auth/login",json={"email":"six-pass@example.com","password":"123456"}).status_code==200
 
 
-_DB_PATH = os.environ.get("CARBON_DB_PATH")
 def stored_users_after_restart():
     code = "import sys; sys.path.insert(0, 'backend'); import app; print(sorted(app.users))"
-    env = dict(os.environ)
-    if _DB_PATH:
-        env["CARBON_DB_PATH"] = _DB_PATH
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True,
-                         cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))), env=env)
+                         cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return out.stdout
 
 
