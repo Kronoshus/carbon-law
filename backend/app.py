@@ -1522,6 +1522,10 @@ app.include_router(_rl.router)
 from aprende import routes_progress as _rpr
 app.include_router(_rpr.router)
 
+# Aprende conflicts routes (T5-03)
+from aprende import routes_conflicts as _rco
+app.include_router(_rco.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
