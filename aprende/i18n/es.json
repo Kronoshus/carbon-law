@@ -49,5 +49,17 @@
   "character.calavera.name": "La Calavera",
   "character.pinata.name": "Piñata",
   "character.oso.name": "El Oso",
-  "character.stageLabel": "{name}, un personaje animado; es un programa de inteligencia artificial, no el abogado"
+  "character.stageLabel": "{name}, un personaje animado; es un programa de inteligencia artificial, no el abogado",
+  "price.loading": "Cargando…",
+  "price.por": "por",
+  "price.placeholder": "ejemplo",
+  "price.event.lesson_completed:will": "1 lección",
+  "doc.will": "Su testamento",
+  "doc.trust": "Fideicomiso",
+  "doc.poa": "Poder notarial",
+  "doc.ahcd": "Directiva de salud",
+  "price.seals.one": "{count} de 5 pasos con descuento completados",
+  "price.seals.other": "{count} de 5 pasos con descuento completados",
+  "price.sum.one": "{base} − {discount} por {count} lección",
+  "price.sum.other": "{base} − {discount} por {count} lecciones"
 }

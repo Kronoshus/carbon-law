@@ -1,4 +1,4 @@
-import os, sys, tempfile, subprocess, pytest, sqlite3
+import glob, os, sys, tempfile, subprocess, pytest, sqlite3
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BACKEND = os.path.join(os.path.dirname(HERE), "backend")
@@ -22,6 +22,8 @@ if _orig_db_path is None:
 else:
     os.environ["CARBON_DB_PATH"] = _orig_db_path
 
+MIGRATIONS = sorted(os.path.splitext(os.path.basename(p))[0] for p in glob.glob(os.path.join(BACKEND, "migrations", "*.sql")))
+
 TABLES = {"schema_migrations", "settings", "journeys", "journey_events",
           "jobs", "ai_calls", "events", "characters"}
 
@@ -32,7 +34,7 @@ def test_migrate_from_empty_sqlite():
     names = {r[0] for r in rows}
     for t in TABLES:
         assert t in names, t
-    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATIONS)
 
 
 def test_migrate_is_idempotent():
@@ -113,15 +115,15 @@ conn.execute('CREATE SCHEMA public')
 conn.close()
 import db, migrate
 applied = migrate.run()
-assert applied == ['0001_aprende_core', '0002_characters']
+assert applied == {migrations!r}
 tables = {{r[0] for r in db.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")}}
 for t in {tables!r}:
     assert t in tables, t
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == {n}
 assert migrate.run() == []
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == {n}
 print("postgres migration ok")
-""".format(url=pg_url, backend=BACKEND, tables=sorted(TABLES))
+""".format(url=pg_url, backend=BACKEND, tables=sorted(TABLES), migrations=MIGRATIONS, n=len(MIGRATIONS))
     r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     print(r.stdout)
     print(r.stderr)
