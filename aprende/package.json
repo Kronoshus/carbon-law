@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "i18n:check": "node scripts/i18n-check.mjs",
-    "i18n:types": "node scripts/i18n-check.mjs --write"
+    "i18n:types": "node scripts/i18n-check.mjs --write",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@preact/signals": "^2.0.4",
