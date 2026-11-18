@@ -33,7 +33,8 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '127.0.0.1',
       // dev and e2e: the API is same-origin through this proxy (production uses VITE_API_ORIGIN)
-      proxy: Object.fromEntries(['/auth', '/journey', '/health', '/payments', '/characters', '/learn', '/content', '/progress']
+      // ('/characters' is also the folder of the character files, so only the API paths are forwarded)
+      proxy: Object.fromEntries(['/auth', '/journey', '/health', '/payments', '^/characters(/[a-z_]+)?$', '/learn', '/content', '/progress']
         .map((p) => [p, 'http://127.0.0.1:8011'])),
     },
     plugins,

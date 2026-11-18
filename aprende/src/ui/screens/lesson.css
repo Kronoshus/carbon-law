@@ -1,0 +1,34 @@
+/* Lesson player (design doc §7.2, docs/aprende/screens/leccion.html) */
+.lesson-player { min-block-size: 100dvh; background: var(--paper); padding-block-end: 14rem; }
+.lessonbar { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); }
+.lessonbar .chip .icon { inline-size: 1.2rem; block-size: 1.2rem; }
+.icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); flex: none; border: 0; background: none;
+            color: var(--text); padding: 0; cursor: pointer; }
+.icon-btn .icon { inline-size: 1.6rem; block-size: 1.6rem; }
+.stage-wrap { margin-inline: var(--s4); }
+.stage-wrap .character-stage { aspect-ratio: 16 / 8; max-inline-size: none; }
+.stage-wrap .character-canvas, .stage-wrap .character-still { position: absolute; inset-inline: 0; inset-block-start: -40%;
+                                                            block-size: auto; aspect-ratio: 1; }      /* a head-and-shoulders crop */
+.talk { padding: var(--s3) var(--s4) 0; }
+.talk .bubble { display: flex; align-items: center; gap: var(--s2); padding-block: var(--s2); }
+.talk .listen { margin-inline-start: auto; }
+.q { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; }
+.q h1 { font-size: var(--step-1); }
+.q .story { font-style: italic; color: var(--text-soft); }
+.kind { font: 700 var(--step--1)/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); }
+.q fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--s2); }
+.option { position: relative; cursor: pointer; }
+.option input { position: absolute; opacity: 0; }
+.option:has(input:checked) { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
+.option:has(input:focus-visible) { outline: 3px solid var(--purple); outline-offset: 3px; }
+.option.wrong { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
+.feedback { position: fixed; inset: auto 0 0 0; z-index: 3; box-shadow: 0 -6px 18px rgb(46 22 64 / .18); gap: var(--s2); padding-block: var(--s3); }
+.feedback.wrong { background: color-mix(in oklab, var(--rosa) 18%, var(--paper)); }
+.feedback h2 { display: flex; align-items: center; gap: var(--s2); font-size: var(--step-1); }
+.feedback h2 .icon { inline-size: 1.8rem; block-size: 1.8rem; }
+.feedback-actions { display: flex; gap: var(--s3); align-items: center; }
+.gain { display: inline-flex; align-items: center; gap: var(--s1); font-weight: 700; flex: none; }
+.gain .icon { inline-size: 1.3rem; block-size: 1.3rem; }
+.celebration { margin: var(--s4); display: grid; gap: var(--s4); text-align: center; }
+.celebration h1 { font-size: var(--step-2); }
+.lesson-note { color: var(--text-soft); }
