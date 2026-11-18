@@ -1,18 +1,12 @@
 """FastAPI routes for the Aprende journey."""
-import os, sys
-from fastapi import APIRouter, Header, HTTPException, Body
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-
-# `backend` is already on sys.path via app.py; do not manipulate it here.
 
 import app as backend_app
 from aprende import journey
 
 router = APIRouter()
-
-DOC_CODES = {"will", "trust", "poa", "ahcd"}
-
 
 class JourneyEventBody(BaseModel):
     type: str
@@ -65,16 +59,12 @@ def post_event(body: JourneyEventBody, authorization: str = Header(None)):
                 raise HTTPException(422, "invalid name")
     if etype in ("documents_tentative", "documents_confirmed"):
         codes = payload.get("codes") if isinstance(payload, dict) else None
-        if not isinstance(codes, list) or len(codes) == 0 or any(c not in DOC_CODES for c in codes):
+        if not isinstance(codes, list) or len(codes) == 0 or any(c not in journey.DOC_CODES for c in codes):
             raise HTTPException(422, "invalid codes")
         if len(set(codes)) != len(codes):
             raise HTTPException(422, "duplicate codes")
     # gate check
-    g = journey.gates(j["facts"]) if False else None
-    # use internal facts via journey.get_journey for gates? j facts is client-facing (no conflict results)
-    # recompute gates from full journey
-    full = journey.get_journey(j["id"])
-    g = full["gates"]
+    g = j["gates"]   # computed from the full internal facts, including the confidential conflict results
     required = journey.REQUIRED_GATE.get(etype, "may_disclose")
     if not g.get(required, False):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": [required]})

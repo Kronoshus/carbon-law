@@ -1,9 +1,7 @@
 """Journey state machine for Aprende y Planea (spec section 5)."""
-import os, sys, json, uuid, datetime
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.dirname(HERE)
-# `backend` is already on sys.path via app.py; do not manipulate it here.
+import datetime
+import json
+import uuid
 
 import db
 from aprende import legacy
@@ -116,7 +114,6 @@ def _reconstruct_facts(rows):
         typ = r[0]
         payload_raw = r[1]
         created_at = r[3]
-        rid = r[4] if len(r) > 4 else None
         try:
             payload = json.loads(payload_raw) if payload_raw else {}
         except (ValueError, TypeError):
@@ -196,58 +193,25 @@ def get_or_create_for_user(user_id):
     return j
 
 
-def _dedupe_key_for(event_type, payload):
-    payload = payload or {}
-    if event_type == "consent":
-        return str(payload.get("answer", ""))
-    if event_type in ("conflict_auto", "conflict_firm"):
-        return str(payload.get("result", ""))
-    return ""
-
-
-def _last_event(journey_id, event_type):
-    rows = db.query(
-        "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? "
-        "ORDER BY created_at DESC, id DESC LIMIT 1",
-        (journey_id, event_type),
-    )
-    if not rows:
-        return None
-    try:
-        return json.loads(rows[0][0]) if rows[0][0] else {}
-    except (ValueError, TypeError):
-        return {}
-
-
-def _same_payload(a, b):
-    if not isinstance(a, dict) or not isinstance(b, dict):
-        return a == b
-    keys = ("answer", "result")
-    for k in keys:
-        if k in a or k in b:
-            return a.get(k) == b.get(k)
-    return a == b
-
-
 def _insert_event(journey_id, event_type, payload, actor, created_at):
-    payload = payload or {}
-    # application-level dedup: re-sending the same event (or same answer/result) is a no-op
-    last = _last_event(journey_id, event_type)
-    if last is not None:
-        if event_type in ("consent", "conflict_auto", "conflict_firm"):
-            if _same_payload(last, payload):
+    """Record an event unless it repeats the latest one of its type (a resend is a no-op). For consent and the conflict
+    results only an unchanged answer is a repeat, so a changed decision is always recorded. Read and insert happen in one
+    transaction, so concurrent requests cannot both insert."""
+    with db.transaction() as conn:
+        row = conn.execute(
+            "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
+            (journey_id, event_type)).fetchone()
+        if row is not None:
+            if event_type not in ("consent", "conflict_auto", "conflict_firm"):
                 return False
-        else:
-            return False
-    eid = str(uuid.uuid4())
-    # unique dedupe_key so transitions with the same answer/result are still recorded
-    dedupe = uuid.uuid4().hex
-    rc = db.execute(
-        "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (eid, journey_id, event_type, json.dumps(payload), actor, created_at, dedupe),
-    )
-    return rc > 0
+            last = json.loads(row[0] or "{}")
+            key = "answer" if event_type == "consent" else "result"
+            if last.get(key) == payload.get(key):
+                return False
+        conn.execute(
+            "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
+    return True
 
 
 def apply(journey_id, event_type, payload=None, actor="system"):

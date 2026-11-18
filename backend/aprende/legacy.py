@@ -1,9 +1,9 @@
 """Legacy bridge: create/update matters in the legacy portal from an Aprende journey."""
-import os, sys, json, uuid, threading
-
-# `backend` is already on sys.path via app.py; do not manipulate it here.
+import threading
+import uuid
 
 import app as backend_app
+import db
 from aprende import journey as J
 
 _lock = threading.Lock()
@@ -18,8 +18,6 @@ def _user_name(user_id):
 
 def ensure_matter(journey):
     j = journey
-    if hasattr(j, "id"):
-        j = {"id": j.id, "user_id": getattr(j, "user_id", None), "matter_id": getattr(j, "matter_id", None)}
     jid = j["id"]
     with _lock:
         jj = J.get_journey(jid)
@@ -47,16 +45,12 @@ def ensure_matter(journey):
         backend_app.matters[matter_id] = matter
         backend_app.stage_history[matter_id] = [{"stage": "1 Intake", "time": now, "by": "system"}]
         backend_app.save_data()
-        db = None
-        import db as _db
-        _db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (matter_id, jid))
+        db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (matter_id, jid))
         return matter_id
 
 
 def set_stage(journey, stage):
     j = journey
-    if hasattr(j, "id"):
-        j = {"id": j.id, "matter_id": getattr(j, "matter_id", None)}
     jj = J.get_journey(j["id"])
     mid = (jj or {}).get("matter_id") or j.get("matter_id")
     if not mid or mid not in backend_app.matters:
