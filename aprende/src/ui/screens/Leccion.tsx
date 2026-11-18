@@ -8,6 +8,9 @@ import { startAt, clear, retryLater, finished, type QueueState } from '../../cor
 import type { CharacterEngine } from '../../core/character/engine';
 import type { CharacterState } from '../../core/character/states';
 import { CharacterStage } from '../CharacterStage';
+import { MatchExercise } from '../exercises/Match';
+import { OrderExercise } from '../exercises/Order';
+import { ListenExercise } from '../exercises/Listen';
 import { Icon } from '../Icons';
 import './lesson.css';
 
@@ -15,21 +18,23 @@ type Character = 'calavera' | 'pinata' | 'oso';
 interface Item {
   id: string; kind: string; character?: Character; sensitive?: boolean;
   text?: string; story?: string; prompt?: string; statement?: string; options?: string[];
+  say?: string; left?: { key: string; text: string }[]; right?: { key: string; text: string }[];
+  steps?: { key: string; text: string }[];
 }
 interface Lesson { id: string; title: string; character: Character; sensitive: boolean; steps: { id: string; title: string; items: Item[] }[] }
 interface Feedback { correct: boolean; explain: string | null; source: { kind: string; cite: string; url: string } | null; petals: number }
 
-const SUPPORTED = new Set(['explain', 'choice', 'scenario', 'truefalse']);   // match, order, listen: T4-05
+const SUPPORTED = new Set(['explain', 'choice', 'scenario', 'truefalse', 'match', 'order', 'listen']);
 const posKey = (id: string) => `aprende.lesson.${id}`;
 
 /** What the character says for an item: the explanation, or the question. */
-const spoken = (it: Item) => it.text ?? it.statement ?? it.prompt ?? '';
+const spoken = (it: Item) => it.say ?? it.text ?? it.statement ?? it.prompt ?? '';
 
 export function Leccion({ id }: { id: string }) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [failure, setFailure] = useState<'locked' | 'error' | null>(null);
   const [state, setState] = useState<QueueState | null>(null);
-  const [choice, setChoice] = useState<number | boolean | null>(null);
+  const [choice, setChoice] = useState<unknown>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [result, setResult] = useState<{ completed: boolean; score: number } | null>(null);
   const [streak, setStreak] = useState(0);
@@ -129,7 +134,13 @@ export function Leccion({ id }: { id: string }) {
       ? h('section', { class: 'q' }, h('p', { class: 'lesson-note' }, t('leccion.soon')), h('button', { class: 'btn secondary', type: 'button', onClick: next }, t('leccion.skip')))
       : item.kind === 'explain'
         ? h('section', { class: 'q' }, h('button', { class: 'btn', type: 'button', onClick: next }, t('leccion.continue')))
-        : h(Question, { item, choice, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check }),
+        : item.kind === 'match'
+        ? h(MatchExercise, { item, choice: choice as unknown as Record<string,string> | null, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check })
+        : item.kind === 'order'
+        ? h(OrderExercise, { item, choice: choice as unknown as string[] | null, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check })
+        : item.kind === 'listen'
+        ? h(ListenExercise, { item, choice: choice as unknown as number | null, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check })
+        : h(Question, { item, choice: choice as unknown as number | boolean | null, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check }),
     feedback && h(FeedbackSheet, { feedback, onNext: next })));
 }
 

@@ -89,5 +89,12 @@
   "celebration.calm": "Thank you for thinking this through calmly.",
   "celebration.back": "Back to the map",
   "result.notYet": "Nearly there: {score}% correct. Let's go over what's left.",
-  "result.review": "Review"
+  "result.review": "Review",
+  "leccion.kind.match": "Match",
+  "leccion.kind.order": "Put in order",
+  "leccion.kind.listen": "Listen",
+  "leccion.up": "Move up",
+  "leccion.down": "Move down",
+  "leccion.showText": "Show text",
+  "leccion.play": "Play"
 }

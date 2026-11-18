@@ -89,5 +89,12 @@
   "celebration.calm": "Gracias por pensar en esto con calma.",
   "celebration.back": "Volver al mapa",
   "result.notYet": "Le faltó poco: {score}% correcto. Repasemos lo que falta.",
-  "result.review": "Repasar"
+  "result.review": "Repasar",
+  "leccion.kind.match": "Empareje",
+  "leccion.kind.order": "Ordene",
+  "leccion.kind.listen": "Escuche",
+  "leccion.up": "Subir",
+  "leccion.down": "Bajar",
+  "leccion.showText": "Mostrar texto",
+  "leccion.play": "Escuchar"
 }
