@@ -10,9 +10,10 @@ const EXECUTABLE = process.env.PW_CHROMIUM;
 
 test('popup reads journey and opens side panel', async () => {
   const context = await chromium.launchPersistentContext('', {
-    headless: true,
+    headless: false,
     ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
+      '--headless=new',
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
@@ -58,9 +59,10 @@ test('popup reads journey and opens side panel', async () => {
 test('storage.local stays empty and token clears on restart', async () => {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cl-t2-12-'));
   const context = await chromium.launchPersistentContext(userDataDir, {
-    headless: true,
+    headless: false,
     ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
+      '--headless=new',
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
@@ -101,9 +103,10 @@ test('storage.local stays empty and token clears on restart', async () => {
   await context.close();
 
   const context2 = await chromium.launchPersistentContext(userDataDir, {
-    headless: true,
+    headless: false,
     ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
+      '--headless=new',
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
