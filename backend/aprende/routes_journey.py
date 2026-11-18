@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
-from aprende import journey
+from aprende import journey, timeline
 
 router = APIRouter()
 
@@ -32,6 +32,16 @@ def get_journey(authorization: str = Header(None)):
     u = _auth(authorization)
     _adult_check(u)
     j = journey.get_or_create_for_user(u["id"])
+    import datetime
+    turnaround = timeline.load_settings("turnaround")
+    if turnaround is None:
+        turnaround = {"conflict_bd": 2, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}
+    holidays = timeline.load_settings("holidays")
+    if holidays is None:
+        holidays = []
+    facts = dict(j.get("facts") or {})
+    facts["started_at"] = j.get("started_at")
+    j["timeline"] = timeline.plan(facts, {"turnaround": turnaround}, holidays, datetime.datetime.now(datetime.timezone.utc))
     return j
 
 
