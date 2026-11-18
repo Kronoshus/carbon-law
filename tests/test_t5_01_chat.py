@@ -53,9 +53,10 @@ from ai.stub import StubClient
 from aprende import chat as chatmod
 from aprende import content
 
-# the real lessons, published (the character may draw only on published, attorney-approved items)
-_bundle = content.load_dir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aprende", "content"))
-content.import_bundle(_bundle, actor="opus")
+# the learning tests' lesson fixture, published once per test database (the character may draw only on published items)
+_bundle = content.load_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "learn"))
+if not db.query("SELECT id FROM content_lessons WHERE id = 'lw'"):
+    content.import_bundle(_bundle, actor="opus")
 for _l in _bundle["lessons"]:
     for _s in _l["steps"]:
         for _it in _s["items"]:
@@ -81,7 +82,7 @@ def stub(monkeypatch):
 
 
 def ask(h, text, history=(), **extra):
-    body = {"mode": "learn", "character": "calavera", "lesson_id": "will",
+    body = {"mode": "learn", "character": "calavera", "lesson_id": "lw",
             "messages": [*history, {"role": "user", "content": text}], **extra}
     return c.post("/chat", json=body, headers=h)
 
@@ -141,7 +142,7 @@ def test_the_lesson_is_what_the_character_may_draw_on(stub):
     ask(h, "¿Qué es un albacea?")
     system = stub.calls[-1]["system"]
     assert "calavera" in system.lower()
-    assert "albacea" in system.lower()          # the will lesson's explanations are in the prompt
+    assert "Explicación." in system              # the lesson's published explanations are in the prompt
     assert "no es el abogado" in system.lower() or "not the attorney" in system.lower()
 
 
@@ -161,7 +162,7 @@ def test_a_question_about_the_clients_own_case_goes_to_the_attorney(stub):
     assert "[ATTORNEY_QUESTION:" in r["history"]           # the model sees its own tag next turn (the prototype's rule)
     rows = c.get("/chat/attorney-questions", headers=staff()).json()
     mine = [q for q in rows if q["journey_id"] == j["id"]]
-    assert len(mine) == 1 and mine[0]["question"] == QUESTION and mine[0]["lesson_id"] == "will"
+    assert len(mine) == 1 and mine[0]["question"] == QUESTION and mine[0]["lesson_id"] == "lw"
 
 
 def test_attorney_questions_are_staff_only(stub):
@@ -195,8 +196,8 @@ def test_a_model_failure_is_a_calm_503_not_a_crash(monkeypatch):
 
 
 @pytest.mark.parametrize("body", [
-    {"mode": "sing", "character": "calavera", "lesson_id": "will"},
-    {"mode": "learn", "character": "nobody", "lesson_id": "will"},
+    {"mode": "sing", "character": "calavera", "lesson_id": "lw"},
+    {"mode": "learn", "character": "nobody", "lesson_id": "lw"},
     {"mode": "learn", "character": "calavera", "lesson_id": "no-such-lesson"},
 ])
 def test_bad_requests_are_rejected_without_a_model_call(stub, body):
@@ -205,3 +206,14 @@ def test_bad_requests_are_rejected_without_a_model_call(stub, body):
     r = c.post("/chat", json={**body, "messages": [{"role": "user", "content": "hola"}]}, headers=h)
     assert r.status_code in (404, 422)
     assert stub.calls == []
+
+
+def test_a_tagged_question_with_two_sentences_never_leaks_into_the_text(stub):
+    q2 = "¿Mi hijo puede ser albacea? Vive en México."
+    stub.text = f"Esa es una pregunta para el abogado Raval. [ATTORNEY_QUESTION: {q2}] Ya se la anoté y él le responde."
+    h = client()
+    j = cleared(h)
+    r = ask(h, q2).json()
+    assert "ATTORNEY_QUESTION" not in r["text"] and "México" not in r["text"]
+    rows = c.get("/chat/attorney-questions", headers=staff()).json()
+    assert [q["question"] for q in rows if q["journey_id"] == j["id"]] == [q2]
