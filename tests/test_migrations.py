@@ -115,7 +115,7 @@ conn.execute('CREATE SCHEMA public')
 conn.close()
 import db, migrate
 applied = migrate.run()
-assert applied == MIGRATIONS
+assert applied == {migrations!r}
 tables = {{r[0] for r in db.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")}}
 for t in {tables!r}:
     assert t in tables, t
@@ -123,7 +123,7 @@ assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATION
 assert migrate.run() == []
 assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATIONS)
 print("postgres migration ok")
-""".format(url=pg_url, backend=BACKEND, tables=sorted(TABLES))
+""".format(url=pg_url, backend=BACKEND, tables=sorted(TABLES), migrations=MIGRATIONS)
     r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     print(r.stdout)
     print(r.stderr)
