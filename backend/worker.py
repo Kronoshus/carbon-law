@@ -28,6 +28,9 @@ def run_one(worker_id):
 
 def run_forever(stop_event):
     migrate.run()
+    from datetime import datetime, timezone
+    from aprende import timeline        # registers its job; the hourly tick re-queues itself from here on
+    timeline.schedule(datetime.now(timezone.utc))
     worker_id = "worker-{}".format(os.getpid())
     while not (stop_event is not None and stop_event.is_set()):
         did = run_one(worker_id)

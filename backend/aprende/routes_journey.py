@@ -1,10 +1,11 @@
 """FastAPI routes for the Aprende journey."""
+import datetime
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
-from aprende import journey
+from aprende import journey, timeline
 
 router = APIRouter()
 
@@ -32,6 +33,7 @@ def get_journey(authorization: str = Header(None)):
     u = _auth(authorization)
     _adult_check(u)
     j = journey.get_or_create_for_user(u["id"])
+    j["timeline"] = timeline.for_journey(j, datetime.datetime.now(datetime.timezone.utc))
     return j
 
 

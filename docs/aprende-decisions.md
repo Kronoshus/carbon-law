@@ -83,6 +83,7 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 | T4-07 | The map shows the firm's later steps (pay, attorney review, documents, signing) as locked nodes with their days; Phase 6 links them to the real timeline. |
 | T4-08 | Discounts are recorded in the same transaction as the event that earns them and keep the amount of that moment. Prices for the trust, POA and health care directive are placeholders shown as "ejemplo" until the firm sets them (Q-P4). |
 | Process | Beam builders wrote first versions of T4-02…T4-06; several ended their sessions without committing, and most needed real rewrites (SQLite-only SQL, bypassing `journey.apply`, no tests, no styles). Opus finished or rewrote each one and reviewed every screen from screenshots. |
+| T5-03 | Conflict status: firm "flagged" → hold; firm "cleared" → clear (releases a possible match or no_list after review); otherwise auto "possible" → hold, auto "no_list" or nothing → pending, auto "clear" → clear. The firm's latest decision wins. Names/matches are stored only in `conflict_checks` (staff-only); `conflict_auto` carries only `{result}`. |
 
 ## T5-02
 - Consent event stores only {answer}; all other payload keys dropped server-side.
