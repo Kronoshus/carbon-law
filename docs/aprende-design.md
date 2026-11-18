@@ -152,6 +152,10 @@ Also rendered: the dark theme (`mapa-dark.png`) and the Chrome side panel at 360
 
 ![States](aprende/characters/states.png)
 
+Phase 3, rendered from the final rigs:
+
+![Final lineup](aprende/characters/lineup-final.png)
+
 ### 8.2 Shared rules (so the cast looks like one family)
 
 - Flat shapes, the 2 × 0.006 plum outline, the seven-colour fiesta palette from `calavera_art.py`, rosy cheeks with a pink swirl, a grin that curls up at the corners with a dimple, and **sparkly eyes with a smiling lower lid** (gold for La Calavera and Piñata, warm amber for El Oso).

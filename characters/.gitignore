@@ -1,0 +1,6 @@
+__pycache__/
+aprende-public
+out/*/preview-*.png
+out/old-*.glb
+*.blend1
+out/*/*.glb
