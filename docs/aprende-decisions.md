@@ -57,3 +57,8 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 | T2-09 | Worker loop runs in-process in the web service (daemon thread) gated by `APRENDE_INPROCESS_WORKER=1`; `render.yaml` has no paid worker service. `backend/worker.py` exposes `run_forever(stop_event)` and `start_in_background()`. `python -m backend.worker` still works for a separate process. Backoff 60/300/1800s. |
 | T2-12 | Popup is a separate tiny Preact view (`src/targets/extension/Popup.tsx`), not `App`; no three.js/character stage in the popup bundle. Streak shows 0 until Phase 4. Today's step = journey `day` plus the first gate in `GATE_ORDER` that is false, mapped via a typed `Record<Gate, I18nKey>`. Token storage uses `chrome.storage.session` only; `local`/`sync` are never touched. Side panel opens via `chrome.sidePanel.open({ windowId })` from the popup button. |
 
+
+## T3-06 Characters API
+- `name_key` convention: `character.{id}.name` (i18n key; actual names pending Q-C1).
+- `GET /characters` returns a JSON array of enabled characters.
+- Calavera cannot be disabled (409); `character_for(unit)` falls back to calavera.
