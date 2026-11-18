@@ -52,6 +52,7 @@ def post_event(body: JourneyEventBody, authorization: str = Header(None)):
     if etype == "consent":
         if not isinstance(payload, dict) or payload.get("answer") not in ("yes", "no"):
             raise HTTPException(422, "answer must be yes or no")
+        payload = {"answer": payload["answer"]}
     if etype == "names_submitted":
         names = payload.get("names") if isinstance(payload, dict) else None
         if not isinstance(names, list) or len(names) == 0 or len(names) > 20:
