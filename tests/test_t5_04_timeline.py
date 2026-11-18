@@ -125,7 +125,8 @@ def test_a_firm_holiday_shifts_only_the_steps_after_it():
     assert s["pay"]["date"] == "2026-12-06" and s["pay"]["shifted_days"] == 0
     assert s["attorney_review"]["date"] == "2026-12-10"
     assert s["attorney_review"]["shifted_days"] == 1 and s["attorney_review"]["reason_key"] == "holiday"
-    assert total(s, datetime.date(2026, 12, 2)) > 14
+    assert s["client_review"]["date"] == "2026-12-11" and s["client_review"]["reason_key"] == "holiday"
+    assert s["signing"]["date"] == "2026-12-14"          # the weekend before signing absorbs the holiday's day
 
 
 def test_later_days_follow_what_actually_happened():
@@ -201,3 +202,38 @@ def test_the_client_journey_carries_the_timeline(monkeypatch, alerts):
     tl = state(h)["timeline"]
     assert [s["step"] for s in tl][:5] == ["lesson_will", "lesson_trust", "lesson_ahcd", "lesson_poa", "pay"]
     assert all({"step", "day", "date", "due", "status", "shifted_days", "reason_key"} <= set(s) for s in tl)
+
+
+def test_status_is_one_of_the_five_and_there_is_one_next():
+    start = at(2026, 12, 2)
+    for now in (start, at(2026, 12, 4), at(2026, 12, 20)):
+        s = timeline.plan({"started_at": start}, SETTINGS, [], utc(now))
+        assert {x["status"] for x in s} <= {"done", "today", "next", "waiting", "late"}
+        assert [x["status"] for x in s].count("next") <= 1
+
+
+def test_a_client_delay_is_not_called_a_weekend():
+    start = at(2026, 12, 2)                                                    # Wednesday
+    s = steps({"started_at": start, "lesson_completed:will": at(2026, 12, 4)}, at(2026, 12, 4, 12))
+    assert s["lesson_will"]["shifted_days"] == 2 and s["lesson_will"]["reason_key"] is None
+
+
+def test_only_firm_steps_have_a_due_date():
+    start = at(2026, 12, 2)
+    s = steps({"started_at": start, "paid": at(2026, 12, 6, 11), "attorney_approved": at(2026, 12, 7, 15)}, at(2026, 12, 7, 16))
+    assert s["attorney_review"]["due"] == "2026-12-09"                         # the deadline, not the early release
+    assert all(s[k]["due"] is None for k in ("lesson_will", "pay", "client_review", "signing", "final_lesson"))
+
+
+def test_an_open_conflict_review_past_its_due_date_alerts_once(monkeypatch, alerts):
+    clock = {"now": at(2026, 12, 2)}
+    monkeypatch.setattr(journey, "_now_iso", lambda: clock["now"])
+    h = client()
+    jid = state(h)["id"]
+    send(h, "ai_disclosed"); send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
+    mine = lambda: [a for a in alerts if jid in a[1]]
+    timeline.tick(utc(at(2026, 12, 3, 17)))                                    # due Thursday 3 Dec: not late that day
+    assert mine() == []
+    timeline.tick(utc(at(2026, 12, 4, 9)))
+    timeline.tick(utc(at(2026, 12, 7, 9)))
+    assert len(mine()) == 1 and "conflict_review" in mine()[0][1]

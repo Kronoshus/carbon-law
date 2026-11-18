@@ -1,306 +1,161 @@
-"""Timeline engine for Aprende y Planea (pure projection)."""
+"""Timeline engine (spec 6.3): when each step of a client's journey falls on the calendar, and which firm steps are late.
+
+`plan` is pure. Days 1-4 are calendar days from the start in the client's time zone; firm steps count business days in
+America/Los_Angeles with the firm's holiday list; every later step chains from what actually happened before it."""
 import datetime
 import json
-import os
-import sys
 import uuid
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.dirname(HERE)
-if BACKEND not in sys.path:
-    sys.path.insert(0, BACKEND)
-
 from zoneinfo import ZoneInfo
 
 import db
+from aprende import jobs
 from aprende.notify import notify_staff
 
 LA = ZoneInfo("America/Los_Angeles")
 UTC = datetime.timezone.utc
-
+DAY = datetime.timedelta(days=1)
 DEFAULT_TURNAROUND = {"conflict_bd": 2, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}
+NOMINAL = {"lesson_will": 1, "lesson_trust": 2, "lesson_ahcd": 3, "lesson_poa": 4, "pay": 5, "attorney_review": 8,
+           "client_review": 9, "changes": 10, "signing": 13, "final_lesson": 14}
+DONE_BY = {"lesson_will": "lesson_completed:will", "lesson_trust": "lesson_completed:trust",
+           "lesson_ahcd": "lesson_completed:ahcd", "lesson_poa": "lesson_completed:poa", "pay": "paid",
+           "attorney_review": "attorney_approved", "client_review": "client_confirmed", "changes": "changes_requested",
+           "signing": "signed", "final_lesson": "final_lesson_completed"}
 
 
-def load_settings(key):
-    rows = db.query("SELECT value_json FROM settings WHERE key = ?", (key,))
-    if not rows:
-        return None
-    try:
-        return json.loads(rows[0][0])
-    except (ValueError, TypeError):
-        return None
+def _local(iso):
+    t = datetime.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+    return (t if t.tzinfo else t.replace(tzinfo=UTC)).astimezone(LA).date()
 
 
-def _parse_dt(value):
-    if isinstance(value, datetime.datetime):
-        dt = value
-    else:
-        dt = datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return dt
+class _Calendar:
+    """Business days. `weekends=False` and no holidays give the plain-calendar baseline used to explain shifts."""
+    def __init__(self, holidays=(), weekends=True):
+        self.holidays, self.weekends = set(holidays), weekends
+
+    def business(self, d):
+        return (d.weekday() < 5 or not self.weekends) and d.isoformat() not in self.holidays
+
+    def add(self, d, n):
+        """The n-th business day after d (d itself not counted)."""
+        while n:
+            d += DAY
+            n -= self.business(d)
+        return d
+
+    def next_business(self, d):
+        while not self.business(d):
+            d += DAY
+        return d
 
 
-def _local_date(value):
-    return _parse_dt(value).astimezone(LA).date()
-
-
-def _is_biz(d, holidays):
-    return d.weekday() < 5 and d.isoformat() not in holidays
-
-
-def bd_add(d, n, holidays):
-    cur = d
-    count = 0
-    while count < n:
-        cur = cur + datetime.timedelta(days=1)
-        if _is_biz(cur, holidays):
-            count += 1
-    return cur
-
-
-def _build(facts, settings, holidays, now, changes):
-    facts = facts or {}
-    turnaround = (settings or {}).get("turnaround") or DEFAULT_TURNAROUND
-    conflict_bd = int(turnaround.get("conflict_bd", 2))
-    scope_bd = int(turnaround.get("scope_bd", 2))
-    review_bd = int(turnaround.get("review_bd", 3))
-    revise_bd = int(turnaround.get("revise_bd", 2))
-    holidays_set = set(holidays or [])
-
-    started_at = facts.get("started_at")
-    start_date = _local_date(started_at)
-    now_local = _parse_dt(now).astimezone(LA).date()
-
-    changes_flag = bool(changes) or ("changes_requested" in facts)
-
-    nominal_days = {
-        "lesson_will": 1, "lesson_trust": 2, "lesson_ahcd": 3, "lesson_poa": 4,
-        "pay": 5, "attorney_review": 8, "client_review": 9, "changes": 10,
-        "signing": 13, "final_lesson": 14,
-    }
-
-    dates = {}
-
-    lesson_map = {"lesson_will": "will", "lesson_trust": "trust", "lesson_ahcd": "ahcd", "lesson_poa": "poa"}
-    for step, doc in lesson_map.items():
-        key = "lesson_completed:" + doc
-        if key in facts:
-            dates[step] = _local_date(facts[key])
-        else:
-            dates[step] = start_date + datetime.timedelta(days=nominal_days[step] - 1)
-
-    if "documents_tentative" in facts:
-        scope_base = _local_date(facts["documents_tentative"]) - datetime.timedelta(days=1)
-    else:
-        scope_base = start_date
-    if "names_submitted" in facts:
-        conflict_base = _local_date(facts["names_submitted"]) - datetime.timedelta(days=1)
-    else:
-        conflict_base = start_date - datetime.timedelta(days=1)
-
-    if "paid" in facts:
-        pay_date = _local_date(facts["paid"])
-    else:
-        scope_done = bd_add(scope_base, scope_bd, holidays_set)
-        conflict_done = bd_add(conflict_base, conflict_bd, holidays_set)
-        pay_date = max(
-            start_date + datetime.timedelta(days=4),
-            scope_done + datetime.timedelta(days=1),
-            conflict_done + datetime.timedelta(days=1),
-        )
-    dates["pay"] = pay_date
-
-    if "attorney_approved" in facts:
-        released_date = _local_date(facts["attorney_approved"])
-    else:
-        released_date = bd_add(pay_date, review_bd, holidays_set)
-    dates["attorney_review"] = released_date
-
-    review_date = released_date + datetime.timedelta(days=1)
-
-    if "client_confirmed" in facts:
-        client_review_date = _local_date(facts["client_confirmed"])
-        confirm_date = client_review_date
-        review_date = client_review_date
-    else:
-        if changes_flag:
-            confirm_date = bd_add(review_date, revise_bd, holidays_set) + datetime.timedelta(days=1)
-        else:
-            confirm_date = review_date
-
-    dates["client_review"] = review_date
-
-    if changes_flag:
-        if "changes_requested" in facts:
-            changes_date = _local_date(facts["changes_requested"])
-        else:
-            changes_date = confirm_date
-        dates["changes"] = changes_date
-
-    if "signed" in facts:
-        signing_date = _local_date(facts["signed"])
-    else:
-        cand1 = confirm_date + datetime.timedelta(days=1)
-        cand2 = review_date + datetime.timedelta(days=3)
-        signing_date = max(cand1, cand2)
-        while not _is_biz(signing_date, holidays_set):
-            signing_date = signing_date + datetime.timedelta(days=1)
-        # a firm holiday that shifted the review clock also pushes signing when
-        # the calendar math would otherwise land on the same day
-        if holidays_set:
-            nohol_released = bd_add(pay_date, review_bd, set())
-            if nohol_released != released_date:
-                signing_date = signing_date + datetime.timedelta(days=1)
-                while not _is_biz(signing_date, holidays_set):
-                    signing_date = signing_date + datetime.timedelta(days=1)
-    dates["signing"] = signing_date
-
-    if "final_lesson_completed" in facts:
-        final_date = _local_date(facts["final_lesson_completed"])
-    else:
-        final_date = signing_date + datetime.timedelta(days=1)
-    dates["final_lesson"] = final_date
-
-    order = ["lesson_will", "lesson_trust", "lesson_ahcd", "lesson_poa", "pay",
-             "attorney_review", "client_review"]
-    if changes_flag:
-        order.append("changes")
-    order += ["signing", "final_lesson"]
-
-    fact_for_step = {
-        "lesson_will": "lesson_completed:will",
-        "lesson_trust": "lesson_completed:trust",
-        "lesson_ahcd": "lesson_completed:ahcd",
-        "lesson_poa": "lesson_completed:poa",
-        "pay": "paid",
-        "attorney_review": "attorney_approved",
-        "client_review": "client_confirmed",
-        "changes": "changes_requested",
-        "signing": "signed",
-        "final_lesson": "final_lesson_completed",
-    }
-
-    steps_list = []
-    for step in order:
-        d = dates[step]
-        day = (d - start_date).days + 1
-        shifted = day - nominal_days[step]
-        steps_list.append({
-            "step": step,
-            "day": day,
-            "date": d.isoformat(),
-            "due": d.isoformat(),
-            "status": None,
-            "shifted_days": shifted,
-            "reason_key": None,
-        })
-
-    for s in steps_list:
-        step = s["step"]
-        fk = fact_for_step.get(step)
-        if fk is not None and fk in facts:
-            s["status"] = "done"
-        elif s["date"] == now_local.isoformat():
-            s["status"] = "today"
-        elif datetime.date.fromisoformat(s["date"]) > now_local:
-            s["status"] = "future"
-        else:
-            s["status"] = "past"
-
-    next_set = False
-    for s in steps_list:
-        if s["status"] == "future" and not next_set:
-            s["status"] = "next"
-            next_set = True
-
-    firm_steps = {"attorney_review", "changes"}
-    for s in steps_list:
-        if s["status"] == "past":
-            if s["step"] in firm_steps:
-                cond = False
-                if s["step"] == "attorney_review" and "paid" in facts:
-                    cond = True
-                if s["step"] == "changes" and "changes_requested" in facts:
-                    cond = True
-                if cond and datetime.date.fromisoformat(s["due"]) < now_local:
-                    s["status"] = "late"
-                else:
-                    s["status"] = "waiting"
-            else:
-                s["status"] = "waiting"
-
-    if holidays_set:
-        nohol = _build(facts, settings, [], now, changes)
-        nohol_dates = {s["step"]: s["date"] for s in nohol}
-        for s in steps_list:
-            if s["shifted_days"] == 0:
-                s["reason_key"] = None
-            elif nohol_dates.get(s["step"]) != s["date"]:
-                s["reason_key"] = "holiday"
-            else:
-                s["reason_key"] = "weekend"
-    else:
-        for s in steps_list:
-            if s["shifted_days"] != 0:
-                s["reason_key"] = "weekend"
-            else:
-                s["reason_key"] = None
-
-    return steps_list
+def _dates(facts, turnaround, cal, changes):
+    """{step: (date, due)} — `due` only for the firm's steps."""
+    t = {**DEFAULT_TURNAROUND, **(turnaround or {})}
+    start = _local(facts["started_at"])
+    on = lambda key, fallback: _local(facts[key]) if key in facts else fallback
+    out = {}
+    for step, doc in (("lesson_will", "will"), ("lesson_trust", "trust"), ("lesson_ahcd", "ahcd"), ("lesson_poa", "poa")):
+        out[step] = (on(f"lesson_completed:{doc}", start + (NOMINAL[step] - 1) * DAY), None)
+    scope_done = cal.add(on("documents_tentative", start + DAY) - DAY, t["scope_bd"])
+    conflict_done = cal.add(on("names_submitted", start) - DAY, t["conflict_bd"])
+    pay = on("paid", max(start + 4 * DAY, scope_done + DAY, conflict_done + DAY))
+    out["pay"] = (pay, None)
+    review_due = cal.add(pay, t["review_bd"])
+    released = on("attorney_approved", review_due)
+    out["attorney_review"] = (released, review_due)
+    review = on("client_confirmed", released + DAY) if not changes else released + DAY
+    out["client_review"] = (review, None)
+    confirm = review
+    if changes:
+        asked = on("changes_requested", review)
+        revise_due = cal.add(asked, t["revise_bd"])
+        confirm = on("client_confirmed", revise_due + DAY)
+        out["changes"] = (confirm, revise_due)
+    signing = on("signed", cal.next_business(max(confirm + DAY, review + 3 * DAY)))
+    out["signing"] = (signing, None)
+    out["final_lesson"] = (on("final_lesson_completed", signing + DAY), None)
+    return out
 
 
 def plan(facts, settings, holidays, now, *, changes=False):
-    return _build(facts, settings, holidays, now, changes)
+    changes = changes or "changes_requested" in facts
+    turnaround = (settings or {}).get("turnaround")
+    real = _dates(facts, turnaround, _Calendar(holidays), changes)
+    no_holidays = _dates(facts, turnaround, _Calendar(), changes)
+    plain = _dates(facts, turnaround, _Calendar(weekends=False), changes)
+    start, today = _local(facts["started_at"]), now.astimezone(LA).date()
+    steps, found_next = [], False
+    for step, (date, due) in real.items():
+        day = (date - start).days + 1
+        reason = None
+        if day != NOMINAL[step]:
+            reason = "holiday" if date != no_holidays[step][0] else "weekend" if date != plain[step][0] else None
+        if DONE_BY[step] in facts and not (step == "client_review" and changes and "changes_requested" in facts
+                                           and "client_confirmed" not in facts):
+            status = "done"
+        elif due and today > due and (step != "attorney_review" or "paid" in facts) \
+                and (step != "changes" or "changes_requested" in facts):
+            status = "late"
+        elif date == today:
+            status = "today"
+        elif date > today and not found_next:
+            status, found_next = "next", True
+        else:
+            status = "waiting"
+        steps.append({"step": step, "day": day, "date": date.isoformat(), "due": due.isoformat() if due else None,
+                      "status": status, "shifted_days": day - NOMINAL[step], "reason_key": reason})
+    return steps
+
+
+def _setting(key, default):
+    rows = db.query("SELECT value_json FROM settings WHERE key = ?", (key,))
+    return json.loads(rows[0][0]) if rows else default
+
+
+def for_journey(j, now):
+    """The client-facing timeline of a journey as `journey.get_journey` returns it."""
+    facts = {**j["facts"], "started_at": j["started_at"]}
+    return plan(facts, {"turnaround": _setting("turnaround", DEFAULT_TURNAROUND)}, _setting("holidays", []), now)
+
+
+def _firm_clocks(facts, turnaround, holidays):
+    """The firm's background clocks that are not steps on the client's map: (name, due) for each still open."""
+    t, cal, out = {**DEFAULT_TURNAROUND, **(turnaround or {})}, _Calendar(holidays), []
+    if "names_submitted" in facts and "conflict_firm" not in facts:
+        out.append(("conflict_review", cal.add(_local(facts["names_submitted"]) - DAY, t["conflict_bd"])))
+    if "documents_tentative" in facts and "scope_approved" not in facts:
+        out.append(("scope_review", cal.add(_local(facts["documents_tentative"]) - DAY, t["scope_bd"])))
+    return out
 
 
 def tick(now):
-    import aprende.journey as journey
-
-    turnaround = load_settings("turnaround")
-    if turnaround is None:
-        turnaround = DEFAULT_TURNAROUND
-    holidays = load_settings("holidays")
-    if holidays is None:
-        holidays = []
-    settings = {"turnaround": turnaround}
-
-    now_dt = now
-    if getattr(now_dt, "tzinfo", None) is None:
-        now_dt = now_dt.replace(tzinfo=UTC)
-
-    rows = db.query("SELECT id FROM journeys")
-    for (jid,) in rows:
+    """Record each newly late firm step once (the dashboard flag) and alert staff once for it."""
+    from aprende import journey
+    turnaround, holidays = _setting("turnaround", DEFAULT_TURNAROUND), _setting("holidays", [])
+    today = now.astimezone(LA).date()
+    for (jid,) in db.query("SELECT id FROM journeys"):
         j = journey.get_journey(jid)
-        if not j:
-            continue
-        facts = dict(j.get("facts") or {})
-        facts["started_at"] = j.get("started_at")
-        tl = plan(facts, settings, holidays, now_dt)
-        firm_steps = {"attorney_review", "changes"}
-        for s in tl:
-            if s["step"] not in firm_steps:
-                continue
-            if s["status"] != "late":
-                continue
-            due = s["due"]
-            try:
-                rc = db.execute(
-                    "INSERT INTO timeline_alerts (id, journey_id, step, due, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (str(uuid.uuid4()), jid, s["step"], due, now_dt.replace(tzinfo=None).isoformat()),
-                )
-            except Exception:
-                rc = 0
-            if rc and rc > 0:
-                notify_staff("Timeline alert", f"Journey {jid}: {s['step']} is late (due {due}). Dashboard: /journey/{jid}")
+        facts = {**j["facts"], "started_at": j["started_at"]}
+        late = [(s["step"], s["due"]) for s in plan(facts, {"turnaround": turnaround}, holidays, now) if s["status"] == "late"]
+        late += [(name, due.isoformat()) for name, due in _firm_clocks(facts, turnaround, holidays) if today > due]
+        for step, due in late:
+            new = db.execute("INSERT INTO timeline_alerts (id, journey_id, step, due, created_at) VALUES (?, ?, ?, ?, ?) "
+                             "ON CONFLICT (journey_id, step, due) DO NOTHING",
+                             (str(uuid.uuid4()), jid, step, due, now.astimezone(UTC).replace(tzinfo=None).isoformat()))
+            if new:
+                notify_staff("Paso atrasado", f"{step} venció el {due}. Expediente: /dashboard#journey={jid}")
 
 
-try:
-    import aprende.jobs as _jobs
+def _tick_job(job):
+    """Hourly: run the tick, then queue the next hour's (the job key makes each hour's job unique)."""
+    now = datetime.datetime.now(UTC)
+    tick(now)
+    schedule(now + datetime.timedelta(hours=1))
 
-    def _timeline_tick_handler(job):
-        tick(datetime.datetime.now(UTC))
 
-    _jobs.register("timeline_tick", _timeline_tick_handler)
-except Exception:
-    pass
+def schedule(at):
+    jobs.enqueue("timeline_tick", f"timeline_tick:{at:%Y-%m-%dT%H}", run_after=at.replace(minute=0, second=0, microsecond=0))
+
+
+jobs.register("timeline_tick", _tick_job)

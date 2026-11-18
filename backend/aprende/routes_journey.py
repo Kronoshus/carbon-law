@@ -1,4 +1,5 @@
 """FastAPI routes for the Aprende journey."""
+import datetime
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -32,16 +33,7 @@ def get_journey(authorization: str = Header(None)):
     u = _auth(authorization)
     _adult_check(u)
     j = journey.get_or_create_for_user(u["id"])
-    import datetime
-    turnaround = timeline.load_settings("turnaround")
-    if turnaround is None:
-        turnaround = {"conflict_bd": 2, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}
-    holidays = timeline.load_settings("holidays")
-    if holidays is None:
-        holidays = []
-    facts = dict(j.get("facts") or {})
-    facts["started_at"] = j.get("started_at")
-    j["timeline"] = timeline.plan(facts, {"turnaround": turnaround}, holidays, datetime.datetime.now(datetime.timezone.utc))
+    j["timeline"] = timeline.for_journey(j, datetime.datetime.now(datetime.timezone.utc))
     return j
 
 
