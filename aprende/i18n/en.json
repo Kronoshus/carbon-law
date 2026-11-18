@@ -49,5 +49,13 @@
   "character.calavera.name": "La Calavera",
   "character.pinata.name": "Piñata",
   "character.oso.name": "El Oso",
-  "character.stageLabel": "{name}, an animated character; an artificial intelligence program, not the attorney"
+  "character.stageLabel": "{name}, an animated character; an artificial intelligence program, not the attorney",
+  "price.loading": "Loading...",
+  "price.por": "for",
+  "price.placeholder": "example",
+  "price.event.lesson_completed:will": "1 lesson",
+  "doc.will": "will",
+  "doc.trust": "trust",
+  "doc.poa": "poa",
+  "doc.ahcd": "ahcd"
 }
