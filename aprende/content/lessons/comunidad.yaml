@@ -1,0 +1,84 @@
+id: comunidad
+unit: bonus
+day: null
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Bienes comunitarios en California
+  en: Community property in California
+steps:
+- id: comunidad.1
+  title:
+    es: La mitad de cada uno
+    en: Each spouse's half
+  items:
+  - id: comunidad.1.1
+    kind: explain
+    legal: true
+    source: pc-100
+    es:
+      text: Cuando fallece una persona casada o con pareja doméstica registrada, la mitad de los bienes comunitarios es del cónyuge que sigue vivo y la otra mitad es de quien falleció.
+    en:
+      text: When a married person or registered domestic partner dies, half of the community property belongs to the surviving spouse and the other half to the one who died.
+  - id: comunidad.1.2
+    kind: explain
+    legal: true
+    source: pc-6101
+    es:
+      text: En su testamento, usted decide sobre sus bienes propios y sobre su mitad de los bienes comunitarios.
+    en:
+      text: In your will, you decide about your separate property and your half of the community property.
+  - id: comunidad.1.3
+    kind: explain
+    legal: true
+    source: pc-6401
+    es:
+      text: Sin testamento, su cónyuge recibe su mitad de los bienes comunitarios.
+    en:
+      text: Without a will, your spouse receives your half of the community property.
+  - id: comunidad.1.4
+    kind: truefalse
+    legal: true
+    source: pc-6101
+    answer: false
+    es:
+      statement: En su testamento, usted puede dejar la casa comunitaria completa a un hijo.
+      explain: Falso. Solo puede dejar su mitad; la otra mitad ya es de su cónyuge.
+    en:
+      statement: In your will, you can leave the whole community home to one child.
+      explain: False. You can only leave your half; the other half already belongs to your spouse.
+- id: comunidad.2
+  title:
+    es: Si se casa después
+    en: If you marry later
+  items:
+  - id: comunidad.2.1
+    kind: explain
+    legal: true
+    source: pc-21610
+    es:
+      text: Si se casa después de firmar su testamento y no lo actualiza, su nuevo cónyuge puede recibir su mitad de los bienes comunitarios y una parte de sus bienes propios.
+    en:
+      text: If you marry after signing your will and do not update it, your new spouse may receive your half of the community property and a share of your separate property.
+  - id: comunidad.2.2
+    kind: scenario
+    legal: true
+    source: pc-21610
+    answer: 1
+    es:
+      story: Luis firmó su testamento cuando era soltero. Ahora se casó con Ana.
+      prompt: ¿Qué le conviene a Luis?
+      options:
+      - Nada; su testamento sigue igual
+      - Actualizar su plan con la oficina
+      - Romper su testamento
+      explain: Lo mejor es actualizar el plan para que diga lo que él quiere.
+    en:
+      story: Luis signed his will when he was single. Now he has married Ana.
+      prompt: What should Luis do?
+      options:
+      - Nothing; his will stays the same
+      - Update his plan with the office
+      - Tear up his will
+      explain: The best step is to update the plan so it says what he wants.
