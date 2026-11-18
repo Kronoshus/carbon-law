@@ -1,12 +1,9 @@
 """Legacy bridge: create/update matters in the legacy portal from an Aprende journey."""
-import threading
 import uuid
 
 import app as backend_app
 import db
 from aprende import journey as J
-
-_lock = threading.Lock()
 
 
 def _user_name(user_id):
@@ -19,7 +16,7 @@ def _user_name(user_id):
 def ensure_matter(journey):
     j = journey
     jid = j["id"]
-    with _lock:
+    with backend_app._request_lock:
         jj = J.get_journey(jid)
         if jj and jj.get("matter_id"):
             mid = jj["matter_id"]
@@ -55,7 +52,7 @@ def set_stage(journey, stage):
     mid = (jj or {}).get("matter_id") or j.get("matter_id")
     if not mid or mid not in backend_app.matters:
         return None
-    with _lock:
+    with backend_app._request_lock:
         if stage not in backend_app.STAGES:
             raise ValueError("invalid stage")
         old = backend_app.matters[mid].get("stage")
@@ -66,3 +63,4 @@ def set_stage(journey, stage):
         )
         backend_app.save_data()
         return backend_app.matters[mid]
+
