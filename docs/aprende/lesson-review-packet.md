@@ -2,7 +2,7 @@
 
 Every legal statement in the five lessons (the four core lessons and «Cuide sus documentos»), in Spanish and English, with the source it cites. Statutes were read on leginfo.legislature.ca.gov on the date shown; the summary is ours, the link is the official text. Nothing here publishes until it is approved item by item (the app records who approved which version).
 
-89 legal statements across 103 items. Reading level: Spanish Fernández-Huerta 77.9, English Flesch 74.8 (target ≥ 70).
+111 legal statements across 130 items (the five lessons and four bonus lessons). Reading level: Spanish Fernández-Huerta 77.9, English Flesch 74.8 (target ≥ 70).
 
 How to answer: for each item, *approve*, or write the change you want. Items marked (non-legal) are general guidance and copy; please read them too.
 
@@ -560,4 +560,158 @@ How to answer: for each item, *approve*, or write the change you want. Items mar
   - ES: Ana tiene un hijo nuevo después de firmar su testamento. ¿Qué le conviene hacer? — Nada, el testamento ya cubre todo / **Pedir un cambio para actualizar su plan** / Romper su testamento *(Explicación: Lo mejor es pedir un cambio. Aunque la ley protege al hijo, su plan debe decir lo que usted quiere.)*
   - EN: Ana has a new child after signing her will. What should she do? — Nothing, the will already covers everything / **Ask for a change to update her plan** / Tear up her will *(Feedback: The best step is to ask for a change. Although the law protects the child, your plan should say what you want.)*
   - [ ] approve   changes: 
+
+## Bonus — ¿Qué es la sucesión (probate)? / What is probate?
+
+### El proceso del tribunal
+
+- **probate.1.1** — California Courts self-help, “Guide to property after someone dies” (read 2026-11-18). [official text](https://selfhelp.courts.ca.gov/probate)
+  - ES: La sucesión, o probate, es el proceso legal para pasar o heredar los bienes de una persona después de su fallecimiento.
+  - EN: Probate is the legal process to transfer or inherit a person's property after they die.
+  - [ ] approve   changes: 
+
+- **probate.1.2** — California Courts self-help, “Guide to property after someone dies” (read 2026-11-18). [official text](https://selfhelp.courts.ca.gov/probate)
+  - ES: Un juez nombra a un representante: la persona que reúne los bienes, paga las deudas y entrega lo que queda a los herederos o beneficiarios.
+  - EN: A judge appoints a representative: the person who gathers the property, pays the debts and gives what remains to the heirs or beneficiaries.
+  - [ ] approve   changes: 
+
+- **probate.1.3** — Probate Code § 8420 (read 2026-11-18): the person named as executor in the decedent's will has the right to appointment as personal representative. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=8420)
+  - ES: La persona nombrada como albacea en el testamento tiene derecho a ser ese representante.
+  - EN: The person named as executor in the will has the right to be that representative.
+  - [ ] approve   changes: 
+
+- **probate.1.4** — California Courts self-help, “Guide to property after someone dies” (read 2026-11-18). [official text](https://selfhelp.courts.ca.gov/probate)
+  - ES: Un patrimonio puede tener que pasar por el tribunal aunque la persona tuviera testamento. — **Cierto** *(Explicación: Cierto. Tener testamento no siempre evita el tribunal.)*
+  - EN: An estate may have to go through court even if the person had a will. — **True** *(Feedback: True. Having a will does not always avoid court.)*
+  - [ ] approve   changes: 
+
+### El testamento original
+
+- **probate.2.1** — California Courts self-help, “Guide to property after someone dies” (read 2026-11-18). [official text](https://selfhelp.courts.ca.gov/probate)
+  - ES: Quien encuentre el testamento original debe entregarlo al tribunal.
+  - EN: Whoever finds the original will must deliver it to the court.
+  - [ ] approve   changes: 
+
+- **probate.2.2** — Probate Code § 8200 (read 2026-11-18): the custodian of a will must, within 30 days after learning of the testator's death, deliver the will to the clerk of the superior court and a copy to the named executor (or a beneficiary). [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=8200)
+  - ES: Tiene 30 días desde que sabe del fallecimiento, y también entrega una copia al albacea.
+  - EN: They have 30 days from learning of the death, and also give a copy to the executor.
+  - [ ] approve   changes: 
+
+- **probate.2.3** — Probate Code § 8200 (read 2026-11-18): the custodian of a will must, within 30 days after learning of the testator's death, deliver the will to the clerk of the superior court and a copy to the named executor (or a beneficiary). [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=8200)
+  - ES: Mateo encuentra el testamento original de su tía en un cajón, una semana después de su fallecimiento. ¿Qué debe hacer con el testamento original? — Guardarlo en su casa / Dárselo al banco / **Entregarlo al tribunal del condado** *(Explicación: El original va al tribunal, dentro de los 30 días.)*
+  - EN: Mateo finds his aunt's original will in a drawer, a week after she died. What should they do with the original will? — Keep it at home / Give it to the bank / **Deliver it to the county court** *(Feedback: The original goes to the court, within 30 days.)*
+  - [ ] approve   changes: 
+
+- **probate.2.4** — California Courts self-help, “Wills, estates, and advance care planning” (read 2026-11-18). [official text](https://selfhelp.courts.ca.gov/wills-estates-probate/legal-documents)
+  - ES: Un fideicomiso en vida bien fondeado ayuda a que su familia no tenga que pasar por este proceso.
+  - EN: A well-funded living trust helps your family avoid this process.
+  - [ ] approve   changes: 
+
+## Bonus — Bienes comunitarios en California / Community property in California
+
+### La mitad de cada uno
+
+- **comunidad.1.1** — Probate Code § 100 (read 2026-11-18): upon the death of a married person or registered domestic partner, one-half of the community property belongs to the surviving spouse and the other one-half belongs to the decedent. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=100)
+  - ES: Cuando fallece una persona casada o con pareja doméstica registrada, la mitad de los bienes comunitarios es del cónyuge que sigue vivo y la otra mitad es de quien falleció.
+  - EN: When a married person or registered domestic partner dies, half of the community property belongs to the surviving spouse and the other half to the one who died.
+  - [ ] approve   changes: 
+
+- **comunidad.1.2** — Probate Code § 6101 (read 2026-11-18): a will may dispose of the testator's separate property and the one-half of the community and quasi-community property that belongs to the testator. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6101)
+  - ES: En su testamento, usted decide sobre sus bienes propios y sobre su mitad de los bienes comunitarios.
+  - EN: In your will, you decide about your separate property and your half of the community property.
+  - [ ] approve   changes: 
+
+- **comunidad.1.3** — Probate Code § 6401 (read 2026-11-18): without a will, the surviving spouse takes the decedent's half of the community and quasi-community property, and all, one-half or one-third of the separate property depending on the surviving children, parents and siblings. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6401)
+  - ES: Sin testamento, su cónyuge recibe su mitad de los bienes comunitarios.
+  - EN: Without a will, your spouse receives your half of the community property.
+  - [ ] approve   changes: 
+
+- **comunidad.1.4** — Probate Code § 6101 (read 2026-11-18): a will may dispose of the testator's separate property and the one-half of the community and quasi-community property that belongs to the testator. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6101)
+  - ES: En su testamento, usted puede dejar la casa comunitaria completa a un hijo. — **Falso** *(Explicación: Falso. Solo puede dejar su mitad; la otra mitad ya es de su cónyuge.)*
+  - EN: In your will, you can leave the whole community home to one child. — **False** *(Feedback: False. You can only leave your half; the other half already belongs to your spouse.)*
+  - [ ] approve   changes: 
+
+### Si se casa después
+
+- **comunidad.2.1** — Probate Code § 21610 (read 2026-11-18): a surviving spouse who married the decedent after all the decedent's testamentary instruments were made, and is not provided for, receives the decedent's half of community and quasi-community property and a share of the separate property, with exceptions. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=21610)
+  - ES: Si se casa después de firmar su testamento y no lo actualiza, su nuevo cónyuge puede recibir su mitad de los bienes comunitarios y una parte de sus bienes propios.
+  - EN: If you marry after signing your will and do not update it, your new spouse may receive your half of the community property and a share of your separate property.
+  - [ ] approve   changes: 
+
+- **comunidad.2.2** — Probate Code § 21610 (read 2026-11-18): a surviving spouse who married the decedent after all the decedent's testamentary instruments were made, and is not provided for, receives the decedent's half of community and quasi-community property and a share of the separate property, with exceptions. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=21610)
+  - ES: Luis firmó su testamento cuando era soltero. Ahora se casó con Ana. ¿Qué le conviene a Luis? — Nada; su testamento sigue igual / **Actualizar su plan con la oficina** / Romper su testamento *(Explicación: Lo mejor es actualizar el plan para que diga lo que él quiere.)*
+  - EN: Luis signed his will when he was single. Now he has married Ana. What should Luis do? — Nothing; his will stays the same / **Update his plan with the office** / Tear up his will *(Feedback: The best step is to update the plan so it says what he wants.)*
+  - [ ] approve   changes: 
+
+## Bonus — Beneficiarios de cuentas y seguros / Account and insurance beneficiaries
+
+### Lo que pasa fuera del testamento
+
+- **beneficiarios.1.1** — Probate Code § 5000 (read 2026-11-18): a provision for a nonprobate transfer on death in an insurance policy, account agreement, pension or retirement plan, trust, transfer on death deed or similar written instrument is not invalid because it does not meet the requirements for executing a will. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5000)
+  - ES: Los seguros de vida, los planes de retiro y las cuentas con beneficiario se pagan a quien usted nombró en ese formulario, sin seguir las reglas de un testamento.
+  - EN: Life insurance, retirement plans and accounts with a beneficiary are paid to whoever you named on that form, without following the rules for a will.
+  - [ ] approve   changes: 
+
+- **beneficiarios.1.2** — Probate Code § 5302 (read 2026-11-18): sums remaining in a joint account at the death of a party belong to the surviving party or parties unless there is clear and convincing evidence of a different intent; a P.O.D. account goes to the surviving P.O.D. payees. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5302)
+  - ES: En una cuenta conjunta, el dinero queda normalmente para la otra persona de la cuenta. En una cuenta con beneficiario (P.O.D.), pasa a ese beneficiario.
+  - EN: In a joint account, the money usually goes to the other person on the account. In an account with a payable-on-death beneficiary, it goes to that beneficiary.
+  - [ ] approve   changes: 
+
+- **beneficiarios.1.3** (non-legal)
+  - ES: Una cada bien con quien lo recibe — Seguro de vida = El beneficiario del seguro; Cuenta conjunta = La otra persona de la cuenta; Casa en el fideicomiso = Los beneficiarios del fideicomiso *(Explicación: ¡Muy bien! Por eso conviene revisar cada formulario.)*
+  - EN: Match each asset with who receives it — Life insurance = The policy's beneficiary; Joint account = The other person on the account; House in the trust = The trust's beneficiaries *(Feedback: Well done! That is why it helps to check every form.)*
+
+### Después de un divorcio
+
+- **beneficiarios.2.1** — Probate Code § 5040 (read 2026-11-18): a nonprobate transfer to a former spouse in an instrument made before or during the marriage fails if, at the transferor's death, the former spouse is no longer the surviving spouse because of dissolution or annulment, with exceptions. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5040)
+  - ES: Si usted se divorcia, la ley normalmente anula lo que un formulario de beneficiario hecho antes o durante el matrimonio le dejaba a su excónyuge. Hay excepciones; revise sus formularios.
+  - EN: If you divorce, the law usually cancels what a beneficiary form made before or during the marriage left to your former spouse. There are exceptions; review your forms.
+  - [ ] approve   changes: 
+
+- **beneficiarios.2.2** — Probate Code § 5040 (read 2026-11-18): a nonprobate transfer to a former spouse in an instrument made before or during the marriage fails if, at the transferor's death, the former spouse is no longer the surviving spouse because of dissolution or annulment, with exceptions. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5040)
+  - ES: Después de un divorcio conviene revisar todos sus formularios de beneficiario. — **Cierto** *(Explicación: Cierto. Así su plan dice lo que usted quiere hoy.)*
+  - EN: After a divorce, it is wise to review all your beneficiary forms. — **True** *(Feedback: True. That way your plan says what you want today.)*
+  - [ ] approve   changes: 
+
+## Bonus — Qué traer a su cita de firma / What to bring to your signing
+
+### Quién firma y quién es testigo
+
+- **cita.1.1** — Probate Code § 6110 (read 2026-11-15): a will must be in writing and signed, and witnessed by at least two persons who, present at the same time, witnessed the signing or the testator's acknowledgment and understand the instrument is the testator's will. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6110)
+  - ES: Su testamento lo firman usted y dos testigos presentes al mismo tiempo.
+  - EN: Your will is signed by you and two witnesses present at the same time.
+  - [ ] approve   changes: 
+
+- **cita.1.2** — Probate Code § 6112 (read 2026-11-15): a gift to a subscribing witness is presumed procured by duress, menace, fraud or undue influence unless at least two other subscribing witnesses are disinterested. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6112)
+  - ES: Es mejor que ningún testigo de su testamento reciba algo en él.
+  - EN: It is best that no witness to your will receives anything under it.
+  - [ ] approve   changes: 
+
+- **cita.1.3** — Probate Code § 4122 (read 2026-11-16): witnesses to a power of attorney must be adults, the attorney-in-fact may not act as a witness, and each witness must witness the principal's signing or the principal's acknowledgment of the signature or the power of attorney. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=4122)
+  - ES: Su poder notarial y su directiva de salud se firman ante notario o con dos testigos, y su agente no puede ser testigo.
+  - EN: Your power of attorney and your health care directive are signed before a notary or with two witnesses, and your agent cannot be a witness.
+  - [ ] approve   changes: 
+
+- **cita.1.4** — Probate Code § 6112 (read 2026-11-15): a gift to a subscribing witness is presumed procured by duress, menace, fraud or undue influence unless at least two other subscribing witnesses are disinterested. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6112)
+  - ES: ¿Quién NO debería ser testigo de su testamento? — Un vecino / Un compañero de trabajo / **Su hija, que recibe su casa en el testamento** *(Explicación: Quien recibe algo en el testamento no debería ser testigo.)*
+  - EN: Who should NOT witness your will? — A neighbor / A coworker / **Your daughter, who receives your house under the will** *(Feedback: Someone who receives something under the will should not be a witness.)*
+  - [ ] approve   changes: 
+
+### Qué traer
+
+- **cita.2.1** (non-legal)
+  - ES: Traiga una identificación oficial con foto vigente; el notario la necesita.
+  - EN: Bring a current government photo ID; the notary needs it.
+
+- **cita.2.2** (non-legal)
+  - ES: Si va a poner su casa en el fideicomiso, traiga la escritura y sus estados de cuenta recientes.
+  - EN: If you will put your house in the trust, bring the deed and your recent account statements.
+
+- **cita.2.3** (non-legal)
+  - ES: Piense dónde guardará los originales: un lugar seguro que su albacea sepa encontrar.
+  - EN: Think about where you will keep the originals: a safe place your executor knows how to find.
+
+- **cita.2.4** (non-legal)
+  - ES: Ordene los pasos del día de la firma — Llegar con su identificación → Revisar los documentos con el abogado → Firmar con testigos y notario → Llevarse sus originales *(Explicación: ¡Listo para firmar!)*
+  - EN: Put the signing-day steps in order — Arrive with your ID → Review the documents with the attorney → Sign with witnesses and notary → Take your originals home *(Feedback: Ready to sign!)*
 

@@ -238,3 +238,18 @@
   cite: Wills, estates, and advance care planning
   url: https://selfhelp.courts.ca.gov/wills-estates-probate/legal-documents
   read_on: '2026-11-18'
+- id: cc-probate
+  kind: courts_selfhelp
+  cite: Guide to property after someone dies
+  url: https://selfhelp.courts.ca.gov/probate
+  read_on: '2026-11-18'
+- id: pc-5040
+  kind: probate_code
+  cite: '5040'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5040
+  read_on: '2026-11-18'
+- id: pc-6112
+  kind: probate_code
+  cite: '6112'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6112
+  read_on: '2026-11-15'
