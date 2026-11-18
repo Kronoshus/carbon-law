@@ -90,11 +90,12 @@
   "celebration.back": "Back to the map",
   "result.notYet": "Nearly there: {score}% correct. Let's go over what's left.",
   "result.review": "Review",
-  "leccion.kind.match": "Match",
-  "leccion.kind.order": "Put in order",
-  "leccion.kind.listen": "Listen",
-  "leccion.up": "Move up",
-  "leccion.down": "Move down",
+  "leccion.kind.match": "Match the pairs",
+  "leccion.kind.order": "Put the steps in order",
+  "leccion.kind.listen": "Listen and answer",
+  "leccion.up": "Move “{step}” up",
+  "leccion.down": "Move “{step}” down",
   "leccion.showText": "Show text",
-  "leccion.play": "Play"
+  "leccion.play": "Play",
+  "leccion.pairNo": "pair {n}"
 }

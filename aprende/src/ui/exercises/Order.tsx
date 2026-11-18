@@ -1,42 +1,33 @@
 import { h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { t } from '../../core/i18n';
-import { useState } from 'preact/hooks';
 
-export function orderToAnswer(keys: string[]): string[] {
-  return [...keys];
+type Step = { key: string; text: string };
+
+export function move(keys: string[], index: number, by: -1 | 1): string[] {
+  const to = index + by;
+  if (to < 0 || to >= keys.length) return keys;
+  const next = keys.slice();
+  [next[index], next[to]] = [next[to], next[index]];
+  return next;
 }
 
-interface Item { id: string; kind: string; prompt?: string; steps?: { key: string; text: string }[] }
-
-export function OrderExercise({ item, choice, setChoice, locked, onCheck }: {
-  item: Item; choice: string[] | null; setChoice: (v: unknown) => void; locked: boolean; correct: boolean | null; onCheck: () => void;
+/** Put the steps in order with Subir / Bajar on each row (keyboard and switch access; no drag needed). The order as
+ *  served is already an answer, so the client may check it without moving anything. */
+export function OrderExercise({ item, onAnswer, locked, onCheck }: {
+  item: { id: string; prompt?: string; steps?: Step[] }; onAnswer: (a: string[]) => void; locked: boolean; onCheck: () => void;
 }) {
-  const [order, setOrder] = useState<string[]>(() => (Array.isArray(choice) && choice.length ? [...choice] : (item.steps ?? []).map((s) => s.key)));
-
-  const byKey = new Map((item.steps ?? []).map((s) => [s.key, s.text]));
-
-  const move = (idx: number, dir: -1 | 1) => {
-    if (locked) return;
-    const next = [...order];
-    const target = idx + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    setOrder(next);
-    setChoice(next);
-  };
-
-  const rows = order.map((k, i) =>
-    h('li', { key: k, class: 'card', style: 'display:flex;align-items:center;gap:var(--s2);min-block-size:48px;' },
-      h('span', { style: 'flex:1;' }, byKey.get(k) ?? k),
-      h('button', { type: 'button', class: 'btn secondary', 'aria-label': t('leccion.up'), disabled: locked || i === 0, onClick: () => move(i, -1), style: 'min-block-size:48px;min-inline-size:48px;' }, '↑'),
-      h('button', { type: 'button', class: 'btn secondary', 'aria-label': t('leccion.down'), disabled: locked || i === order.length - 1, onClick: () => move(i, 1), style: 'min-block-size:48px;min-inline-size:48px;' }, '↓')
-    )
-  );
-
-  return h('section', { class: 'q' },
+  const steps = item.steps ?? [];
+  const [keys, setKeys] = useState(() => steps.map((s) => s.key));
+  useEffect(() => onAnswer(keys), [keys]);
+  const text = new Map(steps.map((s) => [s.key, s.text]));
+  return h('section', { class: 'q', 'aria-labelledby': `q-${item.id}` },
     h('span', { class: 'kind' }, t('leccion.kind.order')),
-    h('h1', null, item.prompt),
-    h('ol', { style: 'list-style:none;padding:0;margin:0;display:grid;gap:var(--s2);' }, rows),
-    locked ? null : h('button', { class: 'btn', type: 'button', onClick: onCheck }, t('leccion.check'))
-  );
+    h('h1', { id: `q-${item.id}` }, item.prompt),
+    h('ol', { class: 'order' }, keys.map((k, i) => h('li', { class: 'order-row', key: k },
+      h('span', { class: 'order-no', 'aria-hidden': 'true' }, String(i + 1)),
+      h('span', { class: 'order-text' }, text.get(k)),
+      h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('leccion.up', { step: text.get(k) ?? '' }), disabled: locked || i === 0, onClick: () => setKeys(move(keys, i, -1)) }, '↑'),
+      h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('leccion.down', { step: text.get(k) ?? '' }), disabled: locked || i === keys.length - 1, onClick: () => setKeys(move(keys, i, 1)) }, '↓')))),
+    locked ? null : h('button', { class: 'btn', type: 'button', onClick: onCheck }, t('leccion.check')));
 }

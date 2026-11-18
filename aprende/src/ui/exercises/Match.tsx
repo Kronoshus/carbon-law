@@ -1,89 +1,47 @@
 import { h } from 'preact';
-import { t } from '../../core/i18n';
 import { useState } from 'preact/hooks';
+import { t } from '../../core/i18n';
 
-export interface MatchPair { leftKey: string; rightKey: string }
+type Tile = { key: string; text: string };
+export type Pairs = Record<string, string>;      // left key -> right key: exactly the answer the server grades
 
-export function pairsToAnswer(pairs: MatchPair[]): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const p of pairs) out[p.leftKey] = p.rightKey;
-  return out;
+/** Pair or unpair: choosing a left tile and then a right tile pairs them; choosing a paired tile undoes its pair. */
+const without = (pairs: Pairs, left: string): Pairs => Object.fromEntries(Object.entries(pairs).filter(([l]) => l !== left));
+
+export function toggle(pairs: Pairs, left: string | null, right: string | null): { pairs: Pairs; pending: string | null } {
+  if (left && left in pairs) return { pairs: without(pairs, left), pending: null };
+  if (right) {
+    const owner = Object.keys(pairs).find((l) => pairs[l] === right);
+    if (owner) return { pairs: without(pairs, owner), pending: left };
+    if (left) return { pairs: { ...pairs, [left]: right }, pending: null };
+  }
+  return { pairs, pending: left };
 }
 
-const COLORS = ['#c9a227', '#7c5cff', '#2e8b57', '#c45a8a', '#3a7ca5', '#b07d2a'];
-
-interface Item { id: string; kind: string; prompt?: string; left?: { key: string; text: string }[]; right?: { key: string; text: string }[] }
-
-export function MatchExercise({ item, choice, setChoice, locked, onCheck }: {
-  item: Item; choice: Record<string, string> | null; setChoice: (v: unknown) => void; locked: boolean; correct: boolean | null; onCheck: () => void;
+export function MatchExercise({ item, onAnswer, locked, onCheck }: {
+  item: { id: string; prompt?: string; left?: Tile[]; right?: Tile[] }; onAnswer: (a: Pairs | null) => void; locked: boolean; onCheck: () => void;
 }) {
-  const left = item.left ?? [];
-  const right = item.right ?? [];
-  const [pairs, setPairs] = useState<Record<string, string>>(() => (choice && typeof choice === 'object' ? { ...choice } : {}));
-  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
-
-  const sync = (next: Record<string, string>) => {
-    setPairs(next);
-    setChoice(Object.keys(next).length ? next : null);
+  const left = item.left ?? [], right = item.right ?? [];
+  const [pairs, setPairs] = useState<Pairs>({});
+  const [pending, setPending] = useState<string | null>(null);
+  const order = left.filter((l) => l.key in pairs).map((l) => l.key);       // pair numbers follow the left column
+  const number = (leftKey: string | undefined) => (leftKey ? order.indexOf(leftKey) + 1 : 0);
+  const choose = (l: string | null, r: string | null) => {
+    const next = toggle(pairs, l ?? pending, r);
+    setPairs(next.pairs); setPending(next.pending);
+    onAnswer(Object.keys(next.pairs).length === left.length ? next.pairs : null);
   };
-
-  const isPairedLeft = (k: string) => k in pairs;
-  const isPairedRight = (k: string) => Object.values(pairs).includes(k);
-
-  const onLeft = (k: string) => {
-    if (locked) return;
-    if (isPairedLeft(k)) { const rest = Object.fromEntries(Object.entries(pairs).filter(([kk]) => kk !== k)); sync(rest); setSelectedLeft(null); return; }
-    setSelectedLeft(k);
-  };
-  const onRight = (k: string) => {
-    if (locked) return;
-    if (isPairedRight(k)) {
-      const leftKey = Object.keys(pairs).find((l) => pairs[l] === k);
-      if (leftKey) { const rest = Object.fromEntries(Object.entries(pairs).filter(([kk]) => kk !== leftKey)); sync(rest); }
-      return;
-    }
-    if (selectedLeft) {
-      const next = { ...pairs, [selectedLeft]: k };
-      sync(next);
-      setSelectedLeft(null);
-    }
-  };
-
-  const pairedLefts = left.filter((l) => isPairedLeft(l.key)).map((l) => l.key);
-  const pairNo = (leftKey: string) => pairedLefts.indexOf(leftKey);
-
-  const allPaired = left.every((l) => isPairedLeft(l.key));
-
-  const leftTiles = left.map((l) => {
-    const pi = isPairedLeft(l.key) ? pairNo(l.key) : -1;
-    const sel = selectedLeft === l.key;
-    const style = pi >= 0 ? `background:${COLORS[pi % COLORS.length]}22;border-color:${COLORS[pi % COLORS.length]}` : '';
-    return h('button', {
-      type: 'button', class: 'btn secondary', key: l.key, disabled: locked,
-      'aria-pressed': sel || isPairedLeft(l.key),
-      onClick: () => onLeft(l.key),
-      style: `${style};min-block-size:48px`,
-    }, (pi >= 0 ? `${pi + 1}. ` : '') + l.text);
-  });
-
-  const rightTiles = right.map((r) => {
-    const lk = Object.keys(pairs).find((l) => pairs[l] === r.key);
-    const pi = lk ? pairNo(lk) : -1;
-    const style = pi >= 0 ? `background:${COLORS[pi % COLORS.length]}22;border-color:${COLORS[pi % COLORS.length]}` : '';
-    return h('button', {
-      type: 'button', class: 'btn secondary', key: r.key, disabled: locked,
-      onClick: () => onRight(r.key),
-      style: `${style};min-block-size:48px`,
-    }, (pi >= 0 ? `${pi + 1}. ` : '') + r.text);
-  });
-
-  return h('section', { class: 'q' },
+  const tile = (tl: Tile, n: number, pressed: boolean, onClick: () => void) =>
+    h('button', { type: 'button', class: 'tile', 'data-pair': n || undefined, 'aria-pressed': pressed, disabled: locked, onClick, key: tl.key },
+      n ? h('span', { class: 'pair-no', 'aria-label': t('leccion.pairNo', { n }) }, String(n)) : null, tl.text);
+  return h('section', { class: 'q', 'aria-labelledby': `q-${item.id}` },
     h('span', { class: 'kind' }, t('leccion.kind.match')),
-    h('h1', null, item.prompt),
-    h('div', { class: 'match-grid', style: 'display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);' },
-      h('div', { class: 'match-col' }, leftTiles),
-      h('div', { class: 'match-col' }, rightTiles)
-    ),
-    locked ? null : h('button', { class: 'btn', type: 'button', disabled: !allPaired, onClick: onCheck }, t('leccion.check'))
-  );
+    h('h1', { id: `q-${item.id}` }, item.prompt),
+    h('div', { class: 'match' },
+      h('div', { class: 'match-col' }, left.map((l) => tile(l, number(l.key in pairs ? l.key : undefined), pending === l.key || l.key in pairs, () => choose(l.key, null)))),
+      h('div', { class: 'match-col' }, right.map((r) => {
+        const owner = Object.keys(pairs).find((k) => pairs[k] === r.key);
+        return tile(r, number(owner), !!owner, () => choose(null, r.key));
+      }))),
+    locked ? null : h('button', { class: 'btn', type: 'button', disabled: Object.keys(pairs).length !== left.length, onClick: onCheck }, t('leccion.check')));
 }

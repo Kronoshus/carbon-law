@@ -90,11 +90,12 @@
   "celebration.back": "Volver al mapa",
   "result.notYet": "Le faltó poco: {score}% correcto. Repasemos lo que falta.",
   "result.review": "Repasar",
-  "leccion.kind.match": "Empareje",
-  "leccion.kind.order": "Ordene",
-  "leccion.kind.listen": "Escuche",
-  "leccion.up": "Subir",
-  "leccion.down": "Bajar",
+  "leccion.kind.match": "Una cada pareja",
+  "leccion.kind.order": "Ordene los pasos",
+  "leccion.kind.listen": "Escuche y responda",
+  "leccion.up": "Subir «{step}»",
+  "leccion.down": "Bajar «{step}»",
   "leccion.showText": "Mostrar texto",
-  "leccion.play": "Escuchar"
+  "leccion.play": "Escuchar",
+  "leccion.pairNo": "pareja {n}"
 }
