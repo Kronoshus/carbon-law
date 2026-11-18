@@ -1,17 +1,22 @@
 """FastAPI routes for the Aprende journey."""
-import os, sys, json
+import os, sys
 from fastapi import APIRouter, Header, HTTPException, Body
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.dirname(HERE)
-if BACKEND not in sys.path:
-    sys.path.insert(0, BACKEND)
+# `backend` is already on sys.path via app.py; do not manipulate it here.
 
 import app as backend_app
 from aprende import journey
 
 router = APIRouter()
+
+DOC_CODES = {"will", "trust", "poa", "ahcd"}
+
+
+class JourneyEventBody(BaseModel):
+    type: str
+    payload: dict = Field(default_factory=dict)
 
 
 def _auth(authorization):
@@ -36,17 +41,13 @@ def get_journey(authorization: str = Header(None)):
     return j
 
 
-class EventBody:
-    pass
-
-
 @router.post("/journey/events")
-def post_event(body: dict = Body(...), authorization: str = Header(None)):
+def post_event(body: JourneyEventBody, authorization: str = Header(None)):
     u = _auth(authorization)
     _adult_check(u)
     j = journey.get_or_create_for_user(u["id"])
-    etype = body.get("type")
-    payload = body.get("payload", {}) or {}
+    etype = body.type
+    payload = body.payload or {}
     if etype not in journey.ALL_EVENTS:
         raise HTTPException(422, "unknown event type")
     if etype not in journey.CLIENT_EVENTS:
@@ -62,11 +63,20 @@ def post_event(body: dict = Body(...), authorization: str = Header(None)):
         for n in names:
             if not isinstance(n, str) or len(n) == 0 or len(n) > 120:
                 raise HTTPException(422, "invalid name")
+    if etype in ("documents_tentative", "documents_confirmed"):
+        codes = payload.get("codes") if isinstance(payload, dict) else None
+        if not isinstance(codes, list) or len(codes) == 0 or any(c not in DOC_CODES for c in codes):
+            raise HTTPException(422, "invalid codes")
+        if len(set(codes)) != len(codes):
+            raise HTTPException(422, "duplicate codes")
     # gate check
-    g = journey.gates(j["facts"])
+    g = journey.gates(j["facts"]) if False else None
+    # use internal facts via journey.get_journey for gates? j facts is client-facing (no conflict results)
+    # recompute gates from full journey
+    full = journey.get_journey(j["id"])
+    g = full["gates"]
     required = journey.REQUIRED_GATE.get(etype, "may_disclose")
     if not g.get(required, False):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": [required]})
-    # apply
     updated = journey.apply(j["id"], etype, payload, actor=u.get("email") or "client")
     return updated

@@ -1,12 +1,10 @@
 """Legacy bridge: create/update matters in the legacy portal from an Aprende journey."""
 import os, sys, json, uuid, threading
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.dirname(HERE)
-if BACKEND not in sys.path:
-    sys.path.insert(0, BACKEND)
+# `backend` is already on sys.path via app.py; do not manipulate it here.
 
 import app as backend_app
+from aprende import journey as J
 
 _lock = threading.Lock()
 
@@ -19,14 +17,11 @@ def _user_name(user_id):
 
 
 def ensure_matter(journey):
-    """Create exactly one legacy matter for this journey, at stage '1 Intake'. Idempotent."""
     j = journey
     if hasattr(j, "id"):
         j = {"id": j.id, "user_id": getattr(j, "user_id", None), "matter_id": getattr(j, "matter_id", None)}
     jid = j["id"]
     with _lock:
-        # reload journey to get latest matter_id
-        from aprende import journey as J
         jj = J.get_journey(jid)
         if jj and jj.get("matter_id"):
             mid = jj["matter_id"]
@@ -51,16 +46,10 @@ def ensure_matter(journey):
         }
         backend_app.matters[matter_id] = matter
         backend_app.stage_history[matter_id] = [{"stage": "1 Intake", "time": now, "by": "system"}]
-        try:
-            backend_app.save_data()
-        except Exception:
-            pass
-        # persist matter_id on journey
-        try:
-            import db
-            db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (matter_id, jid))
-        except Exception:
-            pass
+        backend_app.save_data()
+        db = None
+        import db as _db
+        _db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (matter_id, jid))
         return matter_id
 
 
@@ -68,7 +57,6 @@ def set_stage(journey, stage):
     j = journey
     if hasattr(j, "id"):
         j = {"id": j.id, "matter_id": getattr(j, "matter_id", None)}
-    from aprende import journey as J
     jj = J.get_journey(j["id"])
     mid = (jj or {}).get("matter_id") or j.get("matter_id")
     if not mid or mid not in backend_app.matters:
@@ -82,8 +70,5 @@ def set_stage(journey, stage):
         backend_app.stage_history.setdefault(mid, []).append(
             {"stage": stage, "time": backend_app.now_iso(), "by": "system"}
         )
-        try:
-            backend_app.save_data()
-        except Exception:
-            pass
+        backend_app.save_data()
         return backend_app.matters[mid]

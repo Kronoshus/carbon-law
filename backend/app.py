@@ -1487,15 +1487,8 @@ def set_stage(matter_id: str, stage: str, authorization: Optional[str]=Header(No
     return matters[matter_id]
 
 # Aprende journey routes (T2-06)
-import sys as _sys
-if os.path.dirname(os.path.abspath(__file__)) not in _sys.path:
-    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-try:
-    from aprende import routes_journey as _rj
-    app.include_router(_rj.router)
-except Exception as _e:
-    import logging
-    logging.getLogger("app").warning("journey router not mounted: %s", _e)
+from aprende import routes_journey as _rj
+app.include_router(_rj.router)
 
 if __name__ == "__main__":
     import uvicorn
