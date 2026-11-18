@@ -35,9 +35,13 @@ def conflict_status(facts):
     facts = facts or {}
     auto = facts.get("conflict_auto_result")
     firm = facts.get("conflict_firm_result")
-    if auto in ("possible", "no_list") or firm == "flagged":
+    if firm == "flagged":
         return "hold"
-    if auto == "clear" and firm != "flagged":
+    if firm == "cleared":
+        return "clear"
+    if auto == "possible":
+        return "hold"
+    if auto == "clear":
         return "clear"
     return "pending"
 
@@ -227,4 +231,7 @@ def apply(journey_id, event_type, payload=None, actor="system"):
         mid = legacy.ensure_matter(get_journey(j["id"]))
         if mid:
             db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (mid, j["id"]))
+        # run the names-only conflict check (T5-03)
+        from aprende import conflicts as _conflicts
+        _conflicts.run_check(j["id"], (payload or {}).get("names") or [])
     return get_journey(j["id"])
