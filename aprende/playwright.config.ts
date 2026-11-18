@@ -1,15 +1,22 @@
 import { defineConfig } from '@playwright/test';
 
+const executablePath = process.env.PW_CHROMIUM;
+
 export default defineConfig({
-  testDir: './e2e',
   timeout: 60000,
-  use: {
-    baseURL: 'http://127.0.0.1:5173',
-    browserName: 'chromium',
-    launchOptions: process.env.PW_CHROMIUM
-      ? { executablePath: process.env.PW_CHROMIUM }
-      : undefined,
-  },
+  projects: [
+    {
+      // the web app against a real backend (T2-11): Vite proxies the API, so the browser stays same-origin
+      name: 'web',
+      testDir: './e2e',
+      use: { baseURL: 'http://127.0.0.1:5173', browserName: 'chromium', launchOptions: executablePath ? { executablePath } : undefined },
+    },
+    {
+      // the built extension (T2-12); these tests launch their own persistent context with the unpacked extension
+      name: 'extension',
+      testDir: './tests/e2e',
+    },
+  ],
   webServer: [
     {
       command: 'bash ../scripts/start-e2e-backend.sh',

@@ -30,5 +30,19 @@
   "error.adult": "You must confirm you are over 18.",
   "error.invalid": "Incorrect email or password.",
   "bienvenida.host": "La Calavera, an artificial intelligence program",
-  "bienvenida.note": "General information, not legal advice. Carbon Law Group, Los Angeles."
+  "bienvenida.note": "General information, not legal advice. Carbon Law Group, Los Angeles.",
+  "popup.streak": "Streak: {count}",
+  "popup.today": "Day {day} of 14",
+  "popup.open": "Open",
+  "popup.gate.may_disclose": "Disclose AI use",
+  "popup.gate.may_consent": "Give consent",
+  "popup.gate.may_name": "Share names",
+  "popup.gate.may_collect_details": "Complete details",
+  "popup.gate.may_chat": "Chat with assistant",
+  "popup.gate.may_sign_engagement": "Sign engagement",
+  "popup.gate.may_pay": "Make payment",
+  "popup.gate.may_see_documents": "View documents",
+  "popup.gate.may_book_signing": "Schedule signing",
+  "popup.gate.may_take_final_lesson": "Take final lesson",
+  "popup.complete": "Complete"
 }
