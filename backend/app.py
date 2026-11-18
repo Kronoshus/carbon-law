@@ -8,7 +8,12 @@ from typing import List, Optional, Dict, Any
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 import sys
 sys.path.insert(0, APP_DIR)
+# Render starts this file as `backend.app`, tests and the aprende package import it as `app`: make both names the same
+# module, or `import app` would execute this file a second time (circular import, and two copies of every store).
+sys.modules.setdefault("app", sys.modules[__name__])
 import db as _db
+import migrate as _migrate
+_migrate.run()   # Aprende tables; idempotent
 ROOT_DIR = os.path.dirname(APP_DIR)
 sys.path.insert(0, ROOT_DIR)
 DATA_FILE = os.path.join(APP_DIR, "data.json")
