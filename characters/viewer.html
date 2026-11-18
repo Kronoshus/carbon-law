@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Review tool: serve the repo root (python -m http.server) and open
+     characters/viewer.html?glb=../aprende/public/characters/oso.glb&pose={"comfort":1}  — renders one pose the way the app does. --><html><body style="margin:0;background:#111">
+<canvas id="c" width="400" height="400"></canvas>
+<script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const q = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true });
+renderer.setClearColor(0x111111); renderer.setSize(400, 400, false);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50); camera.position.set(0, 0.12, 3.6);
+const body = new THREE.Group(); body.position.y = -1.3; scene.add(body);
+new GLTFLoader().load(q.get('glb'), g => {
+  g.scene.traverse(o => { if (!o.isMesh) return; const map = o.material.map;
+    if (map && o.name !== 'Background') map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
+    o.material = new THREE.MeshBasicMaterial({ map, side: THREE.DoubleSide, transparent: o.name === 'Avatar', alphaTest: o.name === 'Avatar' ? 0.02 : 0 }); });
+  const face = g.scene.getObjectByName('Avatar'); scene.add(g.scene); body.add(face); face.position.y = 1.3;
+  const pose = JSON.parse(q.get('pose') || '{}');
+  face.morphTargetInfluences.fill(0);
+  for (const [k, v] of Object.entries(pose)) { const i = face.morphTargetDictionary[k]; if (i !== undefined) face.morphTargetInfluences[i] = v; }
+  renderer.render(scene, camera); document.title = 'ready';
+});
+</script></body></html>

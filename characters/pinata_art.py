@@ -12,7 +12,7 @@ MUZZLE, MUZZLE_D = (255, 226, 120), (240, 190, 70)
 EAR_IN = (255, 210, 63)
 BANDS = [TEAL, YELLOW, PINK, ORANGE, PURPLE, GREEN]
 
-L = {"band": [0.586, 0.598], "jaw": [0.40, 0.60, 0.598, 0.665], "eyes": [[0.425, 0.355], [0.575, 0.355]],
+L = {"jawDrop": 0.06, "jawFade": 0.03, "band": [0.586, 0.598], "jaw": [0.42, 0.58, 0.598, 0.64], "eyes": [[0.425, 0.355], [0.575, 0.355]],
      "socket": [0.046, 0.054], "pupil": 0.022, "brows": [[0.425, 0.278], [0.575, 0.278]], "neck": [0.69, 0.765]}
 
 
@@ -106,7 +106,7 @@ def draw(jaw=0.0, blink=0.0, look=0.0, party=False):
     if jaw > 0.2:
         a.blob(0.5, b0 + gap * 0.72, 0.035, gap * 0.28, (240, 90, 120), w=0)
     for x0 in (0.481, 0.501):                         # two friendly front teeth
-        a.d.rounded_rectangle([*a.P(x0, b0 - 0.008), *a.P(x0 + 0.018, b0 + 0.016)], radius=a.w(0.004), fill=WHITE,
+        a.d.rounded_rectangle([*a.P(x0, b0 - 0.022), *a.P(x0 + 0.018, b0 + 0.001)], radius=a.w(0.004), fill=WHITE,
                               outline=LINE, width=a.w(0.003))
     for side in (-1, 1):                              # the grin curls up at the corners, with a dimple, like La Calavera's
         x0 = 0.5 + side * 0.073
@@ -144,6 +144,15 @@ def backdrop():
     a.img = a.img.filter(ImageFilter.GaussianBlur(S * 0.0025))
     return a
 
+
+
+def rig():
+    """Where the moving parts are, as fractions of the 2048 picture (the K, OY of the drawing applied)."""
+    X, Y = (lambda x: 0.5 + (x - 0.5) * 0.86), (lambda y: 0.14 + y * 0.86)
+    return {"band": [Y(v) for v in L["band"]], "jaw": [X(L["jaw"][0]), X(L["jaw"][1]), Y(L["jaw"][2]), Y(L["jaw"][3])],
+            "eyes": [[X(x), Y(y)] for x, y in L["eyes"]], "socket": [v * 0.86 for v in L["socket"]], "pupil": L["pupil"] * 0.86,
+            "brows": [[X(x), Y(y)] for x, y in L["brows"]], "neck": [Y(v) for v in L["neck"]],
+            "jawDrop": L.get("jawDrop", 0.07), "jawFade": L.get("jawFade", 0.035)}
 
 if __name__ == "__main__":
     draw().save("pinata.png")
