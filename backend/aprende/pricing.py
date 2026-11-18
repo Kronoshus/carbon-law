@@ -1,9 +1,6 @@
 """Pricing engine for Aprende y Planea."""
 import json
-import os
-import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import db
 
 
@@ -11,66 +8,35 @@ def load_settings(key="pricing"):
     rows = db.query("SELECT value_json FROM settings WHERE key = ?", (key,))
     if not rows:
         return None
-    try:
-        return json.loads(rows[0][0])
-    except (ValueError, TypeError):
-        return None
+    return json.loads(rows[0][0])  # raises on bad JSON
 
 
-class Quote(dict):
-    def __init__(self, *, items, package=None, total, currency="USD", test_mode=True):
-        super().__init__({
-            "items": items,
-            "package": package,
-            "total": total,
-            "currency": currency,
-            "test_mode": test_mode,
-        })
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError as exc:
-            raise AttributeError(name) from exc
-
-    def __setattr__(self, name, value):
-        self[name] = value
+DOC_CODES = {"will", "trust", "poa", "ahcd"}
 
 
 def _as_codes(codes):
-    if codes is None:
-        return []
     if isinstance(codes, str):
         return [c.strip() for c in codes.split(",") if c.strip()]
-    return [str(c).strip() for c in codes]
+    return list(codes or [])
 
 
-def _earned_map(discounts):
+def _earned_lookup(earned):
+    """Normalize `earned` into {(doc, event): cents}."""
     out = {}
-    if not discounts:
+    if not earned:
         return out
-    for row in discounts:
-        if isinstance(row, dict):
-            doc = row.get("document") or row.get("doc") or row.get("code")
-            event = row.get("event")
-            amount = row.get("amount_cents")
-            if amount is None:
-                amount = row.get("amount")
+    for key, val in (earned.items() if hasattr(earned, "items") else []):
+        if isinstance(key, (tuple, list)) and len(key) == 2:
+            doc, event = key
+        elif isinstance(key, str) and "|" in key:
+            doc, event = key.split("|", 1)
         else:
-            # tuple/list: (journey_id, document, event, amount_cents, ...) or (document, event, amount)
-            if len(row) >= 4:
-                doc, event, amount = row[1], row[2], row[3]
-            elif len(row) == 3:
-                doc, event, amount = row[0], row[1], row[2]
-            else:
-                continue
-        if doc is None or event is None or amount is None:
             continue
-        out.setdefault(str(doc), {})[str(event)] = int(amount)
+        out[(str(doc), str(event))] = int(val)
     return out
 
 
-def quote(settings, facts, codes, discounts=None, earned=None, **_kw):
+def quote(settings, facts, codes, earned=None):
     settings = settings or {}
     base = settings.get("base") or {}
     packages = settings.get("packages") or {}
@@ -79,30 +45,31 @@ def quote(settings, facts, codes, discounts=None, earned=None, **_kw):
     test_mode = settings.get("test_mode", True)
     if test_mode is None:
         test_mode = True
-    placeholders = set(settings.get("placeholder_codes") or settings.get("placeholders") or [])
+    placeholders = set(settings.get("placeholder_codes") or [])
 
     facts = facts or {}
     codes = _as_codes(codes)
-    earned_map = _earned_map(discounts if discounts is not None else earned)
-
-    # package detection
-    package = None
-    pkg_key = ",".join(sorted(codes))
-    if pkg_key in packages:
-        package = packages[pkg_key]
-    else:
-        for key, val in packages.items():
-            if isinstance(key, str) and set(key.split(",")) == set(codes) or set(key.split("+")) == set(codes):
-                package = val
-                break
+    earned_lookup = _earned_lookup(earned)
 
     items = []
     total = 0
+
+    # package: exact set match only
+    package = None
+    code_set = frozenset(codes)
+    for key, val in (packages or {}).items():
+        if isinstance(key, str):
+            key_set = frozenset(k.strip() for k in key.split(",") if k.strip())
+        elif isinstance(key, (list, tuple, set, frozenset)):
+            key_set = frozenset(key)
+        else:
+            key_set = None
+        if key_set is not None and key_set == code_set:
+            package = val
+            break
+
     for code in codes:
-        base_price = base.get(code)
-        if base_price is None:
-            base_price = 0
-        base_price = int(base_price)
+        base_price = int(base.get(code, 0) or 0)
 
         cfg = discounts_cfg.get(code) or {}
         amount = int(cfg.get("amount", 0) or 0)
@@ -111,20 +78,12 @@ def quote(settings, facts, codes, discounts=None, earned=None, **_kw):
         if floor is not None:
             floor = int(floor)
 
-        # placeholder determination
-        if code in placeholders:
-            placeholder = True
-        elif base.get(code) is None:
-            placeholder = True
-        else:
-            placeholder = (code != "will") and (code in ("trust", "poa", "ahcd"))
-
         discount_list = []
         subtotal_discount = 0
         for ev in events:
             if ev in facts:
-                amt = earned_map.get(code, {}).get(ev, amount)
-                amt = int(amt)
+                locked = earned_lookup.get((code, ev))
+                amt = amount if locked is None else int(locked)
                 discount_list.append({"event": ev, "amount": amt})
                 subtotal_discount += amt
 
@@ -138,13 +97,17 @@ def quote(settings, facts, codes, discounts=None, earned=None, **_kw):
             "base": base_price,
             "discounts": discount_list,
             "price": price,
-            "placeholder": bool(placeholder),
+            "placeholder": bool(code in placeholders),
         })
         total += price
 
-    if package is not None:
-        # package may override total if it has a price
-        if isinstance(package, dict) and "price" in package:
-            total = int(package["price"])
+    if isinstance(package, dict) and "price" in package:
+        total = int(package["price"])
 
-    return Quote(items=items, package=package, total=total, currency=currency, test_mode=test_mode)
+    return {
+        "items": items,
+        "package": package,
+        "total": total,
+        "currency": currency,
+        "test_mode": test_mode,
+    }

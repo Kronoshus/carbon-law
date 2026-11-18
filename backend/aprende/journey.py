@@ -196,7 +196,7 @@ def get_or_create_for_user(user_id):
 def _insert_event(journey_id, event_type, payload, actor, created_at):
     """Record an event unless it repeats the latest one of its type (a resend is a no-op). For consent and the conflict
     results only an unchanged answer is a repeat, so a changed decision is always recorded. Read and insert happen in one
-    transaction, so concurrent requests cannot both insert."""
+    transaction, so concurrent requests cannot both insert. Earned discounts are recorded in the same transaction."""
     with db.transaction() as conn:
         row = conn.execute(
             "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
@@ -211,6 +211,20 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
         conn.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
+        # earned discounts in same transaction
+        try:
+            r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
+            settings = json.loads(r[0]) if r else None
+        except Exception:
+            settings = None
+        if settings:
+            for doc, cfg in (settings.get("discounts") or {}).items():
+                if event_type in (cfg.get("events") or []):
+                    amount = int(cfg.get("amount", 0) or 0)
+                    conn.execute(
+                        "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
+                        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
+                        (str(uuid.uuid4()), journey_id, doc, event_type, amount, created_at))
     return True
 
 
@@ -227,22 +241,4 @@ def apply(journey_id, event_type, payload=None, actor="system"):
         mid = legacy.ensure_matter(get_journey(j["id"]))
         if mid:
             db.execute("UPDATE journeys SET matter_id = ? WHERE id = ?", (mid, j["id"]))
-    # Record earned discounts (discounts rows are facts) at the moment the event is applied.
-    try:
-        from aprende import pricing as _pricing
-        settings = _pricing.load_settings("pricing")
-        if settings:
-            for doc, cfg in (settings.get("discounts") or {}).items():
-                if event_type in (cfg.get("events") or []):
-                    amount = int(cfg.get("amount", 0) or 0)
-                    with db.transaction() as conn:
-                        exists = conn.execute(
-                            "SELECT 1 FROM discounts WHERE journey_id = ? AND document = ? AND event = ?",
-                            (j["id"], doc, event_type)).fetchone()
-                        if not exists:
-                            conn.execute(
-                                "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) VALUES (?, ?, ?, ?, ?, ?)",
-                                (str(uuid.uuid4()), j["id"], doc, event_type, amount, _now_iso()))
-    except Exception:
-        pass
     return get_journey(j["id"])
