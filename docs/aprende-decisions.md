@@ -62,3 +62,7 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 - `name_key` convention: `character.{id}.name` (i18n key; actual names pending Q-C1).
 - `GET /characters` returns a JSON array of enabled characters.
 - Calavera cannot be disabled (409); `character_for(unit)` falls back to calavera.
+## T3-05 CharacterEngine
+- Pinned `three` to 0.160.0 (prototype version) to match avatar-intake; no types shipped, ambient module declarations added in `aprende/src/three.d.ts`.
+- Firm decision F-003 honored: no server voice; `speak(text, lang)` uses browser speechSynthesis; second path `speakAudio({audio_base64, mime, alignment})` retained for future voice service.
+- `three` is a dynamic import inside `CharacterEngine.mount()` only; not in initial bundle.

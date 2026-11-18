@@ -44,5 +44,6 @@
   "popup.gate.may_see_documents": "View documents",
   "popup.gate.may_book_signing": "Schedule signing",
   "popup.gate.may_take_final_lesson": "Take final lesson",
-  "popup.complete": "Complete"
+  "popup.complete": "Complete",
+  "character.aiLabel": "AI Program · not the lawyer"
 }

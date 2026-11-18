@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: isExt ? 'dist/extension' : 'dist/web',
       emptyOutDir: true,
+      manifest: true,
       rollupOptions: {
         output: isExt ? { entryFileNames: '[name].js', chunkFileNames: 'assets/[name]-[hash].js', assetFileNames: 'assets/[name]-[hash][extname]' } : undefined,
         input: isExt
