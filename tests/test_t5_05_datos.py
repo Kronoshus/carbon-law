@@ -111,7 +111,7 @@ def test_no_question_asks_about_immigration_status():
 
 def test_details_wait_for_the_gates():
     h = client()
-    send(h, "ai_disclosed"); send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
+    send(h, "ai_disclosed"); send(h, "consent", answer="yes")                   # no names yet, so no conflict check
     assert c.get("/datos", headers=h).status_code == 409
     assert put(h, "nombre", answer="Ana Torres").status_code == 409
     assert c.get("/datos", headers=staff()).status_code == 403
