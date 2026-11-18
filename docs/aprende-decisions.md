@@ -55,4 +55,11 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 |---|---|
 | T2-10 | Vite `base` comes from `VITE_BASE` (default `/`); the Pages workflow builds with `VITE_BASE=/aprende/` and copies `aprende/dist/web` into `_site/aprende` without touching the existing `web/` files. Tests may not reach the network (`tests/conftest.py`): the existing demo-drafting test had been calling the real Beam API with the local key on every run. |
 | T2-09 | Worker loop runs in-process in the web service (daemon thread) gated by `APRENDE_INPROCESS_WORKER=1`; `render.yaml` has no paid worker service. `backend/worker.py` exposes `run_forever(stop_event)` and `start_in_background()`. `python -m backend.worker` still works for a separate process. Backoff 60/300/1800s. |
-| T2-07 | Aprende paths (prefixes in `APRENDE_PREFIXES`, `backend/aprende/__init__.py`) skip the global request lock. The lock is now one `threading.Lock`, so the sync legacy bridge (`backend/aprende/legacy.py`) takes the same lock as the legacy routes. The middleware polls `acquire(blocking=False)` instead of `to_thread(acquire)`, so a cancelled request can never leave the lock held. |
+
+
+## T2-12 Extension skeleton (2026-11-18)
+- Popup is a separate tiny Preact view (`src/targets/extension/Popup.tsx`), not `App`; no three.js/character stage in popup bundle.
+- Streak displayed as 0 until Phase 4 (no streak backend yet).
+- Today's step = journey `day` plus first gate in `GATE_ORDER` that is false, mapped to `popup.gate.<gate>` i18n key (or `popup.complete`).
+- Token storage uses `chrome.storage.session` only; `chrome.storage.local`/`sync` are never touched.
+- Side panel opens via `chrome.sidePanel.open({ windowId })` from popup button click.
