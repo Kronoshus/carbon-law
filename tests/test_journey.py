@@ -225,9 +225,9 @@ def test_engagement_and_payment_need_the_firms_own_clearance():
 
 
 def test_gates_never_open_on_a_hold():
+    # a possible conflict holds everything until the firm decides (its "cleared" releases it: T5-03)
     facts = {"ai_disclosed": "t", "consent": "t", "consent_answer": "yes", "names_submitted": "t",
-             "conflict_auto": "t", "conflict_auto_result": "possible", "conflict_firm": "t",
-             "conflict_firm_result": "cleared", "scope_approved": "t", "engagement_signed": "t", "paid": "t",
+             "conflict_auto": "t", "conflict_auto_result": "possible", "scope_approved": "t", "engagement_signed": "t", "paid": "t",
              "drafts_ready": "t", "attorney_approved": "t", "client_confirmed": "t", "signed": "t"}
     g = journey.gates(facts)
     assert g["may_disclose"] and g["may_consent"]
