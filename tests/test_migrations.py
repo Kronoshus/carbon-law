@@ -22,8 +22,10 @@ if _orig_db_path is None:
 else:
     os.environ["CARBON_DB_PATH"] = _orig_db_path
 
+MIGRATIONS = sorted(os.path.basename(p)[:-4] for p in __import__('glob').glob(os.path.join(BACKEND, "migrations", "*.sql")))
 TABLES = {"schema_migrations", "settings", "journeys", "journey_events",
-          "jobs", "ai_calls", "events", "characters"}
+          "jobs", "ai_calls", "events", "characters", "content_sources", "content_lessons",
+          "content_steps", "content_items", "content_approvals"}
 
 
 def test_migrate_from_empty_sqlite():
@@ -32,7 +34,7 @@ def test_migrate_from_empty_sqlite():
     names = {r[0] for r in rows}
     for t in TABLES:
         assert t in names, t
-    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+    assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATIONS)
 
 
 def test_migrate_is_idempotent():
@@ -113,13 +115,13 @@ conn.execute('CREATE SCHEMA public')
 conn.close()
 import db, migrate
 applied = migrate.run()
-assert applied == ['0001_aprende_core', '0002_characters']
+assert applied == MIGRATIONS
 tables = {{r[0] for r in db.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")}}
 for t in {tables!r}:
     assert t in tables, t
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATIONS)
 assert migrate.run() == []
-assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == 2
+assert db.query("SELECT COUNT(*) FROM schema_migrations")[0][0] == len(MIGRATIONS)
 print("postgres migration ok")
 """.format(url=pg_url, backend=BACKEND, tables=sorted(TABLES))
     r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)

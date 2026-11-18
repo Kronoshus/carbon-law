@@ -20,8 +20,8 @@ steps:
         legal: true
         source: pc-6110
         answer: 2
-        es: {prompt: ¿Cuántos testigos?, options: [Ninguno, Uno, Dos], explain: Dos testigos presentes juntos.}
-        en: {prompt: How many witnesses?, options: [None, One, Two], explain: Two witnesses present together.}
+        es: {prompt: "¿Cuántos testigos?", options: [Ninguno, Uno, Dos], explain: Dos testigos presentes juntos.}
+        en: {prompt: "How many witnesses?", options: [None, One, Two], explain: Two witnesses present together.}
       - id: demo.1.3
         kind: truefalse
         answer: false

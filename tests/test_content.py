@@ -169,7 +169,8 @@ def test_cli_validate_reports_errors():
     bad = tempfile.mkdtemp()
     shutil.copytree(FIX, bad, dirs_exist_ok=True)
     path = os.path.join(bad, "lessons", "demo.yaml")
-    open(path, "w", encoding="utf-8").write(open(path, encoding="utf-8").read().replace("source: pc-6110\n        es: {text", "es: {text", 1))
+    _txt = open(path, encoding="utf-8").read()
+    open(path, "w", encoding="utf-8").write(_txt.replace("source: pc-6110\n        es: {text", "es: {text", 1))
     r = subprocess.run([sys.executable, "-m", "aprende.content", "validate", bad], cwd=os.path.join(ROOT, "backend"),
                        capture_output=True, text=True)
     assert r.returncode != 0 and "demo.1.1" in (r.stdout + r.stderr)
