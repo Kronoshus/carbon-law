@@ -1486,6 +1486,10 @@ def set_stage(matter_id: str, stage: str, authorization: Optional[str]=Header(No
     save_data()
     return matters[matter_id]
 
+# Aprende journey routes (T2-06)
+from aprende import routes_journey as _rj
+app.include_router(_rj.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
