@@ -27,7 +27,9 @@ export default defineConfig(({ mode }) => {
       }
     });
   }
+  const base = process.env.VITE_BASE || '/';
   return {
+    base,
     plugins,
     esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
     resolve: { alias: { '@': resolve(__dirname, 'src') } },

@@ -324,8 +324,10 @@ def test_workflow_attorney_consultation_and_signing_gates():
     assert c.patch(f"/workflows/{wid}/appointment",json={"kind":"signing","scheduled_at":"2030-01-02T10:00:00-07:00"},headers=ah).json()["stage"]=="complete"
 
 
-def test_demo_conflict_review_is_explicit_and_delayed():
+def test_demo_conflict_review_is_explicit_and_delayed(monkeypatch):
+    import app as backend_app
     from app import workflows
+    monkeypatch.setattr(backend_app, "_beam_review_summary", lambda name, filled: "Stub Beam summary of " + name)
     client=c.post("/auth/signup",json={"name":"Demo Client","email":"demo-flow@example.com","password":"long-secure-password"}).json()
     h={"Authorization":"Bearer "+client["token"]}
     pending=c.post("/workflows",json={"related_names":["Demo Person"]},headers=h).json()

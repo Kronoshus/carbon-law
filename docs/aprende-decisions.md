@@ -48,3 +48,5 @@ recorded when Carbon Law answers `aprende-questions.md`.
 
 Phase 1 ran in one head-engineer session (no sub-agents). The harness does not report cumulative token spend;
 the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on will include the builder agents' use.
+
+- T2-10 (2026-11-17): Vite `base` is read from `VITE_BASE` (with fallbacks `VITE_BASE_URL`, `BASE_PATH`, `BASE_URL`, `BASE`, `PUBLIC_URL`) defaulting to `/`; Pages workflow sets `VITE_BASE=/aprende/` and copies `aprende/dist/web` into `_site/aprende` without touching the existing `web/` site files.

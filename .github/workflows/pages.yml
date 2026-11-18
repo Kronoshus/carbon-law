@@ -17,8 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/setup-node@v4
         with:
-          path: web
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: aprende/package-lock.json
+      - name: configure pages
+        uses: actions/configure-pages@v5
+      - name: build aprende web
+        working-directory: aprende
+        env:
+          VITE_BASE: /aprende/
+        run: |
+          npm ci
+          npm run build:web
+      - name: assemble artifact
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          if [ -d web ]; then cp -a web/. _site/; fi
+          mkdir -p _site/aprende
+          cp -a aprende/dist/web/. _site/aprende/
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
       - uses: actions/deploy-pages@v4
