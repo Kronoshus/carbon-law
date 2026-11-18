@@ -30,16 +30,11 @@ def replace_list(csv_text):
     rows = list(reader)
     if rows and rows[0] and (rows[0][0] or "").strip().lower() == "name":
         rows = rows[1:]
-    names = []
-    for r in rows:
-        if not r:
-            continue
-        val = (r[0] or "").strip()
-        if val:
-            names.append(val)
-    db.execute("DELETE FROM conflict_names")
-    for n in names:
-        db.execute("INSERT INTO conflict_names (name) VALUES (?)", (n,))
+    names = list(dict.fromkeys(v for v in ((r[0] or "").strip() for r in rows if r) if v))   # in order, no repeats
+    with db.transaction() as conn:                       # the old list stays in force until the new one is complete
+        conn.execute("DELETE FROM conflict_names")
+        for n in names:
+            conn.execute("INSERT INTO conflict_names (name) VALUES (?)", (n,))
     return {"count": len(names)}
 
 
@@ -54,7 +49,8 @@ def _run_for(journey_id, names):
         result = "no_list"
         matches = []
     else:
-        matches = conflict_hits(" ".join(names or []), firm) or []
+        # each submitted name on its own, so words from two different people never combine into a match
+        matches = list(dict.fromkeys(m for n in names or [] for m in conflict_hits(n, firm)))
         result = "possible" if matches else "clear"
     db.execute(
         "INSERT INTO conflict_checks (id, journey_id, names_json, matches_json, result, created_at) "

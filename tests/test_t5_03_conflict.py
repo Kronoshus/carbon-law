@@ -100,6 +100,16 @@ def test_the_automatic_check(alerts, names, result):
     assert state(h)["conflict"] == ("clear" if result == "clear" else "hold")
 
 
+def test_names_from_two_people_never_combine_into_a_match(alerts):
+    upload()
+    j = submit(client(), ["Lucía Roberto", "Méndez Torres"])       # "Roberto" and "Méndez" side by side, but two people
+    assert auto_payloads(j["id"]) == [{"result": "clear"}]
+
+
+def test_a_list_with_repeated_names_uploads_once_each():
+    assert upload("name\nRoberto Méndez\nRoberto Méndez\nAcme Holdings LLC\n")["count"] == 2
+
+
 def test_the_list_upload_is_staff_only():
     h = client()
     assert c.post("/conflicts/list", json={"csv": LIST_CSV}, headers=h).status_code == 403
