@@ -44,5 +44,10 @@
   "popup.gate.may_see_documents": "Ver los documentos",
   "popup.gate.may_book_signing": "Agendar la firma",
   "popup.gate.may_take_final_lesson": "Tomar la lección final",
-  "popup.complete": "Completado"
+  "popup.complete": "Completado",
+  "character.aiLabel": "Programa de IA · no es el abogado",
+  "character.calavera.name": "La Calavera",
+  "character.pinata.name": "Piñata",
+  "character.oso.name": "El Oso",
+  "character.stageLabel": "{name}, un personaje animado; es un programa de inteligencia artificial, no el abogado"
 }

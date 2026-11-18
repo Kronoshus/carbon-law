@@ -14,6 +14,7 @@ import { Bienvenida } from './screens/Bienvenida';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
+import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 
@@ -33,7 +34,6 @@ export function App() {
       if (!tok && !isPublic) {
         navigate('/bienvenida');
       } else if (tok && isPublic) {
-        // landing route
         try {
           const res = await fetch('/journey', { headers: { Authorization: `Bearer ${tok}` } });
           if (res.ok) {
@@ -50,6 +50,10 @@ export function App() {
     })();
     return () => { cancelled = true; };
   }, [r]);
+
+  if (ready && import.meta.env?.DEV && r === '/dev/personaje') {
+    return h(DevCharacter, null);
+  }
 
   if (!ready) return null;
 
