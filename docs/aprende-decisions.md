@@ -53,4 +53,5 @@ the session's context reached about 0.4 M tokens. Phase reports from Phase 2 on 
 
 | Ticket | Decision |
 |---|---|
+| T2-10 | Vite `base` comes from `VITE_BASE` (default `/`); the Pages workflow builds with `VITE_BASE=/aprende/` and copies `aprende/dist/web` into `_site/aprende` without touching the existing `web/` files. Tests may not reach the network (`tests/conftest.py`): the existing demo-drafting test had been calling the real Beam API with the local key on every run. |
 | T2-09 | Worker loop runs in-process in the web service (daemon thread) gated by `APRENDE_INPROCESS_WORKER=1`; `render.yaml` has no paid worker service. `backend/worker.py` exposes `run_forever(stop_event)` and `start_in_background()`. `python -m backend.worker` still works for a separate process. Backoff 60/300/1800s. |
