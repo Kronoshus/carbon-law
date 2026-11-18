@@ -126,5 +126,13 @@
   "map.node.documents.day": "Day 9",
   "map.node.signing": "Signing",
   "map.node.signing.day": "Day 13",
-  "price.howTo": "Each lesson you finish takes $100 off."
+  "price.howTo": "Each lesson you finish takes $100 off.",
+  "leccion.kind.match": "Match the pairs",
+  "leccion.kind.order": "Put the steps in order",
+  "leccion.kind.listen": "Listen and answer",
+  "leccion.up": "Move “{step}” up",
+  "leccion.down": "Move “{step}” down",
+  "leccion.showText": "Show text",
+  "leccion.play": "Play",
+  "leccion.pairNo": "pair {n}"
 }

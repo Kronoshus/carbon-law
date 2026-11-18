@@ -32,3 +32,27 @@
 .celebration { margin: var(--s4); display: grid; gap: var(--s4); text-align: center; }
 .celebration h1 { font-size: var(--step-2); }
 .lesson-note { color: var(--text-soft); }
+
+/* match (Piñata's game): two columns of tiles; a pair shares a number and a colour */
+.match { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.match-col { display: grid; gap: var(--s2); align-content: start; }
+.tile { display: flex; align-items: center; gap: var(--s2); min-block-size: var(--tap); padding: var(--s2) var(--s3); text-align: start;
+        border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); color: var(--text);
+        box-shadow: var(--ledge); font: 600 var(--step-0)/1.25 var(--font-body); cursor: pointer; }
+.tile[aria-pressed="true"] { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
+.tile[data-pair="1"] { background: color-mix(in oklab, var(--teal) 30%, var(--card)); }
+.tile[data-pair="2"] { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
+.tile[data-pair="3"] { background: color-mix(in oklab, var(--gold) 40%, var(--card)); }
+.tile[data-pair="4"] { background: color-mix(in oklab, var(--purple) 18%, var(--card)); }
+.pair-no { display: grid; place-items: center; inline-size: 1.6rem; block-size: 1.6rem; flex: none; border-radius: 50%;
+           background: var(--plum); color: #fff; font: 800 var(--step--1)/1 var(--font-display); }
+/* order: rows with up/down buttons */
+.order { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.order-row { display: flex; align-items: center; gap: var(--s2); padding: var(--s1) var(--s1) var(--s1) var(--s3); background: var(--card);
+             border: var(--stroke) solid var(--outline); border-radius: var(--radius); box-shadow: var(--ledge); }
+.order-no { font: 800 var(--step-0)/1 var(--font-display); color: var(--text-soft); }
+.order-text { flex: 1; font-weight: 600; }
+.order-row .icon-btn { font-size: var(--step-1); }
+.order-row .icon-btn:disabled { opacity: .35; }
+.listen-actions { display: flex; gap: var(--s2); flex-wrap: wrap; }
+.listen-actions .btn { inline-size: auto; }

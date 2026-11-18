@@ -126,5 +126,13 @@
   "map.node.documents.day": "Día 9",
   "map.node.signing": "La firma",
   "map.node.signing.day": "Día 13",
-  "price.howTo": "Cada lección completada le quita $100."
+  "price.howTo": "Cada lección completada le quita $100.",
+  "leccion.kind.match": "Una cada pareja",
+  "leccion.kind.order": "Ordene los pasos",
+  "leccion.kind.listen": "Escuche y responda",
+  "leccion.up": "Subir «{step}»",
+  "leccion.down": "Bajar «{step}»",
+  "leccion.showText": "Mostrar texto",
+  "leccion.play": "Escuchar",
+  "leccion.pairNo": "pareja {n}"
 }
