@@ -1517,6 +1517,8 @@ app.include_router(_rp.router)
 # Aprende learn routes (T4-03)
 from aprende import routes_learn as _rl
 app.include_router(_rl.router)
+from aprende import chat as _chat
+app.include_router(_chat.router)
 
 # Aprende progress routes (T4-06)
 from aprende import routes_progress as _rpr
