@@ -60,6 +60,7 @@ export class CharacterEngine {
       const GLTFLoader = mod.GLTFLoader;
       this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       this.renderer.setClearColor(0x111111);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // crisp on phones, capped for low-end GPUs
       const s = Math.min(canvas.clientWidth || 256, canvas.clientHeight || 256);
       this.renderer.setSize(s, s, false);
       this.scene = new THREE.Scene();
@@ -140,7 +141,7 @@ export class CharacterEngine {
     const canvas = this.canvas;
     if (canvas && this.renderer) {
       const s = Math.min(canvas.clientWidth || 256, canvas.clientHeight || 256);
-      if (this.renderer.domElement.width !== s) this.renderer.setSize(s, s, false);
+      if (this.renderer.domElement.width !== Math.round(s * this.renderer.getPixelRatio())) this.renderer.setSize(s, s, false);
     }
     this.jaw += (this.mouth - this.jaw) * JAW_SMOOTH;
     if (t > this.nextBlink + 220) this.nextBlink = t + 2200 + Math.random() * 3800;

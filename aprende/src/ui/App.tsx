@@ -14,7 +14,7 @@ import { Bienvenida } from './screens/Bienvenida';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
-import { CharacterStage } from './CharacterStage';
+import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 
@@ -52,7 +52,7 @@ export function App() {
   }, [r]);
 
   if (ready && import.meta.env?.DEV && r === '/dev/personaje') {
-    return h(CharacterStage, { character: 'calavera' });
+    return h(DevCharacter, null);
   }
 
   if (!ready) return null;

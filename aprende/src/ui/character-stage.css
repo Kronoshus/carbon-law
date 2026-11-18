@@ -1,0 +1,7 @@
+.character-stage { position: relative; margin: 0; aspect-ratio: 1; inline-size: 100%; max-inline-size: 32rem; overflow: clip;
+                   border: var(--stroke) solid var(--outline); border-radius: var(--radius-lg); background: var(--night); }
+.character-canvas, .character-still { display: block; inline-size: 100%; block-size: 100%; }
+.character-still { background-size: cover; background-position: center; }
+.character-still img { inline-size: 100%; block-size: 100%; object-fit: contain; }
+.character-label { position: absolute; inset: var(--s3) auto auto var(--s3); padding: var(--s1) var(--s3); border-radius: var(--pill);
+                   background: rgb(28 16 48 / .78); color: #fff; font: 600 var(--step--1)/1.3 var(--font-body); }
