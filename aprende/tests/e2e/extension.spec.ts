@@ -6,18 +6,18 @@ import os from 'node:os';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXT_PATH = path.resolve(__dirname, '../../dist/extension');
-const EXECUTABLE = process.env.PW_CHROMIUM || '/home/dkkm10/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome';
+const EXECUTABLE = process.env.PW_CHROMIUM;
 
 test('popup reads journey and opens side panel', async () => {
   const context = await chromium.launchPersistentContext('', {
     headless: true,
-    executablePath: EXECUTABLE,
+    ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
   });
-  const [sw] = context.serviceWorkers();
+  const sw = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
   const extId = new URL(sw.url()).host;
   const page = await context.newPage();
   const consoleErrors: string[] = [];
@@ -59,13 +59,13 @@ test('storage.local stays empty and token clears on restart', async () => {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cl-t2-12-'));
   const context = await chromium.launchPersistentContext(userDataDir, {
     headless: true,
-    executablePath: EXECUTABLE,
+    ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
   });
-  const [sw] = context.serviceWorkers();
+  const sw = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
   const sidePage = await context.newPage();
   await sidePage.goto(`chrome-extension://${new URL(sw.url()).host}/sidepanel.html`);
   await sidePage.evaluate(async () => {
@@ -82,13 +82,13 @@ test('storage.local stays empty and token clears on restart', async () => {
 
   const context2 = await chromium.launchPersistentContext(userDataDir, {
     headless: true,
-    executablePath: EXECUTABLE,
+    ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
     args: [
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
   });
-  const [sw2] = context2.serviceWorkers();
+  const sw2 = context2.serviceWorkers()[0] ?? await context2.waitForEvent('serviceworker');
   const page2 = await context2.newPage();
   await page2.goto(`chrome-extension://${new URL(sw2.url()).host}/sidepanel.html`);
   const sessionAfter = await page2.evaluate(async () => (await chrome.storage.session.get('aprende_token')).aprende_token ?? null);
