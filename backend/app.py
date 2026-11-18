@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, APP_DIR)
 import db as _db
 ROOT_DIR = os.path.dirname(APP_DIR)
+sys.path.insert(0, ROOT_DIR)
 DATA_FILE = os.path.join(APP_DIR, "data.json")
 PROMPT_ROOT = os.path.join(ROOT_DIR, "prompt-library", "prompts", "california")
 TEMPLATE_ROOT = os.path.join(ROOT_DIR, "templates", "california")

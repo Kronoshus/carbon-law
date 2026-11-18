@@ -238,3 +238,77 @@ def test_key_not_in_logs(caplog):
         )
     srv.shutdown()
     assert "super-secret-key-xyz" not in caplog.text
+
+
+def test_401_no_retry():
+    state = {"calls": 0}
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length", "0"))
+            self.rfile.read(n)
+            state["calls"] += 1
+            self.send_response(401)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"unauthorized")
+
+        def log_message(self, *a):
+            pass
+
+    srv, port = _start_server(H)
+    # count rows before
+    before = db.query("SELECT COUNT(*) FROM ai_calls")[0][0]
+    client = BeamClient(base_url=f"http://127.0.0.1:{port}", api_key="k", timeout=5)
+    import asyncio
+
+    async def run():
+        await client.complete("sys", [{"role": "user", "content": "q"}], 10, purpose="chat")
+
+    try:
+        asyncio.get_event_loop().run_until_complete(run())
+    except ModelError:
+        pass
+    else:
+        srv.shutdown()
+        raise AssertionError("expected ModelError")
+    srv.shutdown()
+    assert state["calls"] == 1
+    after = db.query("SELECT COUNT(*) FROM ai_calls")[0][0]
+    assert after - before == 1
+    row = db.query("SELECT ok FROM ai_calls ORDER BY rowid DESC LIMIT 1")[0]
+    assert row[0] == 0
+
+
+def test_failed_call_writes_row_ok_zero():
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length", "0"))
+            self.rfile.read(n)
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"boom")
+
+        def log_message(self, *a):
+            pass
+
+    srv, port = _start_server(H)
+    before = db.query("SELECT COUNT(*) FROM ai_calls")[0][0]
+    client = BeamClient(base_url=f"http://127.0.0.1:{port}", api_key="k", timeout=5)
+    import asyncio
+
+    async def run():
+        await client.complete("sys", [{"role": "user", "content": "q"}], 10, purpose="chat")
+
+    try:
+        asyncio.get_event_loop().run_until_complete(run())
+    except ModelError:
+        pass
+    else:
+        srv.shutdown()
+        raise AssertionError("expected ModelError")
+    srv.shutdown()
+    after = db.query("SELECT COUNT(*) FROM ai_calls")[0][0]
+    assert after - before == 1
+    row = db.query("SELECT ok FROM ai_calls ORDER BY rowid DESC LIMIT 1")[0]
+    assert row[0] == 0

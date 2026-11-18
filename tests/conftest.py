@@ -1,3 +1,5 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """Tests never reach the network: any urllib request to a non-local host fails the test.
 (backend/app.py's demo drafting loads ~/.config/carbon-law/beam.env and would otherwise call the real Beam API.)"""
 import urllib.parse
