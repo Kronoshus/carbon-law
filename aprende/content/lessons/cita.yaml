@@ -1,0 +1,100 @@
+id: cita
+unit: bonus
+day: null
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Qué traer a su cita de firma
+  en: What to bring to your signing
+steps:
+- id: cita.1
+  title:
+    es: Quién firma y quién es testigo
+    en: Who signs and who witnesses
+  items:
+  - id: cita.1.1
+    kind: explain
+    legal: true
+    source: pc-6110
+    es:
+      text: Su testamento lo firman usted y dos testigos presentes al mismo tiempo.
+    en:
+      text: Your will is signed by you and two witnesses present at the same time.
+  - id: cita.1.2
+    kind: explain
+    legal: true
+    source: pc-6112
+    es:
+      text: Es mejor que ningún testigo de su testamento reciba algo en él.
+    en:
+      text: It is best that no witness to your will receives anything under it.
+  - id: cita.1.3
+    kind: explain
+    legal: true
+    source: pc-4122
+    es:
+      text: Su poder notarial y su directiva de salud se firman ante notario o con dos testigos, y su agente no puede ser testigo.
+    en:
+      text: Your power of attorney and your health care directive are signed before a notary or with two witnesses, and your agent cannot be a witness.
+  - id: cita.1.4
+    kind: choice
+    legal: true
+    source: pc-6112
+    answer: 2
+    es:
+      prompt: ¿Quién NO debería ser testigo de su testamento?
+      options:
+      - Un vecino
+      - Un compañero de trabajo
+      - Su hija, que recibe su casa en el testamento
+      explain: Quien recibe algo en el testamento no debería ser testigo.
+    en:
+      prompt: Who should NOT witness your will?
+      options:
+      - A neighbor
+      - A coworker
+      - Your daughter, who receives your house under the will
+      explain: Someone who receives something under the will should not be a witness.
+- id: cita.2
+  title:
+    es: Qué traer
+    en: What to bring
+  items:
+  - id: cita.2.1
+    kind: explain
+    es:
+      text: Traiga una identificación oficial con foto vigente; el notario la necesita.
+    en:
+      text: Bring a current government photo ID; the notary needs it.
+  - id: cita.2.2
+    kind: explain
+    es:
+      text: Si va a poner su casa en el fideicomiso, traiga la escritura y sus estados de cuenta recientes.
+    en:
+      text: If you will put your house in the trust, bring the deed and your recent account statements.
+  - id: cita.2.3
+    kind: explain
+    es:
+      text: 'Piense dónde guardará los originales: un lugar seguro que su albacea sepa encontrar.'
+    en:
+      text: 'Think about where you will keep the originals: a safe place your executor knows how to find.'
+  - id: cita.2.4
+    kind: order
+    character: pinata
+    es:
+      prompt: Ordene los pasos del día de la firma
+      steps:
+      - Llegar con su identificación
+      - Revisar los documentos con el abogado
+      - Firmar con testigos y notario
+      - Llevarse sus originales
+      explain: ¡Listo para firmar!
+    en:
+      prompt: Put the signing-day steps in order
+      steps:
+      - Arrive with your ID
+      - Review the documents with the attorney
+      - Sign with witnesses and notary
+      - Take your originals home
+      explain: Ready to sign!

@@ -1,6 +1,6 @@
 """FastAPI routes for Aprende characters (T3-06)."""
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 import app as backend_app
 from aprende import characters
