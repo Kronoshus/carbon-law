@@ -173,9 +173,12 @@ def get_user_from_token(token):
         del sessions[token]; save_data(); return None
     for u in users.values():
         if u["id"] == uid:
-            # slide session expiry forward on use
-            sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+_session_delta(u)).isoformat()}
-            save_data()
+            # slide only for clients, and only when < 29 days remain
+            if u.get("role") == "client" and exp:
+                remaining = datetime.datetime.fromisoformat(exp) - datetime.datetime.utcnow()
+                if remaining < datetime.timedelta(days=29):
+                    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+_session_delta(u)).isoformat()}
+                    save_data()
             return u
     return None
 
@@ -1266,7 +1269,7 @@ def signup(req: SignupRequest):
     if len(req.password) < 6:
         raise HTTPException(400,"password must be at least 6 characters")
     if req.source == "aprende" and not req.adult:
-        raise HTTPException(400, "adult consent required")
+        raise HTTPException(400, "adult confirmation required")
     req.email = req.email.strip().lower()
     if any(email.strip().lower() == req.email for email in users): raise HTTPException(400,"user already exists")
     if req.role not in ROLES: req.role="client"
@@ -1275,10 +1278,13 @@ def signup(req: SignupRequest):
     # only allow elevated via seed; public signup -> client
     role = "client"
     uid = str(uuid.uuid4())
-    users[req.email] = {"id":uid,"name":req.name,"email":req.email,"role":role,
+    _user_rec = {"id":uid,"name":req.name,"email":req.email,"role":role,
                         "password_hash":hash_pw(req.password),"created_at":now_iso()}
+    if req.source == "aprende" and req.adult:
+        _user_rec["adult_confirmed_at"] = now_iso()
+    users[req.email] = _user_rec
     token = str(uuid.uuid4())
-    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+datetime.timedelta(days=30)).isoformat()}
+    sessions[token] = {"user_id":uid,"expires":(datetime.datetime.utcnow()+_session_delta(users[req.email])).isoformat()}
     log_audit(req.email,"signup","user",uid)
     save_data()
     return {"token":token,"user":public_user(users[req.email])}
@@ -1318,9 +1324,7 @@ def login(req: LoginRequest):
     if not u["password_hash"].startswith("scrypt$"):
         u["password_hash"] = hash_pw(req.password)
     token = str(uuid.uuid4())
-    _days = 30 if u.get("role") == "client" else 1
-    _delta = datetime.timedelta(days=_days) if u.get("role") == "client" else datetime.timedelta(hours=24)
-    sessions[token] = {"user_id":u["id"],"expires":(datetime.datetime.utcnow()+_delta).isoformat()}
+    sessions[token] = {"user_id":u["id"],"expires":(datetime.datetime.utcnow()+_session_delta(u)).isoformat()}
     save_data()
     return {"token":token,"user":public_user(u)}
 

@@ -16,17 +16,19 @@ export async function clearToken(): Promise<void> {
 
 export type ApiOptions = RequestInit & { json?: unknown };
 
+const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN as string | undefined) ?? '';
+
 export async function apiFetch(path: string, options: ApiOptions = {}): Promise<Response> {
+  const platform = getPlatform();
   const { json, headers, ...rest } = options;
-  const token = await getToken();
+  const token = await platform.storage.get(TOKEN_KEY);
   const h = new Headers(headers);
   if (json !== undefined) h.set('Content-Type', 'application/json');
   if (token) h.set('Authorization', `Bearer ${token}`);
   const body = json !== undefined ? JSON.stringify(json) : (options as RequestInit).body;
-  return fetch(path, { ...rest, headers: h, body });
+  const res = await fetch(`${API_ORIGIN}${path}`, { ...rest, headers: h, body });
+  if (res.status === 401) {
+    await platform.storage.remove(TOKEN_KEY);
+  }
+  return res;
 }
-
-export const api = apiFetch;
-export const request = apiFetch;
-
-export default apiFetch;
