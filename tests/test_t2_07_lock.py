@@ -97,7 +97,7 @@ def test_legacy_lock_blocks_ensure_matter():
     result = {}
 
     def holder():
-        with legacy.legacy_lock():
+        with backend._request_lock:
             acquired.set()
             released.wait(timeout=5)
         # lock released
@@ -119,3 +119,26 @@ def test_legacy_lock_blocks_ensure_matter():
     t1.join(timeout=5)
     assert done.is_set()
     assert result.get("mid")
+
+
+
+def test_cancelled_waiter_does_not_leave_the_lock_held():
+    import asyncio
+    import app as backend_app
+    from starlette.requests import Request
+
+    async def scenario():
+        backend_app._request_lock.acquire()                     # a legacy request is running
+        scope = {"type": "http", "method": "GET", "path": "/matters", "headers": [], "query_string": b""}
+
+        async def call_next(request):
+            raise AssertionError("must not run")
+        waiter = asyncio.ensure_future(backend_app.serialize_requests(Request(scope), call_next))
+        await asyncio.sleep(0.05)
+        waiter.cancel()                                         # the client went away while waiting
+        await asyncio.gather(waiter, return_exceptions=True)
+        backend_app._request_lock.release()
+        await asyncio.sleep(0.05)
+        assert backend_app._request_lock.acquire(blocking=False), "lock leaked to a cancelled waiter"
+        backend_app._request_lock.release()
+    asyncio.run(scenario())

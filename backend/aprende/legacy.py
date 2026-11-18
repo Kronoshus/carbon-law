@@ -1,6 +1,4 @@
 """Legacy bridge: create/update matters in the legacy portal from an Aprende journey."""
-import asyncio
-import threading
 import uuid
 
 import app as backend_app
@@ -66,30 +64,3 @@ def set_stage(journey, stage):
         backend_app.save_data()
         return backend_app.matters[mid]
 
-
-class _LegacyLock:
-    """Dual-mode context manager over the shared legacy threading lock.
-
-    Works both as ``with legacy.legacy_lock():`` (sync, e.g. inside worker threads) and
-    ``async with legacy.legacy_lock():`` (async, without blocking the event loop).
-    """
-
-    def __enter__(self):
-        backend_app._request_lock.acquire()
-        return self
-
-    def __exit__(self, *exc):
-        backend_app._request_lock.release()
-        return False
-
-    async def __aenter__(self):
-        await asyncio.to_thread(backend_app._request_lock.acquire)
-        return self
-
-    async def __aexit__(self, *exc):
-        backend_app._request_lock.release()
-        return False
-
-
-def legacy_lock():
-    return _LegacyLock()

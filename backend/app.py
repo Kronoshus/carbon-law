@@ -58,7 +58,8 @@ async def serialize_requests(request, call_next):
         return await call_next(request)
     if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
         return await call_next(request)
-    await asyncio.to_thread(_request_lock.acquire)
+    while not _request_lock.acquire(blocking=False):   # polled, not to_thread(acquire): a cancelled request must never
+        await asyncio.sleep(0.005)                      # leave a background thread holding the lock
     try:
         return await call_next(request)
     finally:
