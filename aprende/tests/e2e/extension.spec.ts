@@ -66,15 +66,35 @@ test('storage.local stays empty and token clears on restart', async () => {
     ],
   });
   const sw = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
-  const sidePage = await context.newPage();
-  await sidePage.goto(`chrome-extension://${new URL(sw.url()).host}/sidepanel.html`);
-  await sidePage.evaluate(async () => {
-    await chrome.storage.session.set({ aprende_token: 'tok' });
+  const extId = new URL(sw.url()).host;
+  const page = await context.newPage();
+
+  await page.route('**/auth/login', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ token: 'tok-123' }),
+    });
   });
-  const sessionBefore = await sidePage.evaluate(async () => (await chrome.storage.session.get('aprende_token')).aprende_token);
-  expect(sessionBefore).toBe('tok');
-  const localBefore = await sidePage.evaluate(async () => Object.keys(await chrome.storage.local.get(null)));
-  const syncBefore = await sidePage.evaluate(async () => Object.keys(await chrome.storage.sync.get(null)));
+  await page.route('**/journey', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 'j1', user_id: 'u1', day: 1, facts: {}, gates: {}, conflict: 'clear' }),
+    });
+  });
+
+  await page.goto(`chrome-extension://${extId}/sidepanel.html`);
+  await page.getByRole('link', { name: 'Iniciar sesión' }).click();
+  await page.waitForTimeout(1000);
+  await page.getByLabel('Correo electrónico').fill('a@b.com');
+  await page.getByLabel('Contraseña').fill('secret');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+
+  await expect.poll(async () => await page.evaluate(async () => (await chrome.storage.session.get('aprende_token')).aprende_token)).toBe('tok-123');
+
+  const localBefore = await page.evaluate(async () => Object.keys(await chrome.storage.local.get(null)));
+  const syncBefore = await page.evaluate(async () => Object.keys(await chrome.storage.sync.get(null)));
   expect(localBefore).toEqual([]);
   expect(syncBefore).toEqual([]);
 

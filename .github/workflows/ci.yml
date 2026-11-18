@@ -72,4 +72,5 @@ jobs:
       - run: python -m pip install -r requirements.txt -r backend/requirements.txt
       - run: cd aprende && npm ci
       - run: cd aprende && npx playwright install --with-deps chromium
+      - run: cd aprende && npm run build:ext
       - run: cd aprende && npm run test:e2e
