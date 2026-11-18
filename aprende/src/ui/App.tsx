@@ -14,6 +14,7 @@ import { Bienvenida } from './screens/Bienvenida';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
+import { Plan } from './screens/Plan';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
@@ -61,6 +62,7 @@ export function App() {
   if (r === '/bienvenida') screen = h(Bienvenida, null);
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
+  else if (r === '/plan') screen = h(Plan, null);
   else screen = h(Placeholder, null);
 
   if (PUBLIC.has(r)) return screen;

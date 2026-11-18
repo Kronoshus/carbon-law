@@ -49,5 +49,17 @@
   "character.calavera.name": "La Calavera",
   "character.pinata.name": "Piñata",
   "character.oso.name": "El Oso",
-  "character.stageLabel": "{name}, an animated character; an artificial intelligence program, not the attorney"
+  "character.stageLabel": "{name}, an animated character; an artificial intelligence program, not the attorney",
+  "price.loading": "Loading…",
+  "price.por": "for",
+  "price.placeholder": "example",
+  "price.event.lesson_completed:will": "1 lesson",
+  "doc.will": "Your will",
+  "doc.trust": "Trust",
+  "doc.poa": "Power of attorney",
+  "doc.ahcd": "Health care directive",
+  "price.seals.one": "{count} of 5 discount steps completed",
+  "price.seals.other": "{count} of 5 discount steps completed",
+  "price.sum.one": "{base} − {discount} for {count} lesson",
+  "price.sum.other": "{base} − {discount} for {count} lessons"
 }
