@@ -1,4 +1,5 @@
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
+import { IconSprite } from './Icons';
 import '@fontsource/work-sans/400.css';
 import '@fontsource/work-sans/600.css';
 import '@fontsource/work-sans/700.css';
@@ -20,7 +21,7 @@ import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 
-export function App() {
+function Screens() {
   const r = route.value;
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const [ready, setReady] = useState(true);
@@ -75,4 +76,9 @@ export function App() {
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
+}
+
+/** The icon sprite is drawn once for every screen (the shell and the full-screen lesson player). */
+export function App() {
+  return h(Fragment, null, h(IconSprite, null), h(Screens, null));
 }

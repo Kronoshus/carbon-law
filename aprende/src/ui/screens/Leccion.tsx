@@ -1,293 +1,176 @@
-import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { t } from '../../core/i18n';
-import type { I18nKey } from '../../core/i18n-keys';
+import { h, type ComponentChildren } from 'preact';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { t, lang } from '../../core/i18n';
 import { apiFetch } from '../../core/api';
 import { platform } from '../../platform';
 import { navigate } from '../../core/router';
-import { CharacterStage } from '../CharacterStage';
+import { startAt, clear, retryLater, finished, type QueueState } from '../../core/lesson/queue';
+import type { CharacterEngine } from '../../core/character/engine';
 import type { CharacterState } from '../../core/character/states';
+import { CharacterStage } from '../CharacterStage';
+import { Icon } from '../Icons';
+import './lesson.css';
 
+type Character = 'calavera' | 'pinata' | 'oso';
 interface Item {
-  id: string;
-  kind: string;
-  character?: string;
-  sensitive?: boolean;
-  text?: string;
-  statement?: string;
-  prompt?: string;
-  story?: string;
-  options?: string[];
-  left?: { key: string; text: string }[];
-  right?: { key: string; text: string }[];
-  steps?: { key: string; text: string }[];
-  explain?: string;
+  id: string; kind: string; character?: Character; sensitive?: boolean;
+  text?: string; story?: string; prompt?: string; statement?: string; options?: string[];
 }
+interface Lesson { id: string; title: string; character: Character; sensitive: boolean; steps: { id: string; title: string; items: Item[] }[] }
+interface Feedback { correct: boolean; explain: string | null; source: { kind: string; cite: string; url: string } | null; petals: number }
 
-interface Step { id: string; title: string; items: Item[]; }
+const SUPPORTED = new Set(['explain', 'choice', 'scenario', 'truefalse']);   // match, order, listen: T4-05
+const posKey = (id: string) => `aprende.lesson.${id}`;
 
-interface Lesson { id: string; title: string; character: string; sensitive: boolean; steps: Step[]; }
-
-interface Feedback { correct: boolean; explain: string | null; source: { kind: string; cite: string; url: string } | null; }
+/** What the character says for an item: the explanation, or the question. */
+const spoken = (it: Item) => it.text ?? it.statement ?? it.prompt ?? '';
 
 export function Leccion({ id }: { id: string }) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [queue, setQueue] = useState<Item[]>([]);
+  const [failure, setFailure] = useState<'locked' | 'error' | null>(null);
+  const [state, setState] = useState<QueueState | null>(null);
+  const [choice, setChoice] = useState<number | boolean | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [doneCount, setDoneCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [completed, setCompleted] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [wrongItems, setWrongItems] = useState<Item[]>([]);
-  const [repasarMode, setRepasarMode] = useState(false);
-  const engineRef = useRef<{ speak: (t: string, l: 'es' | 'en') => Promise<void> } | null>(null);
-  const langVal = (document.documentElement.lang === 'en' ? 'en' : 'es') as 'es' | 'en';
+  const [result, setResult] = useState<{ completed: boolean; score: number } | null>(null);
+  const [streak, setStreak] = useState(0);
+  const engine = useRef<CharacterEngine | null>(null);
+  const [engineTick, setEngineTick] = useState(0);      // a (new) character engine is ready to speak
+  const l = lang.value;
 
-  const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const steps = useMemo(() => lesson?.steps.map((s) => s.items.map((it) => it.id)) ?? [], [lesson]);
+  const byId = useMemo(() => new Map(lesson?.steps.flatMap((s) => s.items).map((it) => [it.id, it]) ?? []), [lesson]);
+  const total = steps.reduce((n, s) => n + s.length, 0);
+  const item = state && !finished(state) ? byId.get(state.queue[0]) ?? null : null;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}?lang=${langVal}`);
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json() as Lesson;
-        if (cancelled) return;
-        setLesson(data);
-        const allItems = data.steps.flatMap((s) => s.items);
-        setTotal(allItems.length);
-        // resume
-        const pos = await platform.storage.get(`aprende_lesson_pos_${id}`);
-        let si = 0; let startItem: Item | null = null;
-        if (pos) {
-          try {
-            const p = JSON.parse(pos);
-            if (typeof p.stepIndex === 'number') si = p.stepIndex;
-            if (p.itemId) startItem = allItems.find((it) => it.id === p.itemId) || null;
-          } catch { /* ignore */ }
-        }
-        si = Math.min(si, Math.max(0, data.steps.length - 1));
-        setStepIndex(si);
-        const stepItems = data.steps[si]?.items || [];
-        if (startItem && stepItems.some((it) => it.id === startItem!.id)) {
-          // move startItem to front
-          const idx = stepItems.findIndex((it) => it.id === startItem!.id);
-          const q = [...stepItems];
-          if (idx > 0) { const [it] = q.splice(idx, 1); q.unshift(it); }
-          setQueue(q);
-        } else {
-          setQueue([...stepItems]);
-        }
-      } catch (e) {
-        if (!cancelled) setError(String(e));
-      }
+      const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}?lang=${l}`);
+      if (cancelled) return;
+      if (!res.ok) { setFailure(res.status === 409 ? 'locked' : 'error'); return; }
+      const data = (await res.json()) as Lesson;
+      const saved = await platform.storage.get(posKey(id));
+      const pos = saved ? (JSON.parse(saved) as { step: number; item: string }) : { step: 0, item: undefined };
+      if (cancelled) return;
+      setLesson(data);
+      setState(startAt(data.steps.map((s) => s.items.map((it) => it.id)), pos.step, pos.item));
+      const p = await apiFetch('/progress');
+      if (p.ok && !cancelled) setStreak(((await p.json()) as { streak: { count: number } }).streak.count);
     })();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, l]);
 
-  const item = queue[0] || null;
-  const calm = !!(lesson?.sensitive || (lesson?.steps.flatMap((s) => s.items).some((it) => it.sensitive)));
-  const charName = (item?.character || lesson?.character || 'calavera') as 'calavera' | 'pinata' | 'oso';
-  const charState: CharacterState = (completed
-    ? (reducedMotion ? 'idle' : (calm ? 'comforting' : 'celebrating'))
-    : (item?.kind === 'explain' ? 'talking' : 'idle')) as CharacterState;
-
-  useEffect(() => {
-    if (!item || !engineRef.current) return;
-    const text = item.text || item.statement || item.prompt || '';
-    if (text && item.kind === 'explain') {
-      void engineRef.current.speak(text, langVal);
-    }
+  useEffect(() => {                               // remember where the client is
+    if (state && item) void platform.storage.set(posKey(id), JSON.stringify({ step: state.step, item: item.id }));
   }, [item?.id]);
 
-  async function savePos() {
-    if (!lesson || !item) return;
-    await platform.storage.set(`aprende_lesson_pos_${id}`, JSON.stringify({ stepIndex, itemId: item.id }));
-  }
+  useEffect(() => {                               // say the item aloud (once, even when the character changes)
+    if (!item || !engine.current) return;
+    engine.current.cancel();
+    void engine.current.speak(spoken(item), l);
+  }, [item?.id, engineTick]);
 
-  useEffect(() => { void savePos(); }, [stepIndex, item?.id]);
-
-  async function submitAnswer(answer: unknown) {
-    if (!item) return;
-    const res = await apiFetch('/learn/attempts', { method: 'POST', json: { item_id: item.id, answer, lang: langVal } });
-    if (!res.ok) { setError(await res.text()); return; }
-    const data = await res.json() as Feedback;
-    setFeedback(data);
-    if (data.correct) {
-      setDoneCount((c) => c + 1);
-    } else {
-      setWrongItems((prev) => (prev.some((x) => x.id === item.id) ? prev : [...prev, item]));
-    }
-  }
-
-  function advanceAfterFeedback() {
-    if (!item || !feedback) return;
-    if (feedback.correct) {
-      setQueue((q) => q.slice(1));
-    } else {
-      setQueue((q) => {
-        const [first, ...rest] = q;
-        return [...rest, first];
-      });
-    }
-    setFeedback(null);
-    setSelected(null);
-  }
-
-  function advanceExplain() {
-    if (!item) return;
-    setDoneCount((c) => c + 1);
-    setQueue((q) => q.slice(1));
-  }
-
-  function skipItem() {
-    if (!item) return;
-    setDoneCount((c) => c + 1);
-    setQueue((q) => q.slice(1));
-  }
-
-  // move to next step when queue empty
   useEffect(() => {
-    if (!lesson) return;
-    if (queue.length === 0 && stepIndex < lesson.steps.length - 1) {
-      const next = stepIndex + 1;
-      setStepIndex(next);
-      setQueue([...(lesson.steps[next]?.items || [])]);
-    } else if (queue.length === 0 && stepIndex === lesson.steps.length - 1 && total > 0 && doneCount >= total && !completed && !repasarMode) {
-      // complete
-      void finishLesson();
-    }
-  }, [queue.length, stepIndex, lesson]);
+    if (!state || !finished(state) || result) return;
+    (async () => {
+      const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}/complete`, { method: 'POST' });
+      const r = (await res.json()) as { completed: boolean; score: number };
+      if (r.completed) await platform.storage.remove(posKey(id));
+      setResult(r);
+    })();
+  }, [state && finished(state)]);
 
-  async function finishLesson() {
-    const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}/complete`, { method: 'POST' });
-    if (!res.ok) { setError(await res.text()); return; }
-    const data = await res.json() as { completed: boolean; score: number };
-    setCompleted(true);
-    setScore(data.score);
+  const next = () => {
+    if (!state) return;
+    setState(feedback && !feedback.correct ? retryLater(state) : clear(state, steps));
+    setFeedback(null);
+    setChoice(null);
+  };
+
+  const check = async () => {
+    if (!item || choice === null) return;
+    const res = await apiFetch('/learn/attempts', { method: 'POST', json: { item_id: item.id, answer: choice, lang: l } });
+    if (res.ok) setFeedback((await res.json()) as Feedback);
+  };
+
+  if (failure) return h(Frame, { title: lesson?.title ?? '' }, h('p', { class: 'lesson-note', role: 'alert' }, t(failure === 'locked' ? 'leccion.locked' : 'leccion.error')),
+    h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back')));
+  if (!lesson || !state) return h(Frame, { title: '' }, h('p', { class: 'lesson-note', role: 'status' }, t('leccion.loading')));
+
+  const calm = lesson.sensitive || !!item?.sensitive;
+  const character = item?.character ?? lesson.character;
+  const charState: CharacterState = result ? (result.completed ? (calm ? 'comforting' : 'celebrating') : 'idle')
+    : feedback ? (feedback.correct && !calm ? 'celebrating' : 'idle') : 'talking';
+
+  const bar = h('header', { class: 'lessonbar' },
+    h('button', { class: 'icon-btn', type: 'button', 'aria-label': t('leccion.exit'), onClick: () => navigate('/aprender') }, h(Icon, { name: 'cerrar' })),
+    h('progress', { class: 'lesson', max: total, value: state.cleared, 'aria-label': t('leccion.progress') }),
+    h('span', { class: 'chip' }, h(Icon, { name: 'vela' }), String(streak)));
+
+  if (result) {
+    return h('div', { class: 'lesson-player' }, bar, h('main', null,
+      h(CharacterStage, { character: lesson.character, state: charState }),
+      h('section', { class: `celebration card${calm ? ' calm' : ''}`, role: 'status' },
+        result.completed
+          ? [h('h1', null, t(calm ? 'celebration.calm' : 'celebration.title')),
+             h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back'))]
+          : [h('p', null, t('result.notYet', { score: Math.round(result.score * 100) })),
+             h('button', { class: 'btn', type: 'button', onClick: () => { setResult(null); setState(startAt(steps)); } }, t('result.review'))])));
   }
+  if (!item) return null;
 
-  function restartWrong() {
-    if (wrongItems.length === 0) {
-      // restart whole
-      if (!lesson) return;
-      setStepIndex(0);
-      setQueue([...lesson.steps[0].items]);
-      setDoneCount(0);
-      setCompleted(false);
-      setScore(null);
-      setWrongItems([]);
-      return;
-    }
-    const synthetic: Step = { id: 'repaso', title: '', items: [...wrongItems] };
-    const newLesson = lesson ? { ...lesson, steps: [synthetic] } : null;
-    if (newLesson) setLesson(newLesson);
-    setStepIndex(0);
-    setQueue([...wrongItems]);
-    setDoneCount(0);
-    setCompleted(false);
-    setScore(null);
-    setWrongItems([]);
-    setRepasarMode(true);
-  }
+  return h('div', { class: 'lesson-player' }, bar, h('main', null,
+    h('div', { class: 'stage-wrap' }, h(CharacterStage, { character, state: charState, onEngine: (e) => { engine.current = e; setEngineTick((n) => n + 1); } })),
+    item.kind === 'explain'           // a question is on screen as its heading; only explanations need the bubble
+      ? h('div', { class: 'talk' }, h('p', { class: 'bubble', 'aria-live': 'polite' }, spoken(item),
+          h('button', { class: 'icon-btn listen', type: 'button', 'aria-label': t('leccion.replay'), onClick: () => { engine.current?.cancel(); void engine.current?.speak(spoken(item), l); } }, h(Icon, { name: 'volumen' }))))
+      : null,
+    !SUPPORTED.has(item.kind)
+      ? h('section', { class: 'q' }, h('p', { class: 'lesson-note' }, t('leccion.soon')), h('button', { class: 'btn secondary', type: 'button', onClick: next }, t('leccion.skip')))
+      : item.kind === 'explain'
+        ? h('section', { class: 'q' }, h('button', { class: 'btn', type: 'button', onClick: next }, t('leccion.continue')))
+        : h(Question, { item, choice, setChoice, locked: !!feedback, correct: feedback?.correct ?? null, onCheck: check }),
+    feedback && h(FeedbackSheet, { feedback, onNext: next })));
+}
 
-  if (error) return h('div', null, error);
-  if (!lesson || !item && !completed) return h('div', null, '…');
+function Frame({ title, children }: { title: string; children?: ComponentChildren }) {
+  return h('div', { class: 'lesson-player' }, h('main', { class: 'screen' }, title ? h('h1', null, title) : null, children));
+}
 
-  // progress value
-  const progressValue = Math.min(doneCount, total || 1);
+function Question({ item, choice, setChoice, locked, correct, onCheck }: {
+  item: Item; choice: number | boolean | null; setChoice: (v: number | boolean) => void; locked: boolean; correct: boolean | null; onCheck: () => void;
+}) {
+  const options: [string, number | boolean][] = item.kind === 'truefalse'
+    ? [[t('leccion.true'), true], [t('leccion.false'), false]]
+    : (item.options ?? []).map((o, i) => [o, i]);
+  const heading = item.kind === 'truefalse' ? 'leccion.kind.truefalse' : item.kind === 'scenario' ? 'leccion.kind.scenario' : 'leccion.kind.choice';
+  return h('form', { class: 'q', 'aria-labelledby': `q-${item.id}`, onSubmit: (e: Event) => { e.preventDefault(); onCheck(); } },
+    h('span', { class: 'kind' }, t(heading)),
+    item.story ? h('p', { class: 'story' }, item.story) : null,
+    h('h1', { id: `q-${item.id}` }, item.prompt ?? item.statement),
+    h('fieldset', { disabled: locked },
+      h('legend', { class: 'visually-hidden' }, t(heading)),
+      options.map(([text, value], i) => {
+        const picked = choice === value;
+        const mark = locked && picked ? (correct ? ' correct' : ' wrong') : '';
+        return h('label', { class: `option${mark}`, key: String(value) },
+          h('input', { type: 'radio', name: `r-${item.id}`, checked: picked, onChange: () => setChoice(value) }),
+          h('span', { class: 'key', 'aria-hidden': 'true' }, String.fromCharCode(65 + i)), text,
+          locked && picked && correct ? h('span', { class: 'visually-hidden' }, ' ' + t('leccion.correctMark')) : null);
+      })),
+    locked ? null : h('button', { class: 'btn', type: 'submit', disabled: choice === null }, t('leccion.check')));
+}
 
-  if (completed) {
-    return h('div', { class: 'lesson-player' },
-      h('header', { class: 'lessonbar' },
-        h('button', { class: 'icon-btn', 'aria-label': t('leccion.exit' as I18nKey), onClick: () => navigate('/aprender') }, '×'),
-        h('progress', { class: 'lesson', max: total || 1, value: total }),
-      ),
-      h('section', { class: 'celebration' },
-        h('h1', null, calm ? t('celebration.calm' as I18nKey) : t('celebration.title' as I18nKey)),
-        score !== null && !calm ? h('p', null, t('result.score' as I18nKey, { score: Math.round((score || 0) * 100) })) : null,
-        (!completed || (score !== null && score < 0.8))
-          ? h('button', { class: 'btn', onClick: restartWrong }, t('result.repasar' as I18nKey))
-          : h('button', { class: 'btn', onClick: () => navigate('/aprender') }, t('celebration.return' as I18nKey)),
-      ),
-    );
-  }
-
-  const kind = item.kind;
-  const isUnsupported = ['match', 'order', 'listen'].includes(kind);
-
-  return h('div', { class: 'lesson-player' },
-    h('header', { class: 'lessonbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('leccion.exit' as I18nKey), onClick: () => navigate('/aprender') },
-        h('svg', { 'aria-hidden': 'true', width: 24, height: 24 }, h('use', { href: '#i-cerrar' })),
-      ),
-      h('label', { class: 'visually-hidden', for: 'avance' }, t('leccion.progress' as I18nKey)),
-      h('progress', { id: 'avance', class: 'lesson', max: total || 1, value: progressValue }),
-      h('span', { class: 'chip' }, h('svg', { 'aria-hidden': 'true', style: { inlineSize: '1.2rem', blockSize: '1.2rem' } }, h('use', { href: '#i-vela' })), ' 1'),
-    ),
-    h(CharacterStage, { character: charName, state: charState, onEngine: (e) => { engineRef.current = e as never; } }),
-    h('div', { class: 'talk' },
-      h('p', { class: 'bubble', 'aria-live': 'polite' },
-        item.text || item.statement || item.prompt || '',
-        h('button', { class: 'icon-btn listen', type: 'button', 'aria-label': t('leccion.replay' as I18nKey), onClick: () => {
-          const txt = item.text || item.statement || item.prompt || '';
-          void engineRef.current?.speak(txt, langVal);
-        } }, h('svg', { 'aria-hidden': 'true', width: 24, height: 24 }, h('use', { href: '#i-volumen' }))),
-      ),
-    ),
-    isUnsupported
-      ? h('section', { class: 'q' },
-          h('span', { class: 'kind' }, t('leccion.comingSoon' as I18nKey)),
-          h('button', { class: 'btn', onClick: skipItem }, t('leccion.skip' as I18nKey)),
-        )
-      : (kind === 'explain'
-        ? h('section', { class: 'q' },
-            h('button', { class: 'btn', onClick: advanceExplain }, t('leccion.continue' as I18nKey)),
-          )
-        : h('form', { class: 'q', onSubmit: (e: Event) => { e.preventDefault(); } },
-            h('span', { class: 'kind' }, t(`leccion.kind.${kind === 'scenario' ? 'scenario' : kind === 'truefalse' ? 'truefalse' : 'choice'}` as I18nKey)),
-            kind === 'scenario' ? h('p', { class: 'story' }, item.story) : null,
-            h('h1', { id: 'pregunta' }, item.prompt || item.statement || ''),
-            kind === 'truefalse'
-              ? h('fieldset', null,
-                  h('label', { class: 'option' }, h('input', { type: 'radio', name: 'r', onChange: () => setSelected(0) }), 'Verdadero'),
-                  h('label', { class: 'option' }, h('input', { type: 'radio', name: 'r', onChange: () => setSelected(1) }), 'Falso'),
-                )
-              : h('fieldset', null,
-                  (item.options || []).map((opt, i) =>
-                    h('label', { class: 'option', key: i },
-                      h('input', { type: 'radio', name: 'r', onChange: () => setSelected(i) }),
-                      h('span', { class: 'key' }, String.fromCharCode(65 + i)),
-                      ' ', opt,
-                      selected === i && feedback?.correct ? h('span', { class: 'visually-hidden' }, '(correcta)') : null,
-                    ),
-                  ),
-                ),
-            h('button', { class: 'btn', type: 'button', disabled: selected === null && kind !== 'truefalse' ? true : false,
-              onClick: () => {
-                if (kind === 'truefalse') {
-                  const ans = selected === 0 ? true : false;
-                  void submitAnswer(ans);
-                } else if (selected !== null) {
-                  void submitAnswer(selected);
-                }
-              } }, t('leccion.continue' as I18nKey)),
-          )),
-    feedback ? h('section', { class: `feedback ${feedback.correct ? 'correct' : 'wrong'}`, role: 'status' },
-      h('h2', null, feedback.correct ? t('feedback.correct' as I18nKey) : t('feedback.wrong' as I18nKey)),
-      feedback.explain ? h('p', null, feedback.explain) : null,
-      feedback.source ? h('p', { class: 'source' },
-        t('feedback.source' as I18nKey) + ': ',
-        h('a', { href: feedback.source.url || '#', target: '_blank', rel: 'noopener' }, feedback.source.cite),
-        ' · ' + t('feedback.disclaimer' as I18nKey),
-      ) : h('p', { class: 'source' }, t('feedback.disclaimer' as I18nKey)),
-      h('div', { style: { display: 'flex', gap: 'var(--s3)', alignItems: 'center' } },
-        feedback.correct ? h('p', { class: 'gain' }, t('feedback.petals' as I18nKey)) : null,
-        h('button', { class: 'btn', onClick: advanceAfterFeedback }, t('leccion.continue' as I18nKey)),
-      ),
-    ) : null,
-  );
+function FeedbackSheet({ feedback, onNext }: { feedback: Feedback; onNext: () => void }) {
+  const s = feedback.source;
+  return h('section', { class: `feedback ${feedback.correct ? 'correct' : 'wrong'}`, role: 'status' },
+    h('h2', null, h(Icon, { name: feedback.correct ? 'check' : 'pendiente' }), t(feedback.correct ? 'feedback.correct' : 'feedback.wrong')),
+    feedback.explain ? h('p', null, feedback.explain) : null,
+    h('p', { class: 'source' },
+      s ? [t('feedback.sourceLabel'), ' ', h('a', { href: s.url, target: '_blank', rel: 'noopener' },
+        s.kind === 'probate_code' ? t('feedback.probateCode', { cite: s.cite }) : t('feedback.courts')), ' · '] : null,
+      t('feedback.disclaimer')),
+    h('div', { class: 'feedback-actions' },
+      feedback.petals ? h('p', { class: 'gain' }, h(Icon, { name: 'petalo' }), t('feedback.petals', { n: feedback.petals })) : null,
+      h('button', { class: 'btn', type: 'button', autofocus: true, onClick: onNext }, t('leccion.continue'))));
 }

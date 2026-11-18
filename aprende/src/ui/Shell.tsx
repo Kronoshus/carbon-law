@@ -3,7 +3,7 @@ import { route, navigate } from '../core/router';
 import { t } from '../core/i18n';
 import type { I18nKey } from '../core/i18n-keys';
 import { clearToken } from '../core/api';
-import { Icon, IconSprite, type IconName } from './Icons';
+import { Icon, type IconName } from './Icons';
 
 const TABS: { path: string; key: I18nKey; icon: IconName }[] = [
   { path: '/aprender', key: 'nav.aprender', icon: 'mapa' },
@@ -27,7 +27,6 @@ export function Shell({ children }: { children: ComponentChildren }) {
   }
   return (
     <div class="shell">
-      <IconSprite />
       <header class="topbar">
         <span class="topbar-title">{t('top.title')}</span>
         <button type="button" class="topbar-signout" onClick={() => void signOut()}>

@@ -41,7 +41,7 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
   useEffect(() => { engineRef.current?.setCostume(costume); }, [costume]);
 
   const name = t(`character.${character}.name` as I18nKey);
-  return h('figure', { class: 'character-stage', role: 'img', 'aria-label': t('character.stageLabel', { name }) },
+  return h('figure', { class: 'character-stage', 'aria-label': t('character.stageLabel', { name }) },
     fallback
       ? h('div', { class: 'character-still', style: { backgroundImage: `url(${BASE}characters/${character}-bg.jpg)` } },
           h('img', { src: `${BASE}characters/${character}.png`, alt: '' }))
