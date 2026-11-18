@@ -64,7 +64,7 @@ def test_slow_aprende_request_does_not_block_legacy():
 
 def test_concurrent_ensure_matter_one_matter():
     user_id = str(uuid.uuid4())
-    j = journey.create_journey(user_id)
+    j = journey.get_or_create_for_user(user_id)
     jid = j["id"]
 
     results = []
@@ -88,7 +88,7 @@ def test_concurrent_ensure_matter_one_matter():
 
 def test_legacy_lock_blocks_ensure_matter():
     user_id = str(uuid.uuid4())
-    j = journey.create_journey(user_id)
+    j = journey.get_or_create_for_user(user_id)
     jid = j["id"]
 
     acquired = threading.Event()

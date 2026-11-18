@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 
 import app as backend
 import migrate
+import db
 from aprende import journey
 
 migrate.run()
@@ -270,3 +271,14 @@ def test_document_codes_are_validated():
     assert state(h)["documents"]["tentative"] == ["will", "trust"]
     assert send(h, "documents_tentative", codes=["yacht"]).status_code == 422
     assert send(h, "documents_tentative", codes=[]).status_code == 422
+
+
+def test_concurrent_first_requests_create_one_journey():
+    """The first screen loads /learn/map, /progress and /journey at once; none may fail and there must be one journey."""
+    import concurrent.futures
+    h = client()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        codes = list(pool.map(lambda _: c.get("/journey", headers=h).status_code, range(6)))
+    assert codes == [200] * 6
+    uid = c.get("/auth/me", headers=h).json()["id"]
+    assert db.query("SELECT COUNT(*) FROM journeys WHERE user_id = ?", (uid,))[0][0] == 1
