@@ -1,0 +1,225 @@
+id: poa
+unit: poa
+day: 4
+character: calavera
+sensitive: false
+datos:
+- poder_agente
+- poder_inicio
+- poder_alcance
+- poder_regalos
+title:
+  es: Los poderes notariales
+  en: Financial powers of attorney
+steps:
+- id: poa.1
+  title:
+    es: Su apoderado
+    en: Your agent
+  items:
+  - id: poa.1.1
+    kind: explain
+    legal: true
+    source: pc-4123
+    es:
+      text: 'Con un poder notarial para asuntos financieros usted nombra a un apoderado: la persona que manejaría su dinero y sus bienes.'
+    en:
+      text: 'With a financial power of attorney you name an agent: the person who would manage your money and property.'
+  - id: poa.1.2
+    kind: explain
+    legal: true
+    source: pc-4203
+    es:
+      text: Puede nombrar uno o más apoderados suplentes, por si el primero no puede.
+    en:
+      text: You can name one or more successor agents, in case the first one cannot act.
+  - id: poa.1.3
+    kind: explain
+    legal: true
+    source: pc-4121
+    es:
+      text: El poder lleva fecha y su firma, y se firma ante notario o con dos testigos.
+    en:
+      text: The power of attorney is dated and signed by you, and signed before a notary or with two witnesses.
+  - id: poa.1.4
+    kind: explain
+    legal: true
+    source: pc-4122
+    es:
+      text: Su apoderado no puede ser testigo de su propio poder.
+    en:
+      text: Your agent cannot be a witness to their own power of attorney.
+  - id: poa.1.5
+    kind: truefalse
+    legal: true
+    source: pc-4122
+    answer: false
+    es:
+      statement: Su apoderado puede firmar como testigo del poder.
+      explain: Falso. El apoderado no puede ser testigo.
+    en:
+      statement: Your agent can sign as a witness to the power of attorney.
+      explain: False. The agent cannot be a witness.
+- id: poa.2
+  title:
+    es: Cuándo empieza
+    en: When it starts
+  items:
+  - id: poa.2.1
+    kind: explain
+    legal: true
+    source: pc-4124
+    es:
+      text: Para que el poder siga valiendo si usted pierde la capacidad de decidir, debe decirlo por escrito. Eso lo hace duradero.
+    en:
+      text: For the power of attorney to keep working if you lose the ability to decide, it must say so in writing. That makes it durable.
+  - id: poa.2.2
+    kind: explain
+    legal: true
+    source: pc-4124
+    es:
+      text: 'Usted elige: que empiece desde que firma, o solo si usted ya no puede decidir. Al segundo se le llama poder condicional.'
+    en:
+      text: 'You choose: it can start as soon as you sign, or only if you can no longer decide. The second kind is called a springing power.'
+  - id: poa.2.3
+    kind: explain
+    legal: true
+    source: pc-4129
+    es:
+      text: En un poder condicional, usted puede nombrar a quién declara por escrito que usted ya no puede decidir, por ejemplo su médico.
+    en:
+      text: In a springing power, you can name who declares in writing that you can no longer decide, for example your doctor.
+  - id: poa.2.4
+    kind: choice
+    legal: true
+    source: pc-4124
+    answer: 1
+    es:
+      prompt: Ana quiere que su hijo maneje sus cuentas solo si ella ya no puede decidir. ¿Qué tipo de poder es?
+      options:
+      - Un poder que empieza al firmar
+      - Un poder condicional
+      - Un testamento
+      explain: Un poder que empieza solo si ella ya no puede decidir es un poder condicional.
+    en:
+      prompt: Ana wants her son to manage her accounts only if she can no longer decide. What kind of power is that?
+      options:
+      - One that starts when signed
+      - A springing power
+      - A will
+      explain: A power that starts only if she can no longer decide is a springing power.
+- id: poa.3
+  title:
+    es: Lo que puede y no puede hacer
+    en: What the agent can and cannot do
+  items:
+  - id: poa.3.1
+    kind: explain
+    legal: true
+    source: pc-4123
+    es:
+      text: Usted puede darle autoridad sobre todos sus asuntos financieros o solo sobre algunos.
+    en:
+      text: You can give authority over all of your financial matters or only some of them.
+  - id: poa.3.2
+    kind: explain
+    legal: true
+    source: pc-4264
+    es:
+      text: 'Hay cosas que el apoderado solo puede hacer si el poder lo dice expresamente: hacer regalos, cambiar beneficiarios, o crear o cambiar un fideicomiso.'
+    en:
+      text: 'Some things the agent can do only if the power expressly says so: make gifts, change beneficiaries, or create or change a trust.'
+  - id: poa.3.3
+    kind: explain
+    legal: true
+    source: pc-4204
+    es:
+      text: El apoderado tiene derecho a una compensación razonable y a que le reembolsen sus gastos razonables.
+    en:
+      text: The agent is entitled to reasonable compensation and to reimbursement of reasonable expenses.
+  - id: poa.3.4
+    kind: truefalse
+    legal: true
+    source: pc-4264
+    answer: false
+    es:
+      statement: Su apoderado puede regalar su dinero a sus nietos aunque el poder no diga nada sobre regalos.
+      explain: Falso. Para hacer regalos, el poder lo tiene que decir expresamente.
+    en:
+      statement: Your agent can give your money to your grandchildren even if the power says nothing about gifts.
+      explain: False. To make gifts, the power must expressly say so.
+  - id: poa.3.5
+    kind: match
+    character: pinata
+    legal: true
+    source: pc-4124
+    es:
+      prompt: Una cada palabra con su significado
+      pairs:
+      - - Poderdante
+        - Quien da el poder
+      - - Apoderado
+        - Quien maneja el dinero
+      - - Duradero
+        - Sigue valiendo si usted pierde la capacidad
+      - - Condicional
+        - Empieza solo si usted ya no puede decidir
+      explain: ¡Perfecto! Ya habla como un experto.
+    en:
+      prompt: Match each word with its meaning
+      pairs:
+      - - Principal
+        - Who gives the power
+      - - Agent
+        - Who manages the money
+      - - Durable
+        - Keeps working if you lose capacity
+      - - Springing
+        - Starts only if you can no longer decide
+      explain: Perfect! You sound like an expert.
+- id: poa.4
+  title:
+    es: Por qué el banco lo pide
+    en: Why banks ask for it
+  items:
+  - id: poa.4.1
+    kind: explain
+    legal: true
+    source: pc-4303
+    es:
+      text: Un banco que confía de buena fe en un poder válido, firmado ante notario o con dos testigos, está protegido. Por eso los bancos lo piden.
+    en:
+      text: A bank that relies in good faith on a valid power of attorney, notarized or signed by two witnesses, is protected. That is why banks ask for it.
+  - id: poa.4.2
+    kind: explain
+    legal: true
+    source: pc-4406
+    es:
+      text: Si alguien se niega sin razón a aceptar un poder hecho en el formulario oficial de California, se le puede obligar en el tribunal.
+    en:
+      text: If someone unreasonably refuses to accept a power of attorney made on the official California form, they can be required to accept it in court.
+  - id: poa.4.3
+    kind: explain
+    es:
+      text: Conviene que su apoderado tenga una copia y que su banco la conozca antes de que se necesite.
+    en:
+      text: It helps for your agent to have a copy and for your bank to see it before it is needed.
+  - id: poa.4.4
+    kind: choice
+    legal: true
+    source: pc-4303
+    answer: 1
+    es:
+      prompt: ¿Por qué un banco acepta con más confianza un poder notariado?
+      options:
+      - Porque el notario paga si hay un error
+      - Porque la ley protege al banco que confía en él de buena fe
+      - Porque el banco lo redacta
+      explain: La ley protege al banco que confía de buena fe en un poder válido.
+    en:
+      prompt: Why does a bank accept a notarized power of attorney more readily?
+      options:
+      - The notary pays if there is a mistake
+      - The law protects a bank that relies on it in good faith
+      - The bank wrote it
+      explain: The law protects a bank that relies in good faith on a valid power of attorney.
