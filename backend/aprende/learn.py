@@ -162,6 +162,7 @@ def submit_attempt(journey, item_id, answer, lang="es"):
     item = next(i for i in _items(rows[0][0]) if i["id"] == item_id)
     correct = grade(item, answer)
     at = now().isoformat()
+    awarded = 0
     with db.transaction() as conn:
         attempt = conn.execute("SELECT COUNT(*) FROM item_attempts WHERE journey_id = ? AND item_id = ?",
                                (journey["id"], item_id)).fetchone()[0] + 1
@@ -171,9 +172,13 @@ def submit_attempt(journey, item_id, answer, lang="es"):
         conn.execute("INSERT INTO events (id, journey_id, type, props_json, created_at) VALUES (?, ?, ?, ?, ?)",
                      (str(uuid.uuid4()), journey["id"], "item_answered",
                       json.dumps({"item_id": item_id, "correct": correct, "attempt": attempt}), at))
+        if correct:
+            from aprende import motivation       # motivation imports learn (for the clock)
+            awarded = motivation.award_petal_tx(conn, journey["id"], "item_correct", item_id, motivation.PETAL_ITEM, at)
     rows = db.query("SELECT kind, cite, url FROM content_sources WHERE id = ?", (item["source_id"],)) if item["source_id"] else []
     return {"correct": correct, "explain": json.loads(item[lang]).get("explain"),
-            "source": dict(zip(("kind", "cite", "url"), rows[0])) if rows else None}
+            "source": dict(zip(("kind", "cite", "url"), rows[0])) if rows else None,
+            "petals": awarded}
 
 
 def complete_lesson(journey, lesson_id):
@@ -185,8 +190,12 @@ def complete_lesson(journey, lesson_id):
     score = sum(latest.get(i, False) for i in graded) / len(graded) if graded else 1.0
     completed = answered and score >= PASS
     if completed and lesson_id not in _completions(journey["id"]):
-        db.execute("INSERT INTO lesson_completions (journey_id, lesson_id, completed_at) VALUES (?, ?, ?) "
-                   "ON CONFLICT (journey_id, lesson_id) DO NOTHING", (journey["id"], lesson_id, now().isoformat()))
+        from aprende import motivation
+        at = now().isoformat()
+        with db.transaction() as conn:
+            conn.execute("INSERT INTO lesson_completions (journey_id, lesson_id, completed_at) VALUES (?, ?, ?) "
+                         "ON CONFLICT (journey_id, lesson_id) DO NOTHING", (journey["id"], lesson_id, at))
+            motivation.award_petal_tx(conn, journey["id"], "lesson_complete", lesson_id, motivation.PETAL_LESSON, at)
         if lesson["unit"] in DISCOUNT_UNITS:
             journeys.apply(journey["id"], f"lesson_completed:{lesson['unit']}", {}, actor="system")
         elif lesson["unit"] == "final":
