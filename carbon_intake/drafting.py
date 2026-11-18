@@ -31,12 +31,20 @@ VERIFIED = {
     "6110": "a will must be in writing and signed, and witnessed by at least two persons who, present at the same time, "
             "witnessed the signing or the testator's acknowledgment and understand the instrument is the testator's will",
     "6111": "a will not meeting section 6110 is valid as a holographic will if the signature and material provisions "
-            "are in the testator's handwriting",
+            "are in the testator's handwriting; if it is undated and that leaves doubt whether it or an inconsistent other will "
+            "controls, it is invalid to the extent of the inconsistency unless shown to be executed after the other will",
     "6112": "a gift to a subscribing witness is presumed procured by duress, menace, fraud or undue influence unless "
             "at least two other subscribing witnesses are disinterested",
     "6300": "a will may give to the trustee of a trust identified in the will whose terms are in a written instrument "
             "executed before, with, or within 60 days after the will (a pour-over)",
     "10400": "the Independent Administration of Estates Act (short title)",
+    "10800": "the personal representative's statutory compensation: 4% of the first $100,000, 3% of the next $100,000, 2% of the "
+             "next $800,000 ..., on the estate's appraised value without reference to encumbrances",
+    "10810": "the same statutory schedule for the attorney for the personal representative, also without reference to encumbrances",
+    "13100": "a successor may collect a decedent's personal property by affidavit, without administration, after 40 days when the "
+             "gross value of the estate in this state does not exceed the amount set there, as adjusted under section 890",
+    "13151": "a successor may petition for an order determining succession to the decedent's primary residence when its gross "
+             "value does not exceed $750,000, as adjusted under section 890, after 40 days",
     "21109": "a beneficiary who does not survive the transferor, or survive until a later time the instrument requires, does not take",
     "21110": "the issue of a deceased beneficiary take in that beneficiary's place, but a survival requirement in the "
              "instrument is a contrary intention that stops this unless the instrument names a substitute",

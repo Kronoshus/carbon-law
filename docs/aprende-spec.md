@@ -360,7 +360,9 @@ chosen documents' question ids; anything already answered in a lesson is not ask
 Claims to be the attorney or a person; quotes a fee (prices are shown by the app from firm settings, never spoken by a
 character); promises a result; says a document is done or valid; gives advice about the client's own situation;
 handles excluded scope (probate administration, trust administration after death, tax beyond standard provisions,
-business succession, foreign assets, special-needs trusts, title review) other than to say the attorney will advise.
+business succession, foreign assets, special-needs trusts, title review) other than to say the attorney will advise;
+asks about immigration status (if the client raises it, it becomes a question for the attorney); sells or pitches
+(payment is the firm's own screens, never a character); pairs a trust with insurance, annuities or other financial products.
 
 ---
 

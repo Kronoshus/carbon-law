@@ -22,6 +22,13 @@ steps:
     es: ¿Qué hace un testamento?
     en: What a will does
   items:
+  - id: will.1.0
+    kind: explain
+    legal: false
+    es:
+      text: Un testamento no es solo para quien tiene mucho. Es para que su familia sepa qué hacer con lo que usted deja, aunque sea una casa, un carro o una cuenta.
+    en:
+      text: A will is not only for people who have a lot. It tells your family what to do with what you leave, even if it is a house, a car or one account.
   - id: will.1.1
     kind: explain
     legal: true
@@ -43,9 +50,9 @@ steps:
     legal: true
     source: pc-6111
     es:
-      text: 'También existe el testamento escrito a mano: si la firma y las partes importantes son de su puño y letra, puede ser válido sin testigos.'
+      text: 'También existe el testamento escrito a mano: si la firma y las partes importantes son de su puño y letra, puede ser válido sin testigos. Pero si no tiene fecha y hay otro testamento, puede causar dudas sobre cuál vale.'
     en:
-      text: 'There is also the handwritten will: if the signature and the important parts are in your own handwriting, it can be valid without witnesses.'
+      text: 'There is also the handwritten will: if the signature and the important parts are in your own handwriting, it can be valid without witnesses. But if it has no date and there is another will, it can cause doubt about which one counts.'
   - id: will.1.4
     kind: choice
     legal: true
