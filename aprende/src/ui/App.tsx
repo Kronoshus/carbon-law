@@ -15,12 +15,14 @@ import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
 import { Plan } from './screens/Plan';
+import { Leccion } from './screens/Leccion';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 
 export function App() {
   const r = route.value;
+  const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 
@@ -63,8 +65,13 @@ export function App() {
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
   else if (r === '/plan') screen = h(Plan, null);
+  else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
   else screen = h(Placeholder, null);
 
+  if (leccionMatch) {
+    if (!authed) return h(Bienvenida, null);
+    return screen;
+  }
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
