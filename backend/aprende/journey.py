@@ -177,20 +177,12 @@ def get_journey_by_user(user_id):
     return get_journey(rows[0][0])
 
 
-def create_journey(user_id, tz="America/Los_Angeles"):
-    jid = str(uuid.uuid4())
-    db.execute(
-        "INSERT INTO journeys (id, user_id, tz, started_at) VALUES (?, ?, ?, ?)",
-        (jid, user_id, tz, _now_iso()),
-    )
-    return get_journey(jid)
-
-
-def get_or_create_for_user(user_id):
-    j = get_journey_by_user(user_id)
-    if j is None:
-        j = create_journey(user_id)
-    return j
+def get_or_create_for_user(user_id, tz="America/Los_Angeles"):
+    """The client's one journey, created on first use. Safe when several requests arrive at once (the app's first
+    screen loads the map, the progress and the journey together)."""
+    db.execute("INSERT INTO journeys (id, user_id, tz, started_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING",
+               (str(uuid.uuid4()), user_id, tz, _now_iso()))
+    return get_journey_by_user(user_id)
 
 
 def _insert_event(journey_id, event_type, payload, actor, created_at):

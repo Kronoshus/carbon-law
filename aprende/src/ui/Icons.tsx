@@ -1,5 +1,5 @@
 /* The app's icon set (design doc §5): 24-unit grid, plum stroke, one fiesta fill. Rendered once as a sprite. */
-export type IconName = 'mapa' | 'plan' | 'pregunta' | 'perfil' | 'sello' | 'sello-vacio' | 'cerrar' | 'vela' | 'volumen' | 'check' | 'pendiente' | 'petalo';
+export type IconName = 'caja' | 'candado' | 'casa' | 'cerrar' | 'check' | 'llave' | 'lupa' | 'mapa' | 'pendiente' | 'perfil' | 'petalo' | 'plan' | 'pluma' | 'pregunta' | 'salud' | 'sello' | 'sello-vacio' | 'testamento' | 'vela' | 'volumen';
 
 export function IconSprite() {
   return (
@@ -17,6 +17,14 @@ export function IconSprite() {
         <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8" /><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></symbol>
         <symbol id="i-pendiente" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" /><path d="M12 7v6M12 16.5v.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></symbol>
         <symbol id="i-petalo" viewBox="0 0 24 24"><g fill="#FF8C1A" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="4" /><circle cx="18" cy="11" r="4" /><circle cx="15.5" cy="18" r="4" /><circle cx="8.5" cy="18" r="4" /><circle cx="6" cy="11" r="4" /></g><circle cx="12" cy="12.5" r="3" fill="#FFB627" stroke="currentColor" stroke-width="1.5" /></symbol>
+        <symbol id="i-testamento" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M9 9h6M9 12.5h6M9 16h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><circle cx="16" cy="17" r="2.6" fill="#FF4F9A" stroke="currentColor" stroke-width="1.5" /></symbol>
+        <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3Z" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><circle cx="12" cy="14" r="2.3" fill="#FFB627" stroke="currentColor" stroke-width="1.5" /><path d="M12 16.3V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></symbol>
+        <symbol id="i-salud" viewBox="0 0 24 24"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.8C20 15.4 12 20 12 20Z" fill="#FF4F9A" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M9.5 11.5h5M12 9v5" stroke="#fff" stroke-width="2" stroke-linecap="round" /></symbol>
+        <symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5" fill="#FFB627" stroke="currentColor" stroke-width="1.8" /><path d="M11.2 11.2 20 20M16 16l2-2M18.2 18.2l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></symbol>
+        <symbol id="i-pluma" viewBox="0 0 24 24"><path d="M4 20c4-1 7-3 10-6l6-9-9 6c-3 3-5 6-6 10Z" fill="#2EC4B6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M4 20 11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></symbol>
+        <symbol id="i-lupa" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" /><path d="m15 15 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></symbol>
+        <symbol id="i-caja" viewBox="0 0 24 24"><path d="M3 8h18v12H3Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M2 4h20v4H2ZM9.5 12h5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></symbol>
+        <symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8" /></symbol>
       </defs>
     </svg>
   );
