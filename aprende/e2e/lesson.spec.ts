@@ -16,9 +16,9 @@ const cont = (page: Page) => page.getByRole('button', { name: 'Continuar' });
 test('the will lesson: explain, a wrong answer that comes back, sources, resume', async ({ page }) => {
   await signUp(page);
   await page.goto('/#/leccion/will');
-  await expect(page.locator('.bubble')).toContainText('Un testamento dice quién recibe sus bienes');
+  await expect(page.locator('.bubble')).toContainText('Un testamento no es solo para quien tiene mucho');
   await expect(page.getByLabel('Avance de la lección')).toHaveAttribute('value', '0');
-  for (let i = 0; i < 3; i++) await cont(page).click();                     // three explanations
+  for (let i = 0; i < 4; i++) await cont(page).click();                     // four explanations
 
   await expect(page.getByRole('heading', { name: /Cuántos testigos/ })).toBeVisible();
   await page.getByRole('radio', { name: 'Ninguno' }).check();
