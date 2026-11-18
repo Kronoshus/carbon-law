@@ -32,7 +32,7 @@
   "bienvenida.host": "La Calavera, programa de inteligencia artificial",
   "bienvenida.note": "Información general, no asesoría legal. Carbon Law Group, Los Ángeles.",
   "popup.streak": "Racha: {count}",
-  "popup.today": "Paso de hoy: {step}",
+  "popup.today": "Día {day} de 14",
   "popup.open": "Abrir",
   "popup.gate.may_disclose": "Divulgar el uso de IA",
   "popup.gate.may_consent": "Dar su consentimiento",

@@ -83,7 +83,6 @@ export function Popup() {
       if (win.id === undefined) return;
       await chrome.sidePanel.open({ windowId: win.id });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('sidePanel.open failed', e);
     } finally {
       setOpening(false);
@@ -95,12 +94,16 @@ export function Popup() {
     : t(GATE_LABEL[step]);
 
   return (
-    <main style={{ width: '360px', minHeight: '480px', padding: 'var(--s4)' }}>
-      <div class="chip" style={{ marginBottom: 'var(--s3)' }}>
-        <span aria-hidden="true">🕯️</span>
-        <strong>{t('popup.streak', { count: 0 })}</strong>
+    <main class="popup">
+      <div class="popup-head">
+        <img src="img/calavera-face.png" alt="" width="56" height="56" />
+        <span class="chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" /></svg>
+          {t('popup.streak', { count: 0 })}
+        </span>
       </div>
-      <p style={{ marginBottom: 'var(--s4)' }}>{t('popup.today', { step: `${day} · ${stepLabel}` })}</p>
+      <p class="popup-day">{t('popup.today', { day })}</p>
+      <p class="popup-step">{stepLabel}</p>
       <button class="btn" onClick={openSidePanel} disabled={opening} type="button">
         {t('popup.open')}
       </button>

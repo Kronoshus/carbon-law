@@ -45,7 +45,8 @@ test('popup reads journey and opens side panel', async () => {
 
   await page.goto(`chrome-extension://${extId}/popup.html`);
   await expect(page.getByText('Racha: 0')).toBeVisible();
-  await expect(page.getByText('Paso de hoy: 3 · Dar su consentimiento')).toBeVisible();
+  await expect(page.getByText('Día 3 de 14')).toBeVisible();
+  await expect(page.getByText('Dar su consentimiento')).toBeVisible();
 
   const winId = await page.evaluate(async () => (await chrome.windows.getCurrent()).id);
   await page.getByRole('button', { name: 'Abrir' }).click();

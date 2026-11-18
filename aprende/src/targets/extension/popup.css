@@ -1,0 +1,8 @@
+/* Toolbar popup (design doc §9): about 360 x 480, no character stage. */
+body { inline-size: 22.5rem; }
+.popup { display: grid; gap: var(--s4); padding: var(--s5) var(--s4); }
+.popup-head { display: flex; align-items: center; gap: var(--s3); }
+.popup-head img { inline-size: 3.5rem; block-size: 3.5rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
+.popup .chip svg { inline-size: 1.4rem; block-size: 1.4rem; }
+.popup-day { font: 800 var(--step-1)/1.1 var(--font-display); }
+.popup-step { color: var(--text-soft); }
