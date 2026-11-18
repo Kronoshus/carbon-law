@@ -204,3 +204,69 @@ def test_gates_is_a_pure_function_of_facts():
     g = journey.gates(facts)
     assert g["may_collect_details"] is True and g["may_pay"] is False
     assert journey.gates({})["may_disclose"] is True
+
+
+
+# --- added by Opus in review: gates the first implementation got wrong ---
+
+def test_engagement_and_payment_need_the_firms_own_clearance():
+    h = client()
+    jid = to_names(h)["id"]
+    journey.apply(jid, "conflict_auto", {"result": "clear"}, actor="system")
+    journey.apply(jid, "scope_approved", {}, actor="attorney@example.com")
+    assert state(h)["gates"]["may_sign_engagement"] is False          # automatic clear alone is not enough
+    journey.apply(jid, "engagement_signed", {}, actor="client")       # even if a letter were somehow signed
+    assert state(h)["gates"]["may_pay"] is False
+    journey.apply(jid, "conflict_firm", {"result": "cleared"}, actor="staff@example.com")
+    assert state(h)["gates"]["may_pay"] is True
+    journey.apply(jid, "conflict_firm", {"result": "flagged"}, actor="staff@example.com")
+    assert state(h)["gates"]["may_pay"] is False                      # the firm's latest decision wins
+
+
+def test_gates_never_open_on_a_hold():
+    facts = {"ai_disclosed": "t", "consent": "t", "consent_answer": "yes", "names_submitted": "t",
+             "conflict_auto": "t", "conflict_auto_result": "possible", "conflict_firm": "t",
+             "conflict_firm_result": "cleared", "scope_approved": "t", "engagement_signed": "t", "paid": "t",
+             "drafts_ready": "t", "attorney_approved": "t", "client_confirmed": "t", "signed": "t"}
+    g = journey.gates(facts)
+    assert g["may_disclose"] and g["may_consent"]
+    assert not any(v for k, v in g.items() if k not in ("may_disclose", "may_consent", "may_name"))
+
+
+def test_booking_and_final_lesson_follow_the_spec():
+    h = client()
+    jid = to_names(h)["id"]
+    for t, p in (("conflict_auto", {"result": "clear"}), ("conflict_firm", {"result": "cleared"}), ("scope_approved", {}),
+                 ("engagement_signed", {}), ("paid", {}), ("drafts_ready", {}), ("attorney_approved", {})):
+        journey.apply(jid, t, p, actor="system")
+    g = state(h)["gates"]
+    assert g["may_book_signing"] is False and g["may_take_final_lesson"] is False
+    journey.apply(jid, "client_confirmed", {}, actor="client")
+    assert state(h)["gates"]["may_book_signing"] is True
+    journey.apply(jid, "signed", {}, actor="staff@example.com")
+    assert state(h)["gates"]["may_take_final_lesson"] is True
+
+
+def test_client_can_withdraw_and_give_consent_again():
+    h = client()
+    to_names(h)
+    assert send(h, "consent", answer="no").status_code == 200        # withdrawal is honoured
+    assert state(h)["gates"]["may_name"] is False
+    assert send(h, "consent", answer="yes").status_code == 200       # and so is consent given again
+    assert state(h)["gates"]["may_name"] is True
+
+
+def test_server_apply_rejects_unknown_types():
+    jid = state(client())["id"]
+    with pytest.raises(ValueError):
+        journey.apply(jid, "make_me_rich", {}, actor="system")
+
+
+def test_document_codes_are_validated():
+    h = client()
+    jid = to_names(h)["id"]
+    journey.apply(jid, "conflict_auto", {"result": "clear"}, actor="system")
+    assert send(h, "documents_tentative", codes=["will", "trust"]).status_code == 200
+    assert state(h)["documents"]["tentative"] == ["will", "trust"]
+    assert send(h, "documents_tentative", codes=["yacht"]).status_code == 422
+    assert send(h, "documents_tentative", codes=[]).status_code == 422
