@@ -174,8 +174,6 @@ def test_unit_earned_locked():
 
 
 def test_package_exact_set():
-    settings = {"base": {"will": 300000, "poa": 200000}, "packages": {frozenset({"will", "poa"}): {"price": 450000}}, "discounts": {}, "placeholder_codes": []}
-    # packages key as string comma
     settings2 = {"base": {"will": 300000, "poa": 200000}, "packages": {"will,poa": {"price": 450000}}, "discounts": {}, "placeholder_codes": []}
     q = pricing.quote(settings2, {}, ["will", "poa"])
     assert q["total"] == 450000

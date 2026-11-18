@@ -1,0 +1,15 @@
+/* Price card (design doc §7.1, docs/aprende/screens/mapa.html) */
+.card.price { display: grid; gap: var(--s2); background: color-mix(in oklab, var(--gold) 22%, var(--card)); }
+.price-item { display: grid; gap: var(--s2); }
+.price .row { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
+.price .row.between { justify-content: space-between; align-items: center; }
+.price h2 { font: 700 var(--step-0) var(--font-display); margin-inline-end: auto; }
+.price .now { font: 800 var(--step-2)/1 var(--font-display); }
+.price s { color: var(--text-soft); font-weight: 600; }
+.price .small { font-size: var(--step--1); color: var(--text-soft); }
+.seals { display: flex; gap: var(--s1); }
+.seal { color: var(--teal-deep); display: inline-flex; }
+.seal.empty { color: var(--ink-soft); }
+.seal .icon { inline-size: 1.6rem; block-size: 1.6rem; }
+.example { justify-self: start; font: 700 0.7rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; color: var(--rosa-deep);
+           border: 1.5px dashed var(--rosa-deep); border-radius: var(--pill); padding: 2px 6px; }

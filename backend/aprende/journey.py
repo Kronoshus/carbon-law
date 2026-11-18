@@ -211,20 +211,14 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
         conn.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
-        # earned discounts in same transaction
-        try:
-            r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
-            settings = json.loads(r[0]) if r else None
-        except Exception:
-            settings = None
-        if settings:
-            for doc, cfg in (settings.get("discounts") or {}).items():
-                if event_type in (cfg.get("events") or []):
-                    amount = int(cfg.get("amount", 0) or 0)
-                    conn.execute(
-                        "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
-                        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
-                        (str(uuid.uuid4()), journey_id, doc, event_type, amount, created_at))
+        r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
+        settings = json.loads(r[0]) if r else {}
+        for doc, cfg in (settings.get("discounts") or {}).items():
+            if event_type in (cfg.get("events") or []):
+                conn.execute(
+                    "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
+                    (str(uuid.uuid4()), journey_id, doc, event_type, int(cfg["amount"]), created_at))
     return True
 
 

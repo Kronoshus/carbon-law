@@ -33,12 +33,5 @@ def get_quote(codes: str = Query(...), authorization: str = Header(None)):
         raise HTTPException(422, "invalid codes")
     if not code_list:
         raise HTTPException(422, "codes required")
-    settings = pricing.load_settings("pricing")
-    if settings is None:
-        settings = {}
-    drows = db.query("SELECT document, event, amount_cents FROM discounts WHERE journey_id = ?", (j["id"],))
-    earned = {}
-    for r in drows:
-        earned[(r[0], r[1])] = r[2]
-    q = pricing.quote(settings, j["facts"], code_list, earned=earned)
-    return q
+    earned = {(d, e): c for d, e, c in db.query("SELECT document, event, amount_cents FROM discounts WHERE journey_id = ?", (j["id"],))}
+    return pricing.quote(pricing.load_settings("pricing") or {}, j["facts"], code_list, earned=earned)
