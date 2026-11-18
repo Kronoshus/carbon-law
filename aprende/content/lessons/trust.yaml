@@ -1,0 +1,253 @@
+id: trust
+unit: trust
+day: 2
+character: calavera
+sensitive: false
+datos:
+- fid_tipo
+- fid_sucesor
+- fid_bienes
+- fid_menores
+title:
+  es: El fideicomiso en vida
+  en: The living trust
+steps:
+- id: trust.1
+  title:
+    es: Qué es y cómo evita el tribunal
+    en: What it is and how it avoids court
+  items:
+  - id: trust.1.1
+    kind: explain
+    legal: true
+    source: cc-legal-documents
+    es:
+      text: Un fideicomiso en vida ayuda a que su casa y otros bienes pasen a las personas que usted elige sin ir al tribunal de sucesiones.
+    en:
+      text: A living trust helps your home and other property pass to the people you choose without going to probate court.
+  - id: trust.1.2
+    kind: explain
+    legal: true
+    source: cc-legal-documents
+    es:
+      text: El proceso del tribunal, llamado sucesión o probate, suele tardar por lo menos 9 meses en California y tiene costos.
+    en:
+      text: The court process, called probate, usually takes at least 9 months in California and has costs.
+  - id: trust.1.3
+    kind: explain
+    legal: true
+    source: pc-15200
+    es:
+      text: Un fideicomiso se crea cuando usted pasa bienes a un fiduciario, o declara que usted mismo los guarda como fiduciario, para beneficio de otras personas.
+    en:
+      text: A trust is created when you transfer property to a trustee, or declare that you hold it yourself as trustee, for the benefit of other people.
+  - id: trust.1.4
+    kind: explain
+    legal: true
+    source: pc-15400
+    es:
+      text: 'Un fideicomiso en vida normalmente es revocable: mientras usted viva, lo puede cambiar o cancelar.'
+    en:
+      text: 'A living trust is usually revocable: while you are alive, you can change or cancel it.'
+  - id: trust.1.5
+    kind: truefalse
+    legal: true
+    source: pc-15400
+    answer: true
+    es:
+      statement: Si su fideicomiso no dice expresamente que es irrevocable, usted lo puede cancelar.
+      explain: Cierto. En California, un fideicomiso es revocable salvo que diga lo contrario.
+    en:
+      statement: If your trust does not expressly say it is irrevocable, you can cancel it.
+      explain: True. In California a trust is revocable unless it says otherwise.
+- id: trust.2
+  title:
+    es: Las personas del fideicomiso
+    en: The people in a trust
+  items:
+  - id: trust.2.1
+    kind: explain
+    es:
+      text: Usted, que crea el fideicomiso, es el fideicomitente. Mientras pueda, usted mismo suele ser también el fiduciario y maneja sus bienes como siempre.
+    en:
+      text: You, who create the trust, are the settlor. While you are able, you are usually also the trustee and manage your property as always.
+  - id: trust.2.2
+    kind: explain
+    legal: true
+    source: pc-16040
+    es:
+      text: El fiduciario debe manejar los bienes con el cuidado, la habilidad y la prudencia de una persona prudente.
+    en:
+      text: The trustee must manage the property with the care, skill and caution of a prudent person.
+  - id: trust.2.3
+    kind: explain
+    legal: true
+    source: pc-16061.7
+    es:
+      text: El fiduciario sucesor toma el control cuando usted ya no puede o fallece. Cuando usted fallece, debe avisar a sus beneficiarios y herederos.
+    en:
+      text: The successor trustee takes over when you no longer can or after you die. When you die, they must notify your beneficiaries and heirs.
+  - id: trust.2.4
+    kind: choice
+    legal: true
+    source: pc-15205
+    answer: 1
+    es:
+      prompt: Además de bienes, ¿qué necesita todo fideicomiso?
+      options:
+      - Un juez
+      - Beneficiarios
+      - Un notario
+      explain: 'Un fideicomiso existe para beneficio de alguien: sus beneficiarios.'
+    en:
+      prompt: Besides property, what does every trust need?
+      options:
+      - A judge
+      - Beneficiaries
+      - A notary
+      explain: 'A trust exists for someone''s benefit: its beneficiaries.'
+  - id: trust.2.5
+    kind: match
+    character: pinata
+    es:
+      prompt: Una cada persona con lo que hace
+      pairs:
+      - - Fideicomitente
+        - Crea el fideicomiso
+      - - Fiduciario
+        - Maneja los bienes
+      - - Fiduciario sucesor
+        - Toma el control después
+      - - Beneficiario
+        - Recibe los bienes
+      explain: ¡Excelente! Ya conoce a todas las personas de un fideicomiso.
+    en:
+      prompt: Match each person with what they do
+      pairs:
+      - - Settlor
+        - Creates the trust
+      - - Trustee
+        - Manages the property
+      - - Successor trustee
+        - Takes over later
+      - - Beneficiary
+        - Receives the property
+      explain: Excellent! You know everyone in a trust now.
+- id: trust.3
+  title:
+    es: Poner sus bienes en el fideicomiso
+    en: Putting your property in the trust
+  items:
+  - id: trust.3.1
+    kind: explain
+    legal: true
+    source: pc-15202
+    es:
+      text: Un fideicomiso solo funciona con los bienes que están dentro. Si su casa no se pasa al fideicomiso, el fideicomiso no la protege.
+    en:
+      text: A trust only works with the property inside it. If your house is not transferred to the trust, the trust does not cover it.
+  - id: trust.3.2
+    kind: explain
+    legal: true
+    source: pc-15200
+    es:
+      text: Poner bienes en el fideicomiso se llama fondearlo. Para una casa, por ejemplo, se firma una escritura que la pasa a usted como fiduciario.
+    en:
+      text: Putting property in the trust is called funding it. For a house, for example, you sign a deed that transfers it to you as trustee.
+  - id: trust.3.3
+    kind: explain
+    es:
+      text: Para sus cuentas, la oficina le dará una lista de pasos. Cada banco tiene su propio formulario.
+    en:
+      text: For your accounts, the office will give you a list of steps. Each bank has its own form.
+  - id: trust.3.4
+    kind: order
+    character: pinata
+    es:
+      prompt: Ordene los pasos para fondear un fideicomiso con su casa
+      steps:
+      - Firmar el fideicomiso
+      - Firmar la escritura de la casa
+      - Registrar la escritura en el condado
+      - Guardar una copia con el fideicomiso
+      explain: ¡Muy bien! Primero el fideicomiso, después la escritura.
+    en:
+      prompt: Put the steps for funding a trust with your house in order
+      steps:
+      - Sign the trust
+      - Sign the deed to the house
+      - Record the deed with the county
+      - Keep a copy with the trust
+      explain: Well done! First the trust, then the deed.
+  - id: trust.3.5
+    kind: truefalse
+    legal: true
+    source: pc-15202
+    answer: false
+    es:
+      statement: Basta con firmar el fideicomiso; la casa entra sola.
+      explain: Falso. Hay que pasar la casa al fideicomiso con una escritura.
+    en:
+      statement: Signing the trust is enough; the house goes in by itself.
+      explain: False. The house must be transferred to the trust with a deed.
+- id: trust.4
+  title:
+    es: El testamento complementario
+    en: The pour-over will
+  items:
+  - id: trust.4.1
+    kind: explain
+    legal: true
+    source: pc-6300
+    es:
+      text: 'Junto con el fideicomiso se firma un testamento complementario: lo que quedó fuera del fideicomiso pasa a él cuando usted fallece.'
+    en:
+      text: 'Along with the trust you sign a pour-over will: anything left outside the trust passes into it when you die.'
+  - id: trust.4.2
+    kind: explain
+    legal: true
+    source: cc-legal-documents
+    es:
+      text: Ese testamento es una red de seguridad. Pero lo que pasa por un testamento puede tener que ir al tribunal; por eso conviene fondear bien el fideicomiso.
+    en:
+      text: That will is a safety net. But what passes through a will may have to go to court; that is why it helps to fund the trust well.
+  - id: trust.4.3
+    kind: scenario
+    legal: true
+    source: pc-6300
+    answer: 1
+    es:
+      story: Ana tiene un fideicomiso con su casa, pero olvidó poner una cuenta de banco. Ana fallece.
+      prompt: ¿Qué pasa con esa cuenta?
+      options:
+      - Se pierde
+      - El testamento complementario la manda al fideicomiso
+      - Se la queda el banco
+      explain: El testamento complementario la pasa al fideicomiso, aunque puede necesitar el tribunal.
+    en:
+      story: Ana has a trust holding her house, but she forgot to put in a bank account. Ana dies.
+      prompt: What happens to that account?
+      options:
+      - It is lost
+      - The pour-over will sends it to the trust
+      - The bank keeps it
+      explain: The pour-over will passes it to the trust, although it may need the court.
+  - id: trust.4.4
+    kind: choice
+    legal: true
+    source: pc-15401
+    answer: 1
+    es:
+      prompt: ¿Cómo puede Ana cancelar su fideicomiso revocable?
+      options:
+      - Solo con un juez
+      - Como dice el fideicomiso, o con un escrito firmado y entregado al fiduciario
+      - No se puede
+      explain: Puede hacerlo de la forma que diga el fideicomiso, o por escrito firmado y entregado al fiduciario.
+    en:
+      prompt: How can Ana cancel her revocable trust?
+      options:
+      - Only through a judge
+      - As the trust says, or with a signed writing delivered to the trustee
+      - It cannot be done
+      explain: She can do it the way the trust says, or with a signed writing delivered to the trustee.

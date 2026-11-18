@@ -1,0 +1,374 @@
+id: will
+unit: will
+day: 1
+character: calavera
+sensitive: false
+datos:
+- nombre
+- nacimiento
+- domicilio
+- estado_civil
+- hijos
+- herederos
+- legados
+- tutor
+- albacea
+title:
+  es: El testamento
+  en: The will
+steps:
+- id: will.1
+  title:
+    es: ¿Qué hace un testamento?
+    en: What a will does
+  items:
+  - id: will.1.1
+    kind: explain
+    legal: true
+    source: pc-6101
+    es:
+      text: Un testamento dice quién recibe sus bienes cuando usted fallezca. En California puede dejar sus bienes propios y su mitad de los bienes que comparte con su cónyuge.
+    en:
+      text: A will says who receives your property when you die. In California you can leave your separate property and your half of the property you share with your spouse.
+  - id: will.1.2
+    kind: explain
+    legal: true
+    source: pc-6110
+    es:
+      text: Un testamento escrito a máquina lo firma usted, y lo firman dos testigos que estén presentes al mismo tiempo.
+    en:
+      text: A typed will is signed by you and by two witnesses who are present at the same time.
+  - id: will.1.3
+    kind: explain
+    legal: true
+    source: pc-6111
+    es:
+      text: 'También existe el testamento escrito a mano: si la firma y las partes importantes son de su puño y letra, puede ser válido sin testigos.'
+    en:
+      text: 'There is also the handwritten will: if the signature and the important parts are in your own handwriting, it can be valid without witnesses.'
+  - id: will.1.4
+    kind: choice
+    legal: true
+    source: pc-6110
+    answer: 2
+    es:
+      prompt: ¿Cuántos testigos necesita un testamento que no está escrito a mano?
+      options:
+      - Ninguno
+      - Uno, si es notario
+      - Dos, presentes al mismo tiempo
+      explain: 'Así es: dos testigos, juntos, cuando usted firma o reconoce su firma.'
+    en:
+      prompt: How many witnesses does a will that is not handwritten need?
+      options:
+      - None
+      - One, if a notary
+      - Two, present at the same time
+      explain: 'That''s right: two witnesses, together, when you sign or acknowledge your signature.'
+  - id: will.1.5
+    kind: truefalse
+    legal: true
+    source: pc-6111
+    answer: true
+    es:
+      statement: Un testamento escrito totalmente a mano y firmado por usted puede ser válido sin testigos.
+      explain: Cierto. Se llama testamento ológrafo.
+    en:
+      statement: A will written entirely in your handwriting and signed by you can be valid without witnesses.
+      explain: True. It is called a holographic will.
+  - id: will.1.6
+    kind: explain
+    legal: true
+    source: pc-6120
+    es:
+      text: Usted puede cambiar o anular su testamento cuando quiera, por ejemplo con un testamento nuevo.
+    en:
+      text: You can change or cancel your will whenever you like, for example with a new will.
+- id: will.2
+  title:
+    es: El albacea, los regalos y el resto
+    en: The executor, gifts and the residue
+  items:
+  - id: will.2.1
+    kind: explain
+    legal: true
+    source: pc-8420
+    es:
+      text: El albacea es la persona de confianza que usted nombra para cumplir su testamento. Si usted la nombra, tiene derecho a que el tribunal la designe.
+    en:
+      text: The executor is the trusted person you name to carry out your will. If you name them, they have the right to be appointed by the court.
+  - id: will.2.2
+    kind: explain
+    legal: true
+    source: pc-21117
+    es:
+      text: En un testamento puede dejar regalos específicos, como un reloj o una cantidad de dinero. Lo que queda después de esos regalos se llama el resto, o residuo.
+    en:
+      text: In a will you can leave specific gifts, like a watch or an amount of money. What remains after those gifts is called the residue.
+  - id: will.2.3
+    kind: choice
+    legal: true
+    source: pc-21117
+    answer: 1
+    es:
+      prompt: Luis deja su reloj a su sobrino y «todo lo demás» a su hija. ¿Cómo se llama «todo lo demás»?
+      options:
+      - Un regalo específico
+      - El resto o residuo
+      - La herencia del albacea
+      explain: Lo que queda después de los regalos específicos es el resto.
+    en:
+      prompt: Luis leaves his watch to his nephew and "everything else" to his daughter. What is "everything else" called?
+      options:
+      - A specific gift
+      - The residue
+      - The executor's inheritance
+      explain: What remains after the specific gifts is the residue.
+  - id: will.2.4
+    kind: truefalse
+    legal: true
+    source: pc-21109
+    answer: true
+    es:
+      statement: Si la persona a quien usted deja algo fallece antes que usted, normalmente ese regalo no le llega.
+      explain: Cierto. Por eso conviene nombrar a alguien en su lugar.
+    en:
+      statement: If the person you leave something to dies before you, that gift usually does not reach them.
+      explain: True. That is why it helps to name someone in their place.
+  - id: will.2.5
+    kind: match
+    character: pinata
+    es:
+      prompt: Una cada palabra con su significado
+      pairs:
+      - - Albacea
+        - Cumple el testamento
+      - - Testigo
+        - Ve cómo usted firma
+      - - Beneficiario
+        - Recibe sus bienes
+      - - Resto
+        - Lo que queda después de los regalos
+      explain: ¡Muy bien! Ya conoce las palabras principales.
+    en:
+      prompt: Match each word with its meaning
+      pairs:
+      - - Executor
+        - Carries out the will
+      - - Witness
+        - Watches you sign
+      - - Beneficiary
+        - Receives your property
+      - - Residue
+        - What remains after the gifts
+      explain: Well done! You know the main words now.
+- id: will.3
+  title:
+    es: Tutores para sus hijos menores
+    en: Guardians for your minor children
+  items:
+  - id: will.3.1
+    kind: explain
+    legal: true
+    source: pc-1500
+    es:
+      text: En su testamento puede nombrar a un tutor para cuidar a sus hijos menores. Su nombramiento cuenta sobre todo si el otro padre o madre ha fallecido o no puede cuidarlos.
+    en:
+      text: In your will you can name a guardian to care for your minor children. Your choice matters most if the other parent has died or cannot care for them.
+  - id: will.3.2
+    kind: explain
+    legal: true
+    source: pc-1500
+    es:
+      text: Nombrar a un tutor le dice al juez a quién quiere usted. Es su propuesta; el juez la considera para decidir.
+    en:
+      text: Naming a guardian tells the judge who you want. It is your proposal; the judge considers it when deciding.
+  - id: will.3.3
+    kind: explain
+    legal: true
+    source: pc-1501
+    es:
+      text: También puede nombrar a una persona para manejar el dinero o los bienes que sus hijos menores reciban de usted.
+    en:
+      text: You can also name a person to manage the money or property your minor children receive from you.
+  - id: will.3.4
+    kind: truefalse
+    legal: true
+    source: pc-1501
+    answer: true
+    es:
+      statement: Puede nombrar a una persona para cuidar a sus hijos y a otra distinta para manejar su dinero.
+      explain: Cierto. Son dos funciones distintas.
+    en:
+      statement: You can name one person to care for your children and a different person to manage their money.
+      explain: True. They are two different roles.
+  - id: will.3.5
+    kind: scenario
+    legal: true
+    source: pc-1500
+    answer: 1
+    es:
+      story: Ana y Luis tienen dos hijos pequeños, Sofía y Mateo. En su testamento nombraron a la hermana de Ana como tutora. Un día, ninguno de los dos puede cuidar a los niños.
+      prompt: ¿Quién propondría al juez a la persona que cuidaría de Sofía y Mateo?
+      options:
+      - El banco
+      - La persona que Ana y Luis nombraron como tutor
+      - Nadie; el juez elige solo
+      explain: Su nombramiento le dice al juez lo que ustedes quieren.
+    en:
+      story: Ana and Luis have two young children, Sofía and Mateo. In their wills they named Ana's sister as guardian. One day, neither of them can care for the children.
+      prompt: Who would be proposed to the judge to care for Sofía and Mateo?
+      options:
+      - The bank
+      - The person Ana and Luis named as guardian
+      - No one; the judge chooses alone
+      explain: Your nomination tells the judge what you want.
+- id: will.4
+  title:
+    es: ¿Qué pasa si no hay testamento?
+    en: What happens without a will
+  items:
+  - id: will.4.1
+    kind: explain
+    legal: true
+    source: pc-6400
+    es:
+      text: 'Si usted fallece sin testamento, la ley decide quién recibe sus bienes: sus herederos según la ley.'
+    en:
+      text: 'If you die without a will, the law decides who receives your property: your heirs under the law.'
+  - id: will.4.2
+    kind: explain
+    legal: true
+    source: pc-6401
+    es:
+      text: Si está casado, su cónyuge recibe su mitad de los bienes comunitarios. De sus bienes propios recibe todo, la mitad o un tercio, según los hijos y familiares que usted deje.
+    en:
+      text: If you are married, your spouse receives your half of the community property. Of your separate property they receive all, half or a third, depending on the children and relatives you leave.
+  - id: will.4.3
+    kind: explain
+    legal: true
+    source: pc-6402
+    es:
+      text: Lo que no le toca a su cónyuge va primero a sus hijos; si no hay hijos, a sus padres; y si no, a sus hermanos y otros parientes.
+    en:
+      text: What does not go to your spouse goes first to your children; if there are none, to your parents; and if not, to your brothers, sisters and other relatives.
+  - id: will.4.4
+    kind: scenario
+    legal: true
+    source: pc-6401
+    answer: 2
+    es:
+      story: Luis fallece sin testamento. Está casado con Ana y tienen dos hijos.
+      prompt: ¿Qué parte de los bienes propios de Luis recibe Ana por ley?
+      options:
+      - Todo
+      - La mitad
+      - Un tercio
+      explain: Con más de un hijo, el cónyuge recibe un tercio de los bienes propios; el resto va a los hijos.
+    en:
+      story: Luis dies without a will. He is married to Ana and they have two children.
+      prompt: What share of Luis's separate property does Ana receive by law?
+      options:
+      - All of it
+      - Half
+      - One third
+      explain: With more than one child, the spouse receives one third of the separate property; the rest goes to the children.
+  - id: will.4.5
+    kind: truefalse
+    legal: true
+    source: pc-6402
+    answer: true
+    es:
+      statement: Sin testamento, un amigo muy cercano no hereda nada por ley.
+      explain: Cierto. La ley solo nombra a familiares; con un testamento usted puede incluir a quien quiera.
+    en:
+      statement: Without a will, a very close friend inherits nothing by law.
+      explain: True. The law names only relatives; with a will you can include anyone you like.
+- id: will.5
+  title:
+    es: Lo que no pasa por el testamento
+    en: What passes outside the will
+  items:
+  - id: will.5.1
+    kind: explain
+    legal: true
+    source: pc-5000
+    es:
+      text: Los seguros de vida, las cuentas de retiro y las cuentas con beneficiario pasan a la persona que usted nombró en ese formulario. Por eso conviene revisarlos junto con su testamento.
+    en:
+      text: Life insurance, retirement accounts and accounts with a beneficiary pass to the person you named on that form. That is why it helps to review them along with your will.
+  - id: will.5.2
+    kind: explain
+    legal: true
+    source: pc-5302
+    es:
+      text: En una cuenta de banco conjunta, el dinero normalmente queda para la otra persona de la cuenta cuando usted fallece.
+    en:
+      text: In a joint bank account, the money usually goes to the other person on the account when you die.
+  - id: will.5.3
+    kind: explain
+    legal: true
+    source: pc-100
+    es:
+      text: Cuando fallece una persona casada, la mitad de los bienes comunitarios ya es de su cónyuge.
+    en:
+      text: When a married person dies, half of the community property already belongs to their spouse.
+  - id: will.5.4
+    kind: explain
+    legal: true
+    source: pc-6101
+    es:
+      text: Por eso, en su testamento usted puede dejar sus bienes propios y su mitad de los bienes comunitarios, no la mitad de su cónyuge.
+    en:
+      text: That is why, in your will, you can leave your separate property and your half of the community property, not your spouse's half.
+  - id: will.5.5
+    kind: choice
+    legal: true
+    source: pc-6101
+    answer: 1
+    es:
+      prompt: Supongamos que la casa de Ana y Luis es un bien comunitario. En su testamento, ¿qué parte puede dejar Luis?
+      options:
+      - Toda la casa
+      - Su mitad
+      - Nada
+      explain: Cada cónyuge decide sobre su mitad de los bienes comunitarios.
+    en:
+      prompt: Suppose Ana and Luis's house is community property. In his will, what share can Luis leave?
+      options:
+      - The whole house
+      - His half
+      - Nothing
+      explain: Each spouse decides about their half of the community property.
+  - id: will.5.6
+    kind: truefalse
+    legal: true
+    source: pc-5000
+    answer: false
+    es:
+      statement: Una cuenta de retiro siempre pasa según lo que dice el testamento.
+      explain: Falso. Normalmente pasa a quien usted nombró como beneficiario en la cuenta.
+    en:
+      statement: A retirement account always passes according to the will.
+      explain: False. It usually passes to the beneficiary you named on the account.
+  - id: will.5.7
+    kind: order
+    character: pinata
+    legal: true
+    source: pc-6110
+    es:
+      prompt: Ordene los pasos para hacer un testamento
+      steps:
+      - Pensar a quién dejar sus bienes
+      - Elegir a su albacea y al tutor
+      - Firmar con dos testigos
+      - Guardar el original en un lugar seguro
+      explain: ¡Así se hace! Con la oficina, el abogado revisa todo antes de firmar.
+    en:
+      prompt: Put the steps for making a will in order
+      steps:
+      - Think about who receives your property
+      - Choose your executor and guardian
+      - Sign with two witnesses
+      - Keep the original in a safe place
+      explain: That's how it's done! With the office, the attorney reviews everything before you sign.

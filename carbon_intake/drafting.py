@@ -157,6 +157,27 @@ VERIFIED = {
             "reasonably available and willing has priority over any other person in making health care decisions",
     "4686": "unless the power of attorney for health care states a time of termination, the agent's authority is "
             "exercisable notwithstanding lapse of time",
+    # read 2026-11-18 on leginfo.legislature.ca.gov (headless Chromium), for the Aprende lessons
+    "100": "upon the death of a married person or registered domestic partner, one-half of the community property belongs to the surviving spouse and the other one-half belongs to the decedent",
+    "101": "upon the death of a married person or registered domestic partner domiciled in California, one-half of the decedent's quasi-community property belongs to the surviving spouse and the other one-half belongs to the decedent",
+    "331": "a person with the key to a safe deposit box held in the decedent's sole name may, before letters issue, get access only for limited purposes (including removing a will) by giving the institution proof of death and proof of identity",
+    "1500": "a parent may nominate a guardian of the person or estate of a minor child where the other parent nominates or consents to the same guardian, or where the other parent is dead, lacks capacity to consent, or would not need to consent to an adoption",
+    "1501": "a parent or any other person may nominate a guardian for property a minor receives from or by designation of the nominator, such as by gift, deed, trust, will, insurance or benefits",
+    "4406": "a third person who refuses within a reasonable time to honor an agent's authority under a properly executed statutory form power of attorney may be compelled to honor it in court, with attorney's fees if the refusal was unreasonable",
+    "4678": "unless the advance health care directive says otherwise, a person then authorized to make health care decisions for a patient has the same rights as the patient to request, receive, examine, copy and consent to disclosure of the patient's health care information",
+    "5000": "a provision for a nonprobate transfer on death in an insurance policy, account agreement, pension or retirement plan, trust, transfer on death deed or similar written instrument is not invalid because it does not meet the requirements for executing a will",
+    "5040": "a nonprobate transfer to a former spouse in an instrument made before or during the marriage fails if, at the transferor's death, the former spouse is no longer the surviving spouse because of dissolution or annulment, with exceptions",
+    "5302": "sums remaining in a joint account at the death of a party belong to the surviving party or parties unless there is clear and convincing evidence of a different intent; a P.O.D. account goes to the surviving P.O.D. payees",
+    "6101": "a will may dispose of the testator's separate property and the one-half of the community and quasi-community property that belongs to the testator",
+    "6122": "unless the will provides otherwise, dissolution or annulment of the testator's marriage after the will is made revokes gifts and appointments to the former spouse, including as executor, trustee or guardian",
+    "6400": "any part of a decedent's estate not effectively disposed of by will passes to the decedent's heirs as prescribed in the intestate succession part",
+    "6401": "without a will, the surviving spouse takes the decedent's half of the community and quasi-community property, and all, one-half or one-third of the separate property depending on the surviving children, parents and siblings",
+    "6402": "the part of an intestate estate not passing to the surviving spouse passes to the decedent's issue; if none, to the parents; if none, to the issue of the parents; then to grandparents and their issue, and so on",
+    "8200": "the custodian of a will must, within 30 days after learning of the testator's death, deliver the will to the clerk of the superior court and a copy to the named executor (or a beneficiary)",
+    "8420": "the person named as executor in the decedent's will has the right to appointment as personal representative",
+    "21117": "at-death transfers are classified: a specific gift is specifically identifiable property; a general gift comes from general assets; a residuary gift is the property that remains after all specific and general gifts are satisfied",
+    "21610": "a surviving spouse who married the decedent after all the decedent's testamentary instruments were made, and is not provided for, receives the decedent's half of community and quasi-community property and a share of the separate property, with exceptions",
+    "21620": "a child born or adopted after all the decedent's testamentary instruments were made, and not provided for, receives the share the child would have received had the decedent died without a will, with exceptions",
 }
 
 # One entry per document the office drafts: the client facts it must not invent, the articles a professional
