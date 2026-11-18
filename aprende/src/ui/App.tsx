@@ -16,6 +16,7 @@ import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
 import { Plan } from './screens/Plan';
+import { Aprender } from './screens/Aprender';
 import { Leccion } from './screens/Leccion';
 import { DevCharacter } from './DevCharacter';
 
@@ -66,6 +67,7 @@ function Screens() {
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
   else if (r === '/plan') screen = h(Plan, null);
+  else if (r === '/aprender') screen = h(Aprender, null);
   else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
   else screen = h(Placeholder, null);
 

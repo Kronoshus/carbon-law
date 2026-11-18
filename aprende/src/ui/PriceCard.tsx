@@ -48,11 +48,11 @@ export function PriceCard(props: { codes: string[] }) {
         h('div', { class: 'row' },
           h('h2', null, t(DOC_TITLE[it.code])),
           h('span', { class: 'now' }, formatMoney(it.price)),
-          h('s', null, formatMoney(it.base)),
+          earned ? h('s', null, formatMoney(it.base)) : null,
         ),
         h('div', { class: 'row between' },
           h('div', { class: 'seals', role: 'img', 'aria-label': t('price.seals', { count: earned }) }, seals),
-          h('p', { class: 'small' }, t('price.sum', { base: formatMoney(it.base), discount: formatMoney(totalDiscount), count: earned })),
+          h('p', { class: 'small' }, earned ? t('price.sum', { base: formatMoney(it.base), discount: formatMoney(totalDiscount), count: earned }) : t('price.howTo')),
         ),
         it.placeholder ? h('span', { class: 'example' }, t('price.placeholder')) : null,
       );
