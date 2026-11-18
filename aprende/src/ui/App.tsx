@@ -12,11 +12,7 @@ import { route, navigate } from '../core/router';
 import { getToken } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
-import { InicioIa } from './screens/InicioIa';
-import { InicioConsentimiento } from './screens/InicioConsentimiento';
-import { InicioNoAcepto } from './screens/InicioNoAcepto';
-import { InicioNombres } from './screens/InicioNombres';
-import { InicioEspera } from './screens/InicioEspera';
+import { InicioIa, InicioConsentimiento, InicioNoAcepto, InicioNombres, InicioEspera } from './screens/Inicio';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
@@ -93,6 +89,7 @@ function Screens() {
     if (!authed) return h(Bienvenida, null);
     return screen;
   }
+  if (r.startsWith('/inicio/')) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);

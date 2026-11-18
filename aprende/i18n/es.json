@@ -157,5 +157,7 @@
   "gate.names.send": "Continuar",
   "gate.wait.title": "Gracias",
   "gate.wait.body": "La oficina está revisando los nombres. Le avisaremos cuando pueda seguir con sus datos. Mientras tanto, puede seguir con las lecciones.",
-  "gate.wait.learn": "Ir a las lecciones"
+  "gate.wait.learn": "Ir a las lecciones",
+  "gate.disclosure.human": "Yo le ayudo a aprender y a reunir sus datos. El abogado Raval revisa y decide todo.",
+  "gate.error": "No se pudo guardar. Revise su conexión e intente de nuevo."
 }

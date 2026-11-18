@@ -157,5 +157,7 @@
   "gate.names.send": "Continue",
   "gate.wait.title": "Thank you",
   "gate.wait.body": "The office is reviewing the names. We will let you know when you can continue with your details. Meanwhile, you can keep taking the lessons.",
-  "gate.wait.learn": "Go to the lessons"
+  "gate.wait.learn": "Go to the lessons",
+  "gate.disclosure.human": "I help you learn and gather your information. Attorney Raval reviews and decides everything.",
+  "gate.error": "That could not be saved. Check your connection and try again."
 }
