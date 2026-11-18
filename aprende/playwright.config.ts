@@ -12,15 +12,15 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: '/home/dkkm10/work/cl-wt/T2-11/scripts/start-e2e-backend.sh',
+      command: 'bash ../scripts/start-e2e-backend.sh',
       url: 'http://127.0.0.1:8011/health',
+      env: { PYTHON: process.env.PYTHON || 'python' },
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
     {
       command: 'npm run dev',
       url: 'http://127.0.0.1:5173',
-      env: { VITE_API_ORIGIN: 'http://127.0.0.1:8011' },
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },

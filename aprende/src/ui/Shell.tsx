@@ -1,10 +1,11 @@
 import type { ComponentChildren } from 'preact';
 import { route, navigate } from '../core/router';
 import { t } from '../core/i18n';
+import type { I18nKey } from '../core/i18n-keys';
 import { clearToken } from '../core/api';
 import './shell.css';
 
-const TABS = [
+const TABS: { path: string; key: I18nKey }[] = [
   { path: '/aprender', key: 'nav.aprender' },
   { path: '/plan', key: 'nav.plan' },
   { path: '/preguntas', key: 'nav.preguntas' },
@@ -41,7 +42,7 @@ export function Shell({ children }: { children: ComponentChildren }) {
               class="rail-link"
               aria-current={isActive(tab.path) ? 'page' : 'false'}
             >
-              {t(tab.key as never)}
+              {t(tab.key)}
             </a>
           ))}
         </nav>
@@ -55,7 +56,7 @@ export function Shell({ children }: { children: ComponentChildren }) {
             class="tab-link"
             aria-current={isActive(tab.path) ? 'page' : 'false'}
           >
-            {t(tab.key as never)}
+            {t(tab.key)}
           </a>
         ))}
       </nav>
