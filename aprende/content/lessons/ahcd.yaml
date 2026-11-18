@@ -1,0 +1,239 @@
+id: ahcd
+unit: ahcd
+day: 3
+character: oso
+sensitive: true
+datos:
+- salud_agente
+- salud_vida
+- salud_donacion
+- salud_info
+- salud_otros
+title:
+  es: La directiva de salud
+  en: The health care directive
+steps:
+- id: ahcd.1
+  title:
+    es: Quién decide por usted
+    en: Who decides for you
+  items:
+  - id: ahcd.1.1
+    kind: explain
+    legal: true
+    source: pc-4671
+    es:
+      text: 'Hoy hablamos con calma de un tema importante. Con una directiva anticipada usted nombra a un agente: la persona que tomaría decisiones médicas por usted si usted no puede.'
+    en:
+      text: 'Today we talk calmly about something important. With an advance directive you name an agent: the person who would make medical decisions for you if you cannot.'
+  - id: ahcd.1.2
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: También puede nombrar un agente suplente, por si el primero no puede o no está disponible.
+    en:
+      text: You can also name an alternate agent, in case the first one cannot or is not available.
+  - id: ahcd.1.3
+    kind: explain
+    legal: true
+    source: pc-4682
+    es:
+      text: Normalmente su agente decide solo cuando su médico determina que usted ya no puede decidir. Si usted quiere, puede darle esa autoridad desde ahora.
+    en:
+      text: Usually your agent decides only when your doctor determines that you can no longer decide. If you wish, you can give that authority starting now.
+  - id: ahcd.1.4
+    kind: explain
+    legal: true
+    source: pc-4659
+    es:
+      text: Por regla general, su médico, o un empleado del hospital o del hogar de cuidado donde usted recibe atención, no puede ser su agente.
+    en:
+      text: As a rule, your doctor, or an employee of the hospital or care home where you receive care, cannot be your agent.
+  - id: ahcd.1.5
+    kind: choice
+    legal: true
+    source: pc-4659
+    answer: 1
+    es:
+      prompt: ¿Quién, por regla general, NO puede ser su agente de salud?
+      options:
+      - Su hija
+      - Su médico de cabecera
+      - Un amigo de confianza
+      explain: Su médico de cabecera no puede ser su agente.
+    en:
+      prompt: Who, as a rule, CANNOT be your health care agent?
+      options:
+      - Your daughter
+      - Your primary doctor
+      - A trusted friend
+      explain: Your primary doctor cannot be your agent.
+- id: ahcd.2
+  title:
+    es: Sus deseos al final de la vida
+    en: Your wishes at the end of life
+  items:
+  - id: ahcd.2.1
+    kind: explain
+    legal: true
+    source: pc-4670
+    es:
+      text: Usted puede dar instrucciones sobre su atención médica, por escrito o de palabra.
+    en:
+      text: You can give instructions about your health care, in writing or out loud.
+  - id: ahcd.2.2
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: 'El formulario de California le permite elegir: que se haga todo lo posible por prolongar su vida, o no prolongarla si tiene una enfermedad incurable y no se va a recuperar.'
+    en:
+      text: 'The California form lets you choose: to have everything possible done to prolong your life, or not to prolong it if you have an incurable illness and will not recover.'
+  - id: ahcd.2.3
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: No hay respuestas buenas o malas. Son sus valores, y puede escribirlos con sus propias palabras.
+    en:
+      text: There are no right or wrong answers. These are your values, and you can write them in your own words.
+  - id: ahcd.2.4
+    kind: truefalse
+    legal: true
+    source: pc-4670
+    answer: true
+    es:
+      statement: Sus instrucciones de salud pueden ser de palabra, no solo por escrito.
+      explain: Cierto. Aun así, por escrito es más fácil que todos las conozcan.
+    en:
+      statement: Your health care instructions can be spoken, not only written.
+      explain: True. Even so, in writing it is easier for everyone to know them.
+- id: ahcd.3
+  title:
+    es: El dolor y la donación de órganos
+    en: Pain relief and organ donation
+  items:
+  - id: ahcd.3.1
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: Salvo que usted diga otra cosa, el formulario pide que siempre le den tratamiento para aliviar el dolor, aunque eso acorte su vida.
+    en:
+      text: Unless you say otherwise, the form asks that you always receive treatment to relieve pain, even if it shortens your life.
+  - id: ahcd.3.2
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: También puede decir si quiere donar sus órganos y tejidos al fallecer.
+    en:
+      text: You can also say whether you want to donate your organs and tissues when you die.
+  - id: ahcd.3.3
+    kind: explain
+    legal: true
+    source: pc-4683
+    es:
+      text: Salvo que usted lo limite, su agente también puede decidir sobre la donación y sobre qué hacer con su cuerpo después de su fallecimiento.
+    en:
+      text: Unless you limit it, your agent can also decide about donation and what to do with your body after your death.
+  - id: ahcd.3.4
+    kind: choice
+    legal: true
+    source: pc-4701
+    answer: 1
+    es:
+      prompt: Si usted no escribe nada sobre el dolor, ¿qué indica el formulario?
+      options:
+      - Que no le den medicinas
+      - Que siempre le alivien el dolor
+      - Que decida el hospital
+      explain: El formulario pide alivio del dolor, salvo que usted diga otra cosa.
+    en:
+      prompt: If you write nothing about pain, what does the form say?
+      options:
+      - Give you no medicine
+      - Always relieve your pain
+      - The hospital decides
+      explain: The form asks for pain relief unless you say otherwise.
+- id: ahcd.4
+  title:
+    es: Su información médica
+    en: Your medical information
+  items:
+  - id: ahcd.4.1
+    kind: explain
+    legal: true
+    source: pc-4678
+    es:
+      text: Cuando su agente decide por usted, tiene los mismos derechos que usted para pedir y ver su información médica, salvo que su directiva diga otra cosa.
+    en:
+      text: When your agent decides for you, they have the same rights as you to ask for and see your medical information, unless your directive says otherwise.
+  - id: ahcd.4.2
+    kind: explain
+    es:
+      text: Si quiere que sus médicos puedan hablar con su agente desde ahora, la oficina puede preparar un permiso por escrito para eso.
+    en:
+      text: If you want your doctors to be able to talk with your agent starting now, the office can prepare a written permission for that.
+  - id: ahcd.4.3
+    kind: truefalse
+    legal: true
+    source: pc-4678
+    answer: true
+    es:
+      statement: Cuando su agente decide por usted, puede ver su expediente médico.
+      explain: Cierto. Tiene los mismos derechos que usted para ver su información.
+    en:
+      statement: When your agent decides for you, they can see your medical records.
+      explain: True. They have the same rights as you to see your information.
+- id: ahcd.5
+  title:
+    es: La firma y las copias
+    en: Signing and copies
+  items:
+  - id: ahcd.5.1
+    kind: explain
+    legal: true
+    source: pc-4673
+    es:
+      text: Usted firma y pone la fecha. Después la firman dos testigos, o usted la firma ante un notario.
+    en:
+      text: You sign and date it. Then two witnesses sign it, or you sign it before a notary.
+  - id: ahcd.5.2
+    kind: explain
+    legal: true
+    source: pc-4674
+    es:
+      text: Su agente no puede ser testigo, y al menos uno de los testigos no debe ser pariente suyo ni heredar de usted.
+    en:
+      text: Your agent cannot be a witness, and at least one witness must not be your relative or inherit from you.
+  - id: ahcd.5.3
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: Dé una copia a su médico, a su agente y a su suplente, y hable con ellos de sus deseos.
+    en:
+      text: Give a copy to your doctor, your agent and your alternate, and talk with them about your wishes.
+  - id: ahcd.5.4
+    kind: order
+    character: oso
+    legal: true
+    source: pc-4701
+    es:
+      prompt: Ordene los pasos
+      steps:
+      - Elegir a su agente
+      - Hablar con él de sus deseos
+      - Firmar con testigos o ante notario
+      - Dar copias a su médico y a su agente
+      explain: Muy bien. Lo más importante es la conversación con su agente.
+    en:
+      prompt: Put the steps in order
+      steps:
+      - Choose your agent
+      - Talk with them about your wishes
+      - Sign with witnesses or before a notary
+      - Give copies to your doctor and your agent
+      explain: Well done. The most important part is the conversation with your agent.

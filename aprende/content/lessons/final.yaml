@@ -1,0 +1,198 @@
+id: final
+unit: final
+day: 14
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Cuide sus documentos
+  en: Look after your documents
+steps:
+- id: final.1
+  title:
+    es: Dónde guardar los originales
+    en: Where to keep the originals
+  items:
+  - id: final.1.1
+    kind: explain
+    es:
+      text: ¡Felicidades por firmar su plan! Guarde los originales en un lugar seguro y resistente al fuego, que su albacea o su fiduciario sucesor sepan encontrar.
+    en:
+      text: Congratulations on signing your plan! Keep the originals in a safe, fire-resistant place that your executor or successor trustee knows how to find.
+  - id: final.1.2
+    kind: explain
+    legal: true
+    source: pc-331
+    es:
+      text: 'Una caja de seguridad del banco a su solo nombre puede ser difícil de abrir después de su fallecimiento: se necesita la llave, el certificado de defunción y una prueba de identidad.'
+    en:
+      text: 'A bank safe deposit box in your name only can be hard to open after your death: it takes the key, the death certificate and proof of identity.'
+  - id: final.1.3
+    kind: explain
+    legal: true
+    source: pc-8200
+    es:
+      text: Quien tenga su testamento original debe entregarlo al tribunal del condado dentro de los 30 días después de saber de su fallecimiento.
+    en:
+      text: Whoever holds your original will must deliver it to the county court within 30 days after learning of your death.
+  - id: final.1.4
+    kind: truefalse
+    legal: true
+    source: pc-331
+    answer: true
+    es:
+      statement: Para abrir una caja de seguridad a nombre de una persona fallecida, el banco pide el certificado de defunción.
+      explain: Cierto. Por eso conviene que alguien de confianza sepa dónde están sus originales.
+    en:
+      statement: To open a safe deposit box in a deceased person's name, the bank asks for the death certificate.
+      explain: True. That is why someone you trust should know where your originals are.
+- id: final.2
+  title:
+    es: Quién recibe copia
+    en: Who gets a copy
+  items:
+  - id: final.2.1
+    kind: explain
+    es:
+      text: Dígale a su albacea dónde está el original de su testamento.
+    en:
+      text: Tell your executor where the original of your will is.
+  - id: final.2.2
+    kind: explain
+    es:
+      text: Su fiduciario sucesor necesita el fideicomiso y los papeles de lo que usted puso en él.
+    en:
+      text: Your successor trustee needs the trust and the records of what you put into it.
+  - id: final.2.3
+    kind: explain
+    legal: true
+    source: pc-4701
+    es:
+      text: Su agente de salud y su médico deben tener una copia de su directiva.
+    en:
+      text: Your health care agent and your doctor should have a copy of your directive.
+  - id: final.2.4
+    kind: explain
+    es:
+      text: Su apoderado necesita una copia del poder, y a veces su banco también la pide.
+    en:
+      text: Your agent needs a copy of the power of attorney, and sometimes your bank asks for it too.
+  - id: final.2.5
+    kind: match
+    character: pinata
+    es:
+      prompt: Una cada persona con el documento que necesita
+      pairs:
+      - - Albacea
+        - Testamento
+      - - Fiduciario sucesor
+        - Fideicomiso
+      - - Agente de salud
+        - Directiva
+      - - Apoderado
+        - Poder financiero
+      explain: ¡Muy bien! Cada persona sabe dónde buscar.
+    en:
+      prompt: Match each person with the document they need
+      pairs:
+      - - Executor
+        - Will
+      - - Successor trustee
+        - Trust
+      - - Health care agent
+        - Directive
+      - - Agent
+        - Financial power of attorney
+      explain: Well done! Everyone knows where to look.
+- id: final.3
+  title:
+    es: Termine de fondear y revise beneficiarios
+    en: Finish funding and check beneficiaries
+  items:
+  - id: final.3.1
+    kind: explain
+    legal: true
+    source: pc-15202
+    es:
+      text: 'Revise la lista de fondeo de la oficina: cada casa y cada cuenta que deba estar en el fideicomiso. Lo que no esté dentro, el fideicomiso no lo cubre.'
+    en:
+      text: 'Go through the office''s funding checklist: every house and account that should be in the trust. What is not inside, the trust does not cover.'
+  - id: final.3.2
+    kind: explain
+    legal: true
+    source: pc-5000
+    es:
+      text: Las cuentas de retiro y los seguros de vida se pagan a quien usted nombró en ese formulario. Manténgalos de acuerdo con su plan.
+    en:
+      text: Retirement accounts and life insurance are paid to whoever you named on that form. Keep them in line with your plan.
+  - id: final.3.3
+    kind: explain
+    legal: true
+    source: pc-6122
+    es:
+      text: Si usted se divorcia, la ley anula lo que su testamento le dejaba a su excónyuge. Aun así, conviene actualizar todo su plan.
+    en:
+      text: If you divorce, the law cancels what your will left to your former spouse. Even so, it is wise to update your whole plan.
+  - id: final.3.4
+    kind: truefalse
+    legal: true
+    source: pc-6122
+    answer: true
+    es:
+      statement: Si se divorcia, lo que su testamento le dejaba a su excónyuge normalmente queda anulado.
+      explain: Cierto, salvo que el testamento diga lo contrario. Pero actualice su plan de todas formas.
+    en:
+      statement: If you divorce, what your will left to your former spouse is usually cancelled.
+      explain: True, unless the will says otherwise. But update your plan anyway.
+- id: final.4
+  title:
+    es: Cuándo actualizar su plan
+    en: When to update your plan
+  items:
+  - id: final.4.1
+    kind: explain
+    es:
+      text: Actualice su plan si se casa o se divorcia, tiene un hijo, compra una propiedad o un negocio, quiere cambiar a quién nombró o quién recibe, o si alguien de su plan fallece o se enferma.
+    en:
+      text: Update your plan if you marry or divorce, have a child, buy property or a business, want to change who you named or who receives, or if someone in your plan dies or becomes ill.
+  - id: final.4.2
+    kind: explain
+    legal: true
+    source: pc-21610
+    es:
+      text: Si se casa después de firmar su testamento y no lo actualiza, su nuevo cónyuge puede recibir una parte por ley.
+    en:
+      text: If you marry after signing your will and do not update it, your new spouse may receive a share by law.
+  - id: final.4.3
+    kind: explain
+    legal: true
+    source: pc-21620
+    es:
+      text: 'Lo mismo pasa con un hijo que nace o adopta después: puede recibir la parte que le tocaría sin testamento.'
+    en:
+      text: 'The same goes for a child born or adopted later: they may receive the share they would get without a will.'
+  - id: final.4.4
+    kind: explain
+    es:
+      text: Para pedir un cambio, use «Pedir un cambio» en Mi plan. La oficina le responde.
+    en:
+      text: To ask for a change, use "Ask for a change" in My plan. The office will answer you.
+  - id: final.4.5
+    kind: choice
+    legal: true
+    source: pc-21620
+    answer: 1
+    es:
+      prompt: Ana tiene un hijo nuevo después de firmar su testamento. ¿Qué le conviene hacer?
+      options:
+      - Nada, el testamento ya cubre todo
+      - Pedir un cambio para actualizar su plan
+      - Romper su testamento
+      explain: Lo mejor es pedir un cambio. Aunque la ley protege al hijo, su plan debe decir lo que usted quiere.
+    en:
+      prompt: Ana has a new child after signing her will. What should she do?
+      options:
+      - Nothing, the will already covers everything
+      - Ask for a change to update her plan
+      - Tear up her will
+      explain: The best step is to ask for a change. Although the law protects the child, your plan should say what you want.
