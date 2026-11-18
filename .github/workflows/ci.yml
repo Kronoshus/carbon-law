@@ -55,4 +55,4 @@ jobs:
       - name: build extension
         run: cd aprende && npm run build:ext
       - name: i18n parity
-        run: cd aprende && npm run i18n:check --if-present
+        run: cd aprende && npm run i18n:check

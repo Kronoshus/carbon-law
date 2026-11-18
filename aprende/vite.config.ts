@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
       }
     });
   }
-  const base = process.env.VITE_BASE || process.env.VITE_BASE_URL || process.env.BASE_PATH || process.env.BASE_URL || process.env.BASE || process.env.PUBLIC_URL || '/';
+  const base = process.env.VITE_BASE || '/';
   return {
     base,
     plugins,
