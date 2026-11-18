@@ -30,6 +30,14 @@ export default defineConfig(({ mode }) => {
   const base = process.env.VITE_BASE || '/';
   return {
     base,
+    server: {
+      host: '127.0.0.1',
+      proxy: {
+        '/auth': 'http://127.0.0.1:8011',
+        '/journey': 'http://127.0.0.1:8011',
+        '/health': 'http://127.0.0.1:8011',
+      },
+    },
     plugins,
     esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
     resolve: { alias: { '@': resolve(__dirname, 'src') } },

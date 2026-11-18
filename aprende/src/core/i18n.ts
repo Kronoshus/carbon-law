@@ -17,8 +17,20 @@ export function setLang(l: Lang): void {
   lang.value = l;
   if (typeof document !== 'undefined') {
     document.documentElement.lang = l;
+    try { localStorage.setItem('aprende_lang', l); } catch { /* ignore */ }
   }
 }
+
+// restore persisted language
+try {
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem('aprende_lang');
+    if (saved === 'es' || saved === 'en') {
+      lang.value = saved as Lang;
+      if (typeof document !== 'undefined') document.documentElement.lang = saved;
+    }
+  }
+} catch { /* ignore */ }
 
 export function getLocale(l: Lang = lang.value): string {
   return l === 'es' ? 'es-US' : 'en-US';

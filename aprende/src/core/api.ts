@@ -1,4 +1,5 @@
 import { getPlatform } from '../platform';
+import { navigate } from './router';
 
 export const TOKEN_KEY = 'aprende_token';
 
@@ -29,6 +30,9 @@ export async function apiFetch(path: string, options: ApiOptions = {}): Promise<
   const res = await fetch(`${API_ORIGIN}${path}`, { ...rest, headers: h, body });
   if (res.status === 401) {
     await platform.storage.remove(TOKEN_KEY);
+    if (typeof window !== 'undefined' && !window.location.hash.startsWith('#/bienvenida') && !window.location.hash.startsWith('#/entrar') && !window.location.hash.startsWith('#/cuenta-nueva')) {
+      navigate('/bienvenida');
+    }
   }
   return res;
 }
