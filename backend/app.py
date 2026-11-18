@@ -25,6 +25,13 @@ PRIORITIES = {"Normal", "Urgent", "Low"}
 ROLES = {"client", "paralegal", "attorney", "admin"}
 
 app = FastAPI(title="Carbon Law Backend", version="0.4.0", docs_url=None, redoc_url=None, openapi_url=None)
+
+if os.environ.get("APRENDE_INPROCESS_WORKER") == "1":
+    import worker as _worker_mod
+
+    @app.on_event("startup")
+    def _start_inprocess_worker():
+        _worker_mod.start_in_background()
 app.add_middleware(CORSMiddleware,
                    allow_origins=["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"],
                    allow_credentials=False, allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
