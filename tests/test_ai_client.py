@@ -1,3 +1,4 @@
+import pytest
 import os, sys, tempfile, threading, http.server, json, time, hashlib, logging
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -312,3 +313,12 @@ def test_failed_call_writes_row_ok_zero():
     assert after - before == 1
     row = db.query("SELECT ok FROM ai_calls ORDER BY rowid DESC LIMIT 1")[0]
     assert row[0] == 0
+
+
+def test_network_guard_blocks_real_beam():
+    import asyncio
+    from ai.beam import BeamClient
+    client = BeamClient(api_key="k", base_url="https://api.reflection.ai/openai/v1")
+    with pytest.raises(Exception) as e:
+        asyncio.run(client.complete("s", [{"role": "user", "content": "x"}], 10, purpose="chat"))
+    assert "must not call the network" in str(e.value) or "must not call the network" in str(e.value.__cause__)

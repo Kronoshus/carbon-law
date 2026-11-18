@@ -92,7 +92,6 @@ class BeamClient:
         usage: dict[str, Any] = {}
         text = ""
         reasoning = None
-        ok = 1
 
         async def _write_row(ok_flag: int, lat: int, resp_hash: str, usg: dict[str, Any]) -> None:
             await asyncio.to_thread(
@@ -114,54 +113,51 @@ class BeamClient:
                 ),
             )
 
-        try:
-            while True:
-                try:
-                    async with httpx.AsyncClient(timeout=self._timeout(purpose)) as client:
-                        resp = await client.post(
-                            self.base_url + "/chat/completions",
-                            headers=headers,
-                            json=payload,
-                        )
-                    if 400 <= resp.status_code < 500:
-                        # no retry on client errors
-                        response_text_for_hash = resp.text
-                        latency_ms = int((time.monotonic() - started) * 1000)
-                        await _write_row(0, latency_ms, hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest(), {})
-                        raise ModelError(f"client error {resp.status_code}")
-                    if resp.status_code >= 500:
-                        raise httpx.HTTPStatusError(
-                            f"server error {resp.status_code}",
-                            request=resp.request,
-                            response=resp,
-                        )
-                    resp.raise_for_status()
-                    data = resp.json()
-                    response_text_for_hash = json.dumps(data, ensure_ascii=False, sort_keys=True)
-                    choice = (data.get("choices") or [{}])[0]
-                    msg = choice.get("message") or {}
-                    text = msg.get("content") or ""
-                    reasoning = msg.get("reasoning_content") or msg.get("reasoning")
-                    usage = data.get("usage") or {}
+        while True:
+            try:
+                async with httpx.AsyncClient(timeout=self._timeout(purpose)) as client:
+                    resp = await client.post(
+                        self.base_url + "/chat/completions",
+                        headers=headers,
+                        json=payload,
+                    )
+                if 400 <= resp.status_code < 500:
+                    # no retry on client errors
+                    response_text_for_hash = resp.text
+                    latency_ms = int((time.monotonic() - started) * 1000)
+                    await _write_row(0, latency_ms, hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest(), {})
+                    raise ModelError(f"client error {resp.status_code}")
+                if resp.status_code >= 500:
+                    raise httpx.HTTPStatusError(
+                        f"server error {resp.status_code}",
+                        request=resp.request,
+                        response=resp,
+                    )
+                resp.raise_for_status()
+                data = resp.json()
+                response_text_for_hash = json.dumps(data, ensure_ascii=False, sort_keys=True)
+                choice = (data.get("choices") or [{}])[0]
+                msg = choice.get("message") or {}
+                text = msg.get("content") or ""
+                reasoning = msg.get("reasoning_content") or msg.get("reasoning")
+                usage = data.get("usage") or {}
 
-                    if looping(text):
-                        if not retried:
-                            retried = True
-                            continue
-                        latency_ms = int((time.monotonic() - started) * 1000)
-                        await _write_row(0, latency_ms, hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest(), usage)
-                        raise ModelError("model looping")
-                    break
-                except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+                if looping(text):
                     if not retried:
                         retried = True
                         continue
                     latency_ms = int((time.monotonic() - started) * 1000)
-                    resp_hash = hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest() if response_text_for_hash else hashlib.sha256(b"").hexdigest()
-                    await _write_row(0, latency_ms, resp_hash, usage)
-                    raise ModelError(str(exc)) from exc
-        except ModelError:
-            raise
+                    await _write_row(0, latency_ms, hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest(), usage)
+                    raise ModelError("model looping")
+                break
+            except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+                if not retried:
+                    retried = True
+                    continue
+                latency_ms = int((time.monotonic() - started) * 1000)
+                resp_hash = hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest() if response_text_for_hash else hashlib.sha256(b"").hexdigest()
+                await _write_row(0, latency_ms, resp_hash, usage)
+                raise ModelError(str(exc)) from exc
 
         latency_ms = int((time.monotonic() - started) * 1000)
         await _write_row(1, latency_ms, hashlib.sha256(response_text_for_hash.encode("utf-8")).hexdigest(), usage)
