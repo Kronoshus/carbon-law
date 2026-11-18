@@ -1,0 +1,1 @@
+APRENDE_PREFIXES = ("/journey",)

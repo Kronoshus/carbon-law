@@ -45,14 +45,24 @@ app.add_middleware(CORSMiddleware,
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
-_request_lock = asyncio.Lock()
+# Aprende routes (see APRENDE_PREFIXES) are deliberately excluded so a slow Aprende request cannot block legacy ones;
+# their writes to legacy state go through backend/aprende/legacy.py, which takes the SAME lock.
+import threading
+_request_lock = threading.Lock()
+
+from aprende import APRENDE_PREFIXES
 
 @app.middleware("http")
 async def serialize_requests(request, call_next):
     if request.url.path == "/health":
         return await call_next(request)
-    async with _request_lock:
+    if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
         return await call_next(request)
+    await asyncio.to_thread(_request_lock.acquire)
+    try:
+        return await call_next(request)
+    finally:
+        _request_lock.release()
 
 # ---------- in-memory stores (persisted to data.json) ----------
 matters: Dict[str, Dict[str, Any]] = {}
