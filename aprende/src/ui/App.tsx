@@ -12,7 +12,7 @@ const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 
 export function App() {
   const r = route.value;
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
@@ -53,6 +53,6 @@ export function App() {
   else screen = h(Placeholder, null);
 
   if (PUBLIC.has(r)) return screen;
-  if (!authed) return null;
+  if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
 }
