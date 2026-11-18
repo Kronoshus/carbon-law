@@ -12,6 +12,11 @@ import { route, navigate } from '../core/router';
 import { getToken } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
+import { InicioIa } from './screens/InicioIa';
+import { InicioConsentimiento } from './screens/InicioConsentimiento';
+import { InicioNoAcepto } from './screens/InicioNoAcepto';
+import { InicioNombres } from './screens/InicioNombres';
+import { InicioEspera } from './screens/InicioEspera';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
@@ -44,7 +49,15 @@ function Screens() {
           if (res.ok) {
             const j = await res.json();
             const facts = j.facts || {};
-            navigate(facts.ai_disclosed ? '/aprender' : '/inicio/ia');
+            let target = '/inicio/ia';
+            if (facts.ai_disclosed) {
+              if (facts.consent_answer === 'no') target = '/inicio/no-acepto';
+              else if (!facts.consent) target = '/inicio/consentimiento';
+              else if (!facts.names_submitted) target = '/inicio/nombres';
+              else if (j.conflict !== 'clear') target = '/inicio/espera';
+              else target = '/aprender';
+            }
+            navigate(target);
           } else {
             navigate('/inicio/ia');
           }
@@ -67,6 +80,11 @@ function Screens() {
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
   else if (r === '/plan') screen = h(Plan, null);
+  else if (r === '/inicio/ia') screen = h(InicioIa, null);
+  else if (r === '/inicio/consentimiento') screen = h(InicioConsentimiento, null);
+  else if (r === '/inicio/no-acepto') screen = h(InicioNoAcepto, null);
+  else if (r === '/inicio/nombres') screen = h(InicioNombres, null);
+  else if (r === '/inicio/espera') screen = h(InicioEspera, null);
   else if (r === '/aprender') screen = h(Aprender, null);
   else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
   else screen = h(Placeholder, null);
