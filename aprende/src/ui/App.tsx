@@ -25,6 +25,7 @@ import { Resumen } from './screens/Resumen';
 import { Firmados } from './screens/Firmados';
 import { Acuerdo } from './screens/Acuerdo';
 import { Cita } from './screens/Cita';
+import { Pago, PagoListo } from './screens/Pago';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
@@ -33,6 +34,7 @@ function Screens() {
   const r = route.value;
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const datosMatch = r.match(/^\/datos\/(.+)$/);
+  const pagoListo = r.startsWith('/pago/listo');
   const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 
@@ -95,6 +97,8 @@ function Screens() {
   else if (r === '/firmados') screen = h(Firmados, null);
   else if (r === '/acuerdo') screen = h(Acuerdo, null);
   else if (r === '/cita') screen = h(Cita, null);
+  else if (r === '/pago') screen = h(Pago, null);
+  else if (pagoListo) screen = h(PagoListo, null);
   else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
   else screen = h(Placeholder, null);
 
