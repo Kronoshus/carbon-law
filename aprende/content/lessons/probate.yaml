@@ -98,3 +98,58 @@ steps:
       text: Un fideicomiso en vida bien fondeado ayuda a que su familia no tenga que pasar por este proceso.
     en:
       text: A well-funded living trust helps your family avoid this process.
+- id: probate.3
+  title:
+    es: Caminos más sencillos y lo que cuesta
+    en: Simpler routes, and what it costs
+  items:
+  - id: probate.3.1
+    kind: explain
+    legal: true
+    source: pc-13151
+    es:
+      text: Si la casa donde vivía la persona valía $750,000 o menos, sus herederos pueden pedirle al juez una orden más sencilla, sin un proceso completo, 40 días después del fallecimiento. La ley ajusta esa cantidad cada pocos años.
+    en:
+      text: If the home the person lived in was worth $750,000 or less, the heirs can ask the court for a simpler order instead of a full probate, 40 days after the death. The law adjusts that amount every few years.
+  - id: probate.3.2
+    kind: explain
+    legal: true
+    source: pc-13100
+    es:
+      text: Si los demás bienes suman poco, la familia puede recibirlos con una declaración firmada, sin ir al juez. La ley fija esa cantidad y también la ajusta.
+    en:
+      text: If the other property adds up to a small amount, the family can collect it with a signed statement, without going to court. The law sets that amount and adjusts it too.
+  - id: probate.3.3
+    kind: truefalse
+    legal: true
+    source: pc-13151
+    answer: false
+    es:
+      statement: En California, toda casa tiene que pasar por un proceso completo de sucesión.
+      explain: Falso. Una casa de menor valor puede pasar con una orden más sencilla del juez.
+    en:
+      statement: In California, every home has to go through a full probate.
+      explain: False. A lower-value home can pass with a simpler court order.
+  - id: probate.3.4
+    kind: explain
+    legal: true
+    source: pc-10810
+    es:
+      text: En un proceso completo, la ley fija lo que cobran el albacea y su abogado. Se calcula sobre el valor total de los bienes, sin restar lo que se debe de la casa.
+    en:
+      text: In a full probate, the law sets what the executor and their attorney are paid. It is figured on the total value of the property, without subtracting what is still owed on the home.
+  - id: probate.3.5
+    kind: explain
+    legal: true
+    source: pc-10800
+    es:
+      text: 'Por ejemplo: con bienes de $500,000, el albacea puede cobrar $13,000 y su abogado otros $13,000, aunque la casa todavía tenga hipoteca.'
+    en:
+      text: 'For example: with property worth $500,000, the executor can be paid $13,000 and their attorney another $13,000, even if the home still has a mortgage.'
+  - id: probate.3.6
+    kind: explain
+    legal: false
+    es:
+      text: Cuál camino le toca a su familia depende de sus bienes. Esa es una pregunta para el abogado Raval.
+    en:
+      text: Which route fits your family depends on your property. That is a question for attorney Raval.

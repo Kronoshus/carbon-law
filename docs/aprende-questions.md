@@ -111,6 +111,21 @@ before the attorney approves them — the opposite of the new rule. Retire it wh
 legal advice." Aprende starts with AI lessons and offers the consultation optionally from day 4. Change the homepage
 wording, or make the consultation part of the path?
 
+## From the research (2026-11-18, see `aprende-research.md`)
+
+| # | Question | Why it matters | Recommendation |
+|---|---|---|---|
+| Q-R1 | Offer a payment plan or split payment? | Cost and low savings are stated barriers; most older Hispanic homeowners without a will have little cash on hand | Yes, two or three payments, shown on the price card |
+| Q-R2 | A "plan for your children" bonus lesson (guardian nomination, Caregiver's Authorization Affidavit, joint guardianship)? | Children are the strongest real-life reason to plan; deportation fear is current | Yes, as general information; the attorney decides scope and wording |
+| Q-R3 | Mention transfer-on-death deeds, Prop 19 and Medi-Cal estate recovery as "things families don't expect"? | Common cost surprises; outside the four core documents | Only as one line each that routes to the attorney |
+| Q-R4 | Warn that employer plans' beneficiary forms can override the will (federal law)? | A common failure; our source rule allows only the Probate Code and the courts' self-help pages | Allow this one federal point with an attorney-approved source |
+| Q-R5 | The data promise at consent: who sees the client's words, how long they are kept, that they are confidential | About half of Latinos fear immigration enforcement; trust is the barrier | The firm writes it; we show it on the consent screen |
+| Q-R6 | Show the attorney's State Bar number and "a notario is not a lawyer" in the app? | Notario fraud; distrust of the process | Yes, on the disclosure and the price card |
+| Q-R7 | Spanish at signing: a Spanish-speaking witness or interpreter, Spanish summaries; may documents be in Spanish? | Spanish speakers who need an interpreter complete directives least often | Spanish staff at every signing; attorney decides on document language |
+| Q-R8 | Ask in intake whether the client receives or expects Medi-Cal? | Affects advice; sensitive | Only if the attorney wants it, worded as a fact for him |
+| Q-R9 | Add an "if you can't afford this" note pointing to legal aid (TLAP, Bet Tzedek)? | Builds trust; screens out clients the firm can't serve | Firm's business call |
+| Q-R10 | Approve the staff questionnaire now and the client interviews (5–8 people, run by the firm)? | Our research is desk research only | Questionnaire now; interviews after the firm reviews the guide |
+
 ## Budget
 
 **Q-B1. Token budget.** The backlog has 61 tasks; at the brief's minimum of 100 M tokens each that is 6.1 B, above the
