@@ -1539,7 +1539,9 @@ app.include_router(_rda.router)
 
 # Aprende staff routes (T6-09)
 from aprende import routes_staff as _rst
+from aprende import review as _rev
 app.include_router(_rst.router)
+app.include_router(_rev.router)
 # Aprende engagement routes (T6-01)
 from aprende import routes_engagement as _ren
 app.include_router(_ren.router)
