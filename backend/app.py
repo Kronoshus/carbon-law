@@ -1546,6 +1546,8 @@ app.include_router(_ren.router)
 # Aprende booking routes (T6-07)
 from aprende import booking as _rb
 app.include_router(_rb.router)
+from aprende import routes_signing as _rsi
+app.include_router(_rsi.router)
 
 if __name__ == "__main__":
     import uvicorn

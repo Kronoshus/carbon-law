@@ -255,5 +255,13 @@
   "pago.locked": "You can pay once you and attorney Raval have signed the agreement.",
   "pago.waiting": "We are confirming your payment with Stripe. This takes a few seconds.",
   "pago.done": "Payment received! Attorney Raval starts preparing your documents.",
-  "pago.error": "The payment could not be opened. Try again in a few minutes."
+  "pago.error": "The payment could not be opened. Try again in a few minutes.",
+  "firmados.title": "Your signed documents",
+  "firmados.body": "Keep the originals somewhere safe and tell the people you trust where they are. Here is a copy of each one.",
+  "firmados.download": "Download {name}",
+  "firmados.funding.title": "Move your property into the trust",
+  "firmados.funding.body": "Your trust protects only what is in its name. Use this checklist; the office will guide you step by step.",
+  "firmados.funding.download": "Download the trust checklist",
+  "firmados.none": "Your documents will appear here after the signing.",
+  "firmados.final": "Take the final lesson: take care of your documents"
 }

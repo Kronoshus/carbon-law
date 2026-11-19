@@ -255,5 +255,13 @@
   "pago.locked": "Podrá pagar cuando usted y el abogado Raval hayan firmado el acuerdo.",
   "pago.waiting": "Estamos confirmando su pago con Stripe. Esto tarda unos segundos.",
   "pago.done": "¡Pago recibido! El abogado Raval empieza a preparar sus documentos.",
-  "pago.error": "No se pudo abrir el pago. Intente de nuevo en unos minutos."
+  "pago.error": "No se pudo abrir el pago. Intente de nuevo en unos minutos.",
+  "firmados.title": "Sus documentos firmados",
+  "firmados.body": "Guarde los originales en un lugar seguro y diga a sus personas de confianza dónde están. Aquí tiene una copia de cada uno.",
+  "firmados.download": "Descargar {name}",
+  "firmados.funding.title": "Pase sus bienes al fideicomiso",
+  "firmados.funding.body": "Su fideicomiso protege solo lo que está a su nombre. Use esta lista; la oficina le acompaña paso a paso.",
+  "firmados.funding.download": "Descargar la lista para el fideicomiso",
+  "firmados.none": "Sus documentos aparecerán aquí después de la firma.",
+  "firmados.final": "Tomar la lección final: cuide sus documentos"
 }
