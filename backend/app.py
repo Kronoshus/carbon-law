@@ -355,6 +355,11 @@ Once you sign up, you can review documents, schedule appointments, and message y
 Best,
 Carbon Law Group
 """
+    return send_email(to_email, subject, body)
+
+
+def send_email(to_email, subject, body):
+    """Send a plain-text email through the firm's webhook or SMTP. False when neither is configured or sending fails."""
     webhook = os.environ.get("EMAIL_WEBHOOK_URL")
     if webhook:
         try:
@@ -1538,6 +1543,9 @@ app.include_router(_rst.router)
 # Aprende engagement routes (T6-01)
 from aprende import routes_engagement as _ren
 app.include_router(_ren.router)
+# Aprende booking routes (T6-07)
+from aprende import booking as _rb
+app.include_router(_rb.router)
 from aprende import routes_signing as _rsi
 app.include_router(_rsi.router)
 

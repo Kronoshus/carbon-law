@@ -24,6 +24,7 @@ import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
 import { Firmados } from './screens/Firmados';
 import { Acuerdo } from './screens/Acuerdo';
+import { Cita } from './screens/Cita';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
@@ -93,6 +94,7 @@ function Screens() {
   else if (r === '/resumen') screen = h(Resumen, null);
   else if (r === '/firmados') screen = h(Firmados, null);
   else if (r === '/acuerdo') screen = h(Acuerdo, null);
+  else if (r === '/cita') screen = h(Cita, null);
   else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
   else screen = h(Placeholder, null);
 
