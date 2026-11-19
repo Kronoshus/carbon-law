@@ -504,6 +504,19 @@ def matter_history(matter_id: str, authorization: Optional[str]=Header(None)):
             "comms":[c for c in comms if c["matter_id"]==matter_id]}
 
 # change requests
+def record_change_request(rec, actor_email):
+    """A change request and its revision task (docs/interrupt-and-change-control.md). Used by staff, the portal and Aprende."""
+    rec = {**rec, "id": str(uuid.uuid4()), "created_at": now_iso()}
+    tid = str(uuid.uuid4())
+    tasks[tid] = {"id":tid,"matter_id":rec["matter_id"],"title":f"Review change: {rec['change_type']}",
+                  "owner":matters[rec["matter_id"]].get("owner","Unassigned"),"due_date":None,
+                  "status":"Open","blocker":"None","created_at":now_iso()}
+    rec["task_id"] = tid
+    changes.append(rec)
+    log_audit(actor_email,"create","change_request",rec["id"],rec["change_type"])
+    save_data()
+    return rec
+
 @app.post("/change-requests")
 def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
@@ -514,17 +527,7 @@ def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header
     if u["role"] == "client":
         rec["requested_by"] = u["email"]
         rec["status"] = "Open"
-    rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
-    # auto-create revision task and retain its link for status changes
-    tid = str(uuid.uuid4())
-    tasks[tid] = {"id":tid,"matter_id":cr.matter_id,"title":f"Review change: {cr.change_type}",
-                  "owner":matters[cr.matter_id].get("owner","Unassigned"),"due_date":None,
-                  "status":"Open","blocker":"None","created_at":now_iso()}
-    rec["task_id"] = tid
-    changes.append(rec)
-    log_audit(u["email"],"create","change_request",rec["id"],cr.change_type)
-    save_data()
-    return rec
+    return record_change_request(rec, u["email"])
 
 @app.get("/change-requests")
 def list_change_requests(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
@@ -1550,6 +1553,10 @@ from aprende import booking as _rb
 app.include_router(_rb.router)
 from aprende import routes_signing as _rsi
 app.include_router(_rsi.router)
+
+# Aprende client review routes (T6-06)
+from aprende import client_review as _rcr
+app.include_router(_rcr.router)
 
 if __name__ == "__main__":
     import uvicorn

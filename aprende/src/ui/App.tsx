@@ -23,6 +23,7 @@ import { Datos } from './screens/Datos';
 import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
 import { Firmados } from './screens/Firmados';
+import { Revisar } from './screens/Revisar';
 import { Acuerdo } from './screens/Acuerdo';
 import { Cita } from './screens/Cita';
 import { Pago, PagoListo } from './screens/Pago';
@@ -95,6 +96,7 @@ function Screens() {
   else if (r === '/documentos') screen = h(Documentos, null);
   else if (r === '/resumen') screen = h(Resumen, null);
   else if (r === '/firmados') screen = h(Firmados, null);
+  else if (r === '/revisar') screen = h(Revisar, null);
   else if (r === '/acuerdo') screen = h(Acuerdo, null);
   else if (r === '/cita') screen = h(Cita, null);
   else if (r === '/pago') screen = h(Pago, null);

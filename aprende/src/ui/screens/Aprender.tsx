@@ -21,9 +21,13 @@ const CORE = ['will', 'trust', 'ahcd', 'poa'];
 const PAY = { key: 'map.node.pay', sub: 'map.node.pay.day', icon: 'pluma' } as const;
 const REVIEW = { key: 'map.node.review', sub: 'map.node.review.day', icon: 'lupa' } as const;
 const FINISH = [{ key: 'map.node.documents', sub: 'map.node.documents.day', icon: 'plan' }, { key: 'map.node.signing', sub: 'map.node.signing.day', icon: 'pluma' }] as const;
-const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }) => h('li', { class: 'node locked', key: s.key },
-  h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: 'candado' }))),
-  h('span', { class: 'node-label' }, h('b', null, t(s.key)), h('span', null, t(s.sub))));
+const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }) => {
+  const isReview = s.key === 'map.node.review';
+  const inner = [h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: 'candado' }))),
+    h('span', { class: 'node-label' }, h('b', null, t(s.key)), h('span', null, t(s.sub)))];
+  if (isReview) return h('li', { class: 'node-item', key: s.key }, h('a', { class: 'node available', href: '#/revisar' }, ...inner));
+  return h('li', { class: 'node locked', key: s.key }, ...inner);
+};
 
 export function Aprender() {
   const [map, setMap] = useState<MapData | null>(null);

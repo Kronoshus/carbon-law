@@ -1,0 +1,150 @@
+# Plain-language summaries for the day-9 walkthrough (T6-06, Q-L3), written by Opus. One per article, in the order the
+# drafter writes them (carbon_intake DOCS). General only: never about the client's own choices. Attorney approval required.
+will:
+- article: 1
+  es: Quién es usted, dónde vive, quiénes son su familia, y que este testamento reemplaza a cualquier testamento anterior.
+  en: Who you are, where you live, who your family is, and that this will replaces any earlier will.
+- article: 2
+  es: Lo que significan algunas palabras del documento, como «descendientes», para que no haya dudas.
+  en: What some words in the document mean, such as "descendants", so there is no doubt.
+- article: 3
+  es: 'Los regalos especiales: algo concreto para una persona, y qué pasa si esa persona fallece antes que usted.'
+  en: 'Special gifts: a particular thing for a particular person, and what happens if that person dies before you.'
+- article: 4
+  es: Sus cosas personales, como muebles o joyas, que no regaló de forma especial.
+  en: Your personal belongings, like furniture or jewelry, that you did not give as a special gift.
+- article: 5
+  es: 'El resto de sus bienes: a quién pasa todo lo demás. Si tiene un fideicomiso, el resto pasa al fideicomiso.'
+  en: 'The rest of your property: who receives everything else. If you have a trust, the rest goes into the trust.'
+- article: 6
+  es: Cuánto tiempo debe vivir una persona después de usted para recibir su parte.
+  en: How long a person must live after you to receive their share.
+- article: 7
+  es: 'Su albacea: la persona que cumple su testamento, y quién la reemplaza si no puede.'
+  en: 'Your executor: the person who carries out your will, and who replaces them if they cannot.'
+- article: 8
+  es: 'El tutor de sus hijos menores: quién los cuidaría, y quién sería la segunda opción.'
+  en: 'The guardian of your minor children: who would care for them, and who would be the second choice.'
+- article: 9
+  es: Cómo se cuida el dinero de un beneficiario joven hasta que tenga la edad que se indica.
+  en: How a young beneficiary's money is looked after until they reach the age stated.
+- article: 10
+  es: Cómo se pagan las deudas, los gastos del funeral y los impuestos antes de repartir los bienes.
+  en: How debts, funeral costs and taxes are paid before the property is shared out.
+- article: 11
+  es: Qué pasa si alguien impugna el testamento en el tribunal, dentro de lo que la ley permite.
+  en: What happens if someone challenges the will in court, within what the law allows.
+- article: 12
+  es: 'Reglas generales: la ley de California se aplica, y sus deseos sobre el funeral, si los dio.'
+  en: 'General rules: California law applies, and your funeral wishes, if you gave them.'
+trust:
+- article: 1
+  es: Usted crea el fideicomiso y, mientras pueda, usted mismo lo maneja como fiduciario.
+  en: You create the trust and, while you can, you manage it yourself as trustee.
+- article: 2
+  es: Lo que significan algunas palabras del documento, como «incapacidad» o «descendientes».
+  en: What some words in the document mean, such as "incapacity" or "descendants".
+- article: 3
+  es: 'Los bienes del fideicomiso: los de la lista A y los que agregue después. Los bienes solo están protegidos si se pasan a nombre del fideicomiso.'
+  en: 'The trust''s property: what is on Schedule A and anything you add later. Property is protected only once it is put in the trust''s name.'
+- article: 4
+  es: Mientras viva, usted puede cambiar o cancelar el fideicomiso.
+  en: While you are alive, you can change or cancel the trust.
+- article: 5
+  es: Mientras viva, el fideicomiso se usa para su beneficio.
+  en: While you are alive, the trust is used for your benefit.
+- article: 6
+  es: 'Qué pasa si usted ya no puede manejar sus asuntos: quién decide eso y quién maneja el fideicomiso.'
+  en: 'What happens if you can no longer manage your affairs: who decides that, and who manages the trust.'
+- article: 7
+  es: 'Qué hace el fiduciario cuando usted fallece: paga deudas y gastos y avisa a la familia.'
+  en: 'What the trustee does when you die: pays debts and expenses and notifies the family.'
+- article: 8
+  es: 'A quién pasan los bienes: los regalos especiales primero, y luego el resto.'
+  en: 'Who receives the property: special gifts first, then the rest.'
+- article: 9
+  es: Cómo se guarda la parte de un beneficiario joven hasta la edad que se indica.
+  en: How a young beneficiary's share is held until the age stated.
+- article: 10
+  es: Quién maneja el fideicomiso después de usted, y cómo se reemplaza a un fiduciario.
+  en: Who manages the trust after you, and how a trustee is replaced.
+- article: 11
+  es: 'Lo que el fiduciario puede hacer con los bienes: vender, invertir, pagar cuentas, siempre para los beneficiarios.'
+  en: 'What the trustee may do with the property: sell, invest, pay bills, always for the beneficiaries.'
+- article: 12
+  es: Protege la parte de un beneficiario para que no la pierda por deudas antes de recibirla.
+  en: Protects a beneficiary's share so it is not lost to debts before they receive it.
+- article: 13
+  es: Qué pasa si alguien impugna el fideicomiso en el tribunal, dentro de lo que la ley permite.
+  en: What happens if someone challenges the trust in court, within what the law allows.
+- article: 14
+  es: 'Reglas generales: la ley de California se aplica.'
+  en: 'General rules: California law applies.'
+- article: 15
+  es: 'La lista A: los bienes que usted planea pasar al fideicomiso.'
+  en: 'Schedule A: the property you plan to put into the trust.'
+poa:
+- article: 1
+  es: 'Su apoderado: la persona que manejaría su dinero, y quién la reemplaza si no puede.'
+  en: 'Your agent: the person who would handle your money, and who replaces them if they cannot.'
+- article: 2
+  es: 'Desde cuándo puede actuar: desde que firma, o solo si usted ya no puede decidir.'
+  en: 'When they may act: from signing, or only if you can no longer decide.'
+- article: 3
+  es: El poder sigue valiendo aunque usted ya no pueda tomar decisiones.
+  en: The power still works even if you can no longer make decisions.
+- article: 4
+  es: 'Los asuntos que el apoderado puede manejar: el banco, la casa, los pagos, y otros.'
+  en: 'The matters your agent may handle: the bank, the house, payments, and others.'
+- article: 5
+  es: Lo que usted no quiere que haga, con sus propias palabras.
+  en: What you do not want them to do, in your own words.
+- article: 6
+  es: Si el apoderado puede hacer regalos con su dinero, y otros poderes especiales.
+  en: Whether your agent may make gifts from your money, and other special powers.
+- article: 7
+  es: 'Lo que el apoderado debe hacer: actuar en su interés, llevar cuentas y no mezclar su dinero con el de usted.'
+  en: 'What your agent must do: act in your interest, keep records, and keep their money separate from yours.'
+- article: 8
+  es: Si al apoderado se le paga por su trabajo y se le devuelven sus gastos.
+  en: Whether your agent is paid for their work and repaid their expenses.
+- article: 9
+  es: A quién propone usted si un juez tuviera que nombrar a alguien para cuidar sus asuntos.
+  en: Who you propose if a court ever had to appoint someone to look after your affairs.
+- article: 10
+  es: Los bancos y otras personas pueden confiar en este documento y en sus copias.
+  en: Banks and others may rely on this document and its copies.
+- article: 11
+  es: Este poder cancela los poderes anteriores para finanzas.
+  en: This power cancels earlier financial powers of attorney.
+- article: 12
+  es: 'Reglas generales: la ley de California se aplica.'
+  en: 'General rules: California law applies.'
+ahcd:
+- article: 1
+  es: 'Su agente de salud: la persona que decide por usted si usted no puede, y quién la reemplaza.'
+  en: 'Your health care agent: the person who decides for you if you cannot, and who replaces them.'
+- article: 2
+  es: Las decisiones médicas que su agente puede tomar por usted.
+  en: The medical decisions your agent may make for you.
+- article: 3
+  es: Desde cuándo puede decidir su agente, y qué pasa si alguien más quiere decidir.
+  en: When your agent may start deciding, and what happens if someone else wants to decide.
+- article: 4
+  es: Lo que su agente puede decidir después de su fallecimiento.
+  en: What your agent may decide after your death.
+- article: 5
+  es: Sus deseos sobre el final de la vida y el alivio del dolor, con sus propias palabras.
+  en: Your wishes about the end of life and relief from pain, in your own words.
+- article: 6
+  es: Si quiere donar sus órganos.
+  en: Whether you want to donate your organs.
+- article: 7
+  es: Su médico principal.
+  en: Your primary doctor.
+- article: 8
+  es: Permiso para que los médicos compartan su información de salud con su agente.
+  en: Permission for doctors to share your health information with your agent.
+- article: 9
+  es: 'Reglas generales: las copias valen igual, y esta directiva reemplaza a las anteriores.'
+  en: 'General rules: copies are as valid as the original, and this directive replaces earlier ones.'
