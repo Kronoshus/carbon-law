@@ -158,3 +158,10 @@ def test_requesting_changes_needs_a_note_and_keeps_the_draft_private(monkeypatch
                   headers=login(ATT)).status_code == 200
     assert c.get("/documents", headers=h).json() == [] and "attorney_approved" not in state(h)["facts"]
     assert current(jid)["note"] == "Revisar el artículo 3"
+
+
+def test_the_notice_naming_the_marks_does_not_block_approval(monkeypatch):
+    h, jid = drafted(monkeypatch)                              # every draft's notice says "Yellow [ATTORNEY TO COMPLETE] marks …"
+    doc = current(jid)["documents"][0]["id"]
+    assert "[ATTORNEY TO COMPLETE]" in c.get(f"/staff/drafts/{doc}", headers=login(ATT)).json()["content"]
+    assert c.post(f"/staff/journeys/{jid}/review", json={"decision": "approve"}, headers=login(ATT)).status_code == 200

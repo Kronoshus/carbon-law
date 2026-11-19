@@ -22,7 +22,8 @@ function renderDraftContent(container, content) {
     else { el = document.createElement("p"); }
     const text = line.replace(/^#{1,2}\s*/, "");
     // split markers
-    const parts = text.split(/(\[ATTORNEY TO (?:COMPLETE|CONFIRM)[^\]]*\])/g);
+    // an item has text inside the brackets; the notice's bare "[ATTORNEY TO COMPLETE]" is not an item
+    const parts = text.split(/(\[ATTORNEY TO (?:COMPLETE|CONFIRM)[^\]]+\])/g);
     for (const part of parts) {
       const m = part.match(/^\[ATTORNEY TO (COMPLETE|CONFIRM)/);
       if (m) {
@@ -109,7 +110,11 @@ async function openReview(item) {
       });
       card.appendChild(dl);
       // upload
+      const taLabel = document.createElement("label");
+      taLabel.htmlFor = "draft-" + doc.id; taLabel.textContent = "Texto corregido";
+      card.appendChild(taLabel);
       const ta = document.createElement("textarea");
+      ta.id = "draft-" + doc.id;
       ta.value = d.content;
       card.appendChild(ta);
       const saveBtn = document.createElement("button");
@@ -124,8 +129,10 @@ async function openReview(item) {
   }
   // approve / changes controls
   const controls = document.createElement("div");
+  const noteLabel = document.createElement("label");
+  noteLabel.htmlFor = "reviewDraftNote"; noteLabel.textContent = "Nota para pedir cambios";
   const note = document.createElement("textarea");
-  note.id = "reviewNote";
+  note.id = "reviewDraftNote";
   const reqBtn = document.createElement("button");
   reqBtn.type = "button"; reqBtn.className = "btn secondary"; reqBtn.textContent = "Pedir cambios";
   reqBtn.addEventListener("click", async () => {
@@ -134,17 +141,13 @@ async function openReview(item) {
   });
   const apprBtn = document.createElement("button");
   apprBtn.type = "button"; apprBtn.className = "btn"; apprBtn.textContent = "Aprobar";
-  apprBtn.id = "approveDrafts";
-  // disable if any mark.complete
-  setTimeout(() => {
-    const hasComplete = !!document.querySelector(".draft mark.complete");
-    apprBtn.disabled = hasComplete;
-  }, 0);
+
   apprBtn.addEventListener("click", async () => {
     await reviewFetch("/staff/journeys/" + item.journey_id + "/review", "POST", { decision: "approve" });
     await loadReviewQueue();
     detail.hidden = true;
   });
+  controls.appendChild(noteLabel);
   controls.appendChild(note);
   controls.appendChild(reqBtn);
   controls.appendChild(apprBtn);

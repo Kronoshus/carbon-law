@@ -1,9 +1,11 @@
 """Attorney review queue (T6-05): drafts waiting, view, revise, approve or request changes."""
 import base64
 import datetime
-import uuid
+import re
 
-from fastapi import APIRouter, Header, HTTPException, Body
+from fastapi import APIRouter, Header, HTTPException
+from fastapi.responses import Response
+from pydantic import BaseModel
 
 import app as backend_app
 import db
@@ -11,6 +13,18 @@ from aprende import journey, legacy, timeline
 from carbon_intake import docx as make_docx
 
 router = APIRouter()
+
+
+TODO = re.compile(r"\[ATTORNEY TO COMPLETE[^\]]+\]")
+
+
+class Version(BaseModel):
+    content: str
+
+
+class Decision(BaseModel):
+    decision: str
+    note: str | None = None
 
 
 def _auth(authorization, roles=None):
@@ -76,21 +90,17 @@ def get_draft_docx(doc_id: str, authorization: str = Header(None)):
     if doc_id not in backend_app.documents:
         raise HTTPException(404, "document not found")
     d = backend_app.documents[doc_id]
-    import base64 as _b64
-    raw = _b64.b64decode(d.get("docx_b64") or "")
-    from fastapi.responses import Response
+    raw = base64.b64decode(d["docx_b64"])
     return Response(content=raw, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @router.post("/staff/drafts/{doc_id}/versions")
-def new_version(doc_id: str, payload: dict = Body(default={}), authorization: str = Header(None)):
+def new_version(doc_id: str, body: Version, authorization: str = Header(None)):
     u, _ = _auth(authorization, {"attorney", "admin"})
     if doc_id not in backend_app.documents:
         raise HTTPException(404, "document not found")
     old = backend_app.documents[doc_id]
-    content = (payload or {}).get("content")
-    if content is None:
-        raise HTTPException(422, "content required")
+    content = body.content
     j = journey.get_journey(old["journey_id"])
     mid = (j or {}).get("matter_id") or old.get("matter_id")
     rec = legacy.add_document_version(mid, old["journey_id"], old["name"], {
@@ -106,7 +116,7 @@ def new_version(doc_id: str, payload: dict = Body(default={}), authorization: st
 
 
 @router.post("/staff/journeys/{jid}/review")
-def review_journey(jid: str, payload: dict = Body(default={}), authorization: str = Header(None)):
+def review_journey(jid: str, body: Decision, authorization: str = Header(None)):
     u, _ = _auth(authorization, {"attorney", "admin"})
     j = journey.get_journey(jid)
     if not j:
@@ -116,8 +126,7 @@ def review_journey(jid: str, payload: dict = Body(default={}), authorization: st
     assigned = matter.get("attorney_reviewer")
     if u["role"] != "admin" and assigned != u["id"]:
         raise HTTPException(403, "not assigned attorney")
-    decision = (payload or {}).get("decision")
-    note = (payload or {}).get("note")
+    decision, note = body.decision, (body.note or "").strip()
     if decision == "changes":
         if not note:
             raise HTTPException(422, "note required")
@@ -129,9 +138,11 @@ def review_journey(jid: str, payload: dict = Body(default={}), authorization: st
     if decision != "approve":
         raise HTTPException(422, "invalid decision")
     drafts = _current_drafts(jid)
-    for d in drafts:
-        if "[ATTORNEY TO COMPLETE " in (d.get("content") or "") or "[ATTORNEY TO COMPLETE-" in (d.get("content") or ""):
-            raise HTTPException(409, "draft contains [ATTORNEY TO COMPLETE")
+    if not drafts:
+        raise HTTPException(409, "nothing to approve")
+    # an open item has text inside the brackets; the notice at the top of every draft names the bare "[ATTORNEY TO COMPLETE]"
+    if any(TODO.search(d["content"]) for d in drafts):
+        raise HTTPException(409, "a draft still contains [ATTORNEY TO COMPLETE …]")
     with backend_app._request_lock:
         for d in drafts:
             backend_app.documents[d["id"]]["status"] = "Attorney Approved"
