@@ -133,11 +133,19 @@
       <h2 id="practiceLibrary">Practice library</h2><p>Read-only prompt and template reference for staff.</p><div class="grid2"><div class="card"><h3>Prompts</h3><p id="promptMessage" role="status"></p><select id="promptSelect"><option value="">Select a prompt</option></select><pre id="promptContent"></pre></div><div class="card"><h3>Templates</h3><p id="templateMessage" role="status"></p><select id="templateSelect"><option value="">Select a template</option></select><pre id="templateContent"></pre></div></div>
     </div>
 
+
+    <div class="section" id="reviewSection">
+      <h2 id="review">Revisión de borradores</h2>
+      <p id="reviewMessage" role="status"></p>
+      <div class="card table-wrap"><table><thead><tr><th>Cliente</th><th>Vence</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
+      <div id="reviewDetail" hidden></div>
+    </div>
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script src="admin.js"></script>
+<script src="review.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
 function closeModal(id){document.getElementById(id).close();document.getElementById('matterForm').reset();}

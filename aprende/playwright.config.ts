@@ -4,6 +4,7 @@ const executablePath = process.env.PW_CHROMIUM;
 // Several worktrees test at once on one machine: each run may pick its own ports (E2E_WEB_PORT, E2E_API_PORT).
 const web = process.env.E2E_WEB_PORT || '5173';
 const api = process.env.E2E_API_PORT || '8011';
+const adminPort = process.env.E2E_ADMIN_PORT || '5174';
 
 export default defineConfig({
   // Each page renders the 3D character in software; more than a few at once starves a desktop CPU (local runs only).
@@ -36,6 +37,12 @@ export default defineConfig({
       url: `http://127.0.0.1:${web}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
+    },
+    {
+      command: `python3 -m http.server ${adminPort} -d ../web --bind 127.0.0.1`,
+      url: `http://127.0.0.1:${adminPort}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30000,
     },
   ],
 });
