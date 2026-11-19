@@ -228,5 +228,13 @@
   "acuerdo.download": "Descargar mi copia (PDF)",
   "acuerdo.pay": "Ir a pagar",
   "acuerdo.wait": "Su acuerdo estará listo cuando el abogado Raval apruebe sus documentos. Le avisamos.",
-  "acuerdo.changed": "El acuerdo cambió mientras lo leía. Revíselo otra vez antes de firmar."
+  "acuerdo.changed": "El acuerdo cambió mientras lo leía. Revíselo otra vez antes de firmar.",
+  "firmados.title": "Sus documentos firmados",
+  "firmados.body": "Guarde los originales en un lugar seguro y diga a sus personas de confianza dónde están. Aquí tiene una copia de cada uno.",
+  "firmados.download": "Descargar {name}",
+  "firmados.funding.title": "Pase sus bienes al fideicomiso",
+  "firmados.funding.body": "Su fideicomiso protege solo lo que está a su nombre. Use esta lista; la oficina le acompaña paso a paso.",
+  "firmados.funding.download": "Descargar la lista para el fideicomiso",
+  "firmados.none": "Sus documentos aparecerán aquí después de la firma.",
+  "firmados.final": "Tomar la lección final: cuide sus documentos"
 }
