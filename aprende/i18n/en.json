@@ -228,5 +228,14 @@
   "acuerdo.download": "Download my copy (PDF)",
   "acuerdo.pay": "Go to payment",
   "acuerdo.wait": "Your agreement will be ready when attorney Raval approves your documents. We will let you know.",
-  "acuerdo.changed": "The agreement changed while you were reading it. Please review it again before signing."
+  "acuerdo.changed": "The agreement changed while you were reading it. Please review it again before signing.",
+  "pago.title": "Pay",
+  "pago.test": "Test mode: nothing is charged.",
+  "pago.total": "Total to pay: {total}",
+  "pago.note": "You pay on Stripe's secure page. The app never sees your card details.",
+  "pago.button": "Pay with Stripe",
+  "pago.locked": "You can pay once you and attorney Raval have signed the agreement.",
+  "pago.waiting": "We are confirming your payment with Stripe. This takes a few seconds.",
+  "pago.done": "Payment received! Attorney Raval starts preparing your documents.",
+  "pago.error": "The payment could not be opened. Try again in a few minutes."
 }
