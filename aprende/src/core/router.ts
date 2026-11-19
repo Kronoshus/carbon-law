@@ -1,7 +1,7 @@
 import { signal } from '@preact/signals';
 
 function normalize(hash: string): string {
-  const h = (hash || '').replace(/^#/, '');
+  const h = (hash || '').replace(/^#/, '').split('?')[0];          // a screen reads its own ?query from location.hash
   return h === '' ? '/bienvenida' : h;
 }
 

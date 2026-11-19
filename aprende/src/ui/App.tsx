@@ -23,6 +23,7 @@ import { Datos } from './screens/Datos';
 import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
 import { Acuerdo } from './screens/Acuerdo';
+import { Cita } from './screens/Cita';
 import { Pago, PagoListo } from './screens/Pago';
 import { DevCharacter } from './DevCharacter';
 
@@ -93,6 +94,7 @@ function Screens() {
   else if (r === '/documentos') screen = h(Documentos, null);
   else if (r === '/resumen') screen = h(Resumen, null);
   else if (r === '/acuerdo') screen = h(Acuerdo, null);
+  else if (r === '/cita') screen = h(Cita, null);
   else if (r === '/pago') screen = h(Pago, null);
   else if (pagoListo) screen = h(PagoListo, null);
   else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
