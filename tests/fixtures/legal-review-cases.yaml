@@ -1,0 +1,126 @@
+# T6-10: fictional clients (Opus). Each covers a document set and a known hard case.
+A-will-young-family:
+  codes:
+  - will
+  answers:
+    nombre: Ana Lucía Torres Pérez
+    nacimiento: 3 de marzo de 1988
+    domicilio: Boyle Heights, condado de Los Ángeles, California
+    estado_civil: Casada con Luis Torres Gómez
+    hijos: Sofía Torres, 9 años, y Mateo Torres, 6 años
+    documentos_previos: No tengo nada escrito
+    herederos: Todo a mi esposo Luis; si él muere antes, a mis hijos por partes iguales
+    legados: El anillo de mi abuela para Sofía
+    tutor: Mi hermana Rosa Pérez; si no puede, mi primo Javier Pérez
+    albacea: Mi esposo Luis; si no puede, mi hermana Rosa
+    bienes: La casa donde vivimos, una cuenta en Wells Fargo y un carro
+    cuentas_beneficiarios: Mi 401(k) del trabajo tiene a Luis
+    otros: Ninguno
+    contacto: (323) 555-0101, ana.torres@example.com
+B-trust-pourover-couple:
+  codes:
+  - will
+  - trust
+  answers:
+    nombre: Luis Alberto Torres Gómez
+    nacimiento: 14 de julio de 1960
+    domicilio: Whittier, condado de Los Ángeles, California
+    estado_civil: Casado con Ana Torres
+    hijos: 'Dos hijos adultos: Marco Torres (34) y Elena Torres (31)'
+    documentos_previos: Un testamento de 2005, en mi casa
+    herederos: A mi esposa; después a mis dos hijos por partes iguales
+    legados: Mi camioneta para Marco
+    tutor: No tengo hijos menores
+    albacea: Mi esposa Ana; después mi hijo Marco
+    fid_tipo: Conjunto con mi esposa
+    fid_sucesor: Mi hijo Marco; si no puede, mi hija Elena
+    fid_bienes: La casa de Whittier y la cuenta de ahorros de Chase
+    casa_titulo: A nombre de Luis y Ana Torres, casados
+    fid_menores: No aplica, mis hijos son adultos
+    bienes: Casa, cuenta de ahorros, camioneta, IRA
+    cuentas_beneficiarios: La IRA tiene a Ana
+    otros: Quiero que mis hijos no peleen
+    contacto: (562) 555-0102
+C-poa-ahcd-single:
+  codes:
+  - poa
+  - ahcd
+  answers:
+    nombre: María Elena Ruiz
+    nacimiento: 9 de noviembre de 1955
+    domicilio: Santa Ana, condado de Orange, California
+    estado_civil: Soltera
+    hijos: Una hija, Patricia Ruiz, 40 años
+    poder_agente: Mi hija Patricia; si no puede, mi sobrino Daniel Ruiz
+    poder_inicio: Solo si yo ya no puedo decidir
+    poder_alcance: Todo, pero que no venda mi casa sin hablar con mi hermano
+    poder_regalos: No quiero que pueda regalar nada
+    salud_agente: Mi hija Patricia; segunda opción mi hermano Jorge
+    salud_vida: No quiero máquinas si no me voy a recuperar, pero sí medicina para el dolor
+    salud_donacion: Sí, todos mis órganos
+    salud_info: Desde ahora
+    salud_otros: Quiero un sacerdote si estoy muy grave
+    salud_residencia: 'No'
+    bienes: Un condominio y una cuenta de banco
+    otros: Ninguno
+    contacto: (714) 555-0103
+D-all-four-widow-nursing:
+  codes:
+  - will
+  - trust
+  - poa
+  - ahcd
+  answers:
+    nombre: Carmen Flores viuda de Morales
+    nacimiento: 2 de febrero de 1944
+    domicilio: Pico Rivera, condado de Los Ángeles, California
+    estado_civil: Viuda
+    hijos: 'Tres hijos: Jorge (60), Lucía (57) y Ramón (55). Ramón vive conmigo'
+    documentos_previos: Mi esposo dejó una nota a mano, no sé si vale
+    herederos: A mis tres hijos por partes iguales; si uno muere, a sus hijos
+    legados: Mi máquina de coser para mi nieta Andrea
+    tutor: No tengo hijos menores
+    albacea: Mi hija Lucía; si no puede, Jorge
+    fid_tipo: Solo mío
+    fid_sucesor: Mi hija Lucía; después Jorge
+    fid_bienes: Mi casa y mis cuentas
+    casa_titulo: Todavía aparece mi esposo, que murió en 2019
+    fid_menores: Que los nietos reciban a los 25
+    poder_agente: Lucía; después Jorge
+    poder_inicio: Desde que firme
+    poder_alcance: Todo
+    poder_regalos: Solo regalos pequeños de cumpleaños
+    salud_agente: Lucía; después Ramón
+    salud_vida: Todo lo posible mientras haya esperanza
+    salud_donacion: Prefiero decidirlo después
+    salud_info: Desde ahora
+    salud_otros: Entierro católico
+    salud_residencia: Es probable que me mude a un asilo el próximo año
+    bienes: Casa, cuenta de cheques, cuenta de ahorros
+    cuentas_beneficiarios: No sé si nombré a alguien
+    otros: Ramón debe poder quedarse en la casa un año
+    contacto: (562) 555-0104
+E-scope-exclusions-partner:
+  codes:
+  - will
+  - trust
+  answers:
+    nombre: Roberto Sánchez
+    nacimiento: 21 de agosto de 1975
+    domicilio: Pomona, condado de Los Ángeles, California
+    estado_civil: Vivo con mi pareja, Gabriela Núñez; no estamos casados
+    hijos: Un hijo de una relación anterior, Diego (16)
+    documentos_previos: 'No'
+    herederos: La mitad a Gabriela y la mitad a Diego
+    legados: Ninguno
+    tutor: La mamá de Diego vive; si ella no puede, mi hermana Teresa
+    albacea: Gabriela; después Teresa
+    fid_tipo: Solo mío
+    fid_sucesor: Gabriela; después Teresa
+    fid_bienes: Mi casa, mi taquería y un terreno en Michoacán
+    casa_titulo: A mi nombre solo
+    fid_menores: Que Diego reciba a los 25
+    bienes: Casa, la taquería, un terreno en México
+    cuentas_beneficiarios: Ninguna
+    otros: ¿Puedo dejar la taquería a Gabriela?
+    contacto: (909) 555-0105
