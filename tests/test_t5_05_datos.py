@@ -206,7 +206,7 @@ def test_the_character_asks_the_first_open_question_of_the_lesson(stub):
     r = ask(h, "will", []).json()
     assert r["next_question"]["id"] == "nacimiento"
     assert BY_ID["nacimiento"]["es"] in stub.calls[-1]["system"]
-    assert "<client_data>" not in stub.calls[-1]["system"]
+    assert "</client_data>" not in stub.calls[-1]["system"]                    # no client words in the instructions
 
 
 def test_an_answer_marked_done_is_saved_from_the_clients_words(stub):
@@ -260,3 +260,22 @@ def test_a_finished_lesson_group_needs_no_model_call(stub):
             put(h, q["id"], skipped=True)
     r = ask(h, "poa", []).json()
     assert r["next_question"] is None and stub.calls == []
+
+
+def test_the_client_cannot_mark_questions_answered(stub):
+    h = client()
+    cleared(h)
+    stub.text = "Bien."
+    r = c.post("/chat", json={"mode": "intake", "character": "calavera", "group": "will", "covered": ["nombre", "hijos"],
+                              "messages": [{"role": "user", "content": "hola", "question_id": "nombre"}]}, headers=h).json()
+    assert r["covered"] == [] and r["next_question"]["id"] == "nombre"
+
+
+def test_each_character_speaks_with_its_own_persona(stub):
+    h = client()
+    cleared(h)
+    stub.text = "Gracias."
+    ask(h, "ahcd", [], character="oso")
+    system = stub.calls[-1]["system"]
+    assert "El Oso" in system and "No hay respuestas buenas ni malas" in system
+    assert "Never ask about immigration status" in system
