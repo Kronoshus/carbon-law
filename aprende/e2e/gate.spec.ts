@@ -43,14 +43,14 @@ test('a clear yes leads to the names, and the names to a neutral wait', async ({
   await expect(page.getByRole('heading', { name: '¿Quiénes son las personas de su familia?' })).toBeVisible();
   await page.getByLabel('Nombre completo 1').fill('Ana Torres');
   await page.getByRole('button', { name: 'Agregar otro nombre' }).click();
-  await page.getByLabel('Nombre completo 2').fill('Luis Torres');
+  await page.getByLabel('Nombre completo 2').fill('Roberto Mendes');      // close to a name on the seed's list
   await axeClean(page);
   await page.getByRole('button', { name: 'Continuar' }).click();
-  await expect(page.getByText('La oficina está revisando los nombres', { exact: false })).toBeVisible();   // e2e has no conflict list
+  await expect(page.getByText('La oficina está revisando los nombres', { exact: false })).toBeVisible();   // a hold looks like any wait
   const j = await journey(page);
   expect(j.facts.consent_answer).toBe('yes');
   expect(Object.keys(j.facts)).toContain('names_submitted');
-  expect(JSON.stringify(j)).not.toContain('no_list');
+  expect(JSON.stringify(j)).not.toMatch(/possible|M[eé]ndez|Mendes|no_list/);
 });
 
 test('"No, no acepto" is a refusal: learning only, and it can be changed', async ({ page }) => {

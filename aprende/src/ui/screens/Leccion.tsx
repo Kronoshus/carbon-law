@@ -40,6 +40,7 @@ export function Leccion({ id }: { id: string }) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [result, setResult] = useState<{ completed: boolean; score: number } | null>(null);
   const [streak, setStreak] = useState(0);
+  const [mayCollect, setMayCollect] = useState(false);
   const engine = useRef<CharacterEngine | null>(null);
   const [engineTick, setEngineTick] = useState(0);      // a (new) character engine is ready to speak
   const l = lang.value;
@@ -83,6 +84,7 @@ export function Leccion({ id }: { id: string }) {
       const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}/complete`, { method: 'POST' });
       const r = (await res.json()) as { completed: boolean; score: number };
       if (r.completed) await platform.storage.remove(posKey(id));
+      try { const jr = await apiFetch('/journey'); if (jr.ok) { const j = await jr.json(); setMayCollect(!!j?.gates?.may_collect_details); } } catch { /* ignore */ }
       setResult(r);
     })();
   }, [state && finished(state)]);
@@ -120,7 +122,8 @@ export function Leccion({ id }: { id: string }) {
       h('section', { class: `celebration card${calm ? ' calm' : ''}`, role: 'status' },
         result.completed
           ? [h('h1', null, t(calm ? 'celebration.calm' : 'celebration.title')),
-             h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back'))]
+             (mayCollect ? h('button', { class: 'btn', type: 'button', onClick: () => navigate(`/datos/${id}`) }, t('datos.start')) : null),
+             h('button', { class: mayCollect ? 'btn secondary' : 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back'))]
           : [h('p', null, t('result.notYet', { score: Math.round(result.score * 100) })),
              h('button', { class: 'btn', type: 'button', onClick: () => { setResult(null); setState(startAt(steps)); } }, t('result.review'))])));
   }

@@ -19,6 +19,9 @@ import { Placeholder } from './screens/Placeholder';
 import { Plan } from './screens/Plan';
 import { Aprender } from './screens/Aprender';
 import { Leccion } from './screens/Leccion';
+import { Datos } from './screens/Datos';
+import { Documentos } from './screens/Documentos';
+import { Resumen } from './screens/Resumen';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
@@ -26,6 +29,7 @@ const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
 function Screens() {
   const r = route.value;
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
+  const datosMatch = r.match(/^\/datos\/(.+)$/);
   const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 
@@ -83,13 +87,16 @@ function Screens() {
   else if (r === '/inicio/espera') screen = h(InicioEspera, null);
   else if (r === '/aprender') screen = h(Aprender, null);
   else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
+  else if (r === '/documentos') screen = h(Documentos, null);
+  else if (r === '/resumen') screen = h(Resumen, null);
+  else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
   else screen = h(Placeholder, null);
 
   if (leccionMatch) {
     if (!authed) return h(Bienvenida, null);
     return screen;
   }
-  if (r.startsWith('/inicio/')) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);
+  if (r.startsWith('/inicio/') || datosMatch) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);   // one thing at a time
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
