@@ -161,6 +161,8 @@ def test_payment_needs_firm_clearance_scope_and_signed_letter():
     assert state(h)["gates"]["may_sign_engagement"] is True
     assert state(h)["gates"]["may_pay"] is False
     journey.apply(jid, "engagement_signed", {}, actor="client")
+    assert state(h)["gates"]["may_pay"] is False                      # the attorney signs too (Bus. & Prof. Code § 6148)
+    journey.apply(jid, "engagement_countersigned", {}, actor="attorney@example.com")
     assert state(h)["gates"]["may_pay"] is True
 
 

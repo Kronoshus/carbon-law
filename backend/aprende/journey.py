@@ -74,7 +74,6 @@ def gates(facts):
     may_collect_details = base_open
     may_chat = base_open
     may_sign_engagement = base_open and firm_cleared and scope
-    countersigned = "engagement_countersigned" in facts
     may_pay = may_sign_engagement and engagement and countersigned
     may_see_documents = paid and drafts and attorney
     may_book_signing = may_see_documents and client_confirmed

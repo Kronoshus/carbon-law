@@ -39,4 +39,5 @@ engagement.set_firm_profile({"bar_number": "000000",
     "costs_line": {"es": "Sin costos adicionales.", "en": "No additional costs."},
     "refund_policy": {"es": "Política de reembolso de prueba.", "en": "Test refund policy."},
     "data_promise": {"es": "Promesa de datos de prueba.", "en": "Test data promise."}}, "seed")
+app.save_data()                         # users live in the legacy store: persist the test attorney
 print("seeded e2e engagement")
