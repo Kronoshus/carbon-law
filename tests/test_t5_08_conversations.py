@@ -58,8 +58,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SET = yaml.safe_load(open(os.path.join(HERE, "fixtures", "conversations.yaml"), encoding="utf-8"))
 CONVS = SET["conversations"]
 
-_bundle = content.load_dir(os.path.join(os.path.dirname(HERE), "aprende", "content"))
-if not db.query("SELECT id FROM content_lessons WHERE id = 'will'"):
+# The guards don't depend on the lesson: learning-mode turns use the shared test lesson (the live run uses the real ones).
+_bundle = content.load_dir(os.path.join(HERE, "fixtures", "learn"))
+if not db.query("SELECT id FROM content_lessons WHERE id = 'lw'"):
     content.import_bundle(_bundle, actor="opus")
     for _l in _bundle["lessons"]:
         for _s in _l["steps"]:
@@ -100,7 +101,7 @@ def test_the_servers_guards_hold_for_every_conversation(conv, monkeypatch):
         stub.text = bad_reply(conv, turn)
         history.append({"role": "user", "content": turn, "question_id": "nombre"})
         body = {"mode": conv["mode"], "character": conv["character"], "lang": conv["lang"], "messages": history}
-        body.update({"lesson_id": conv["lesson_id"]} if conv["mode"] == "learn" else {"group": conv["group"]})
+        body.update({"lesson_id": "lw"} if conv["mode"] == "learn" else {"group": conv["group"]})
         r = c.post("/chat", json=body, headers=h)
         assert r.status_code == 200, r.text
         out = r.json()
