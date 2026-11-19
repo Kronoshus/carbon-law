@@ -1532,6 +1532,10 @@ app.include_router(_rco.router)
 from aprende import routes_datos as _rda
 app.include_router(_rda.router)
 
+# Aprende booking routes (T6-07)
+from aprende import booking as _rb
+app.include_router(_rb.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
