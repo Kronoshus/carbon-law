@@ -48,19 +48,26 @@ def state(h):
     assert r.status_code == 200, r.text
     return r.json()
 
+import re
+
 from ai import Completion
 from carbon_intake import BANNER, DOCS, WORDS
 from aprende import datos, drafts, jobs
 
 
-def good(kind, cite="6110"):
-    arts = "\n\n".join(f"## ARTICLE {w}\n\n" + ("The client's stated wish is recorded here in full. " * 60)
-                         + f"Probate Code section {cite}." for w in WORDS[:len(DOCS[kind]["articles"])])
+def good(kind, cite=None):
+    cite = cite or sorted(DOCS[kind]["cites"])[0]           # a section on that document's own verified list
+    # varied sentences: a draft that repeats one sentence is (rightly) rejected as a loop by carbon_intake.looping
+    arts = "\n\n".join(f"## ARTICLE {w}\n\n" + " ".join(f"Clause {w.lower()}-{i} records the client's stated wish number {i}."
+                                                          for i in range(60))
+                         + f" Probate Code section {cite} applies to article {w.lower()}." for w in WORDS[:len(DOCS[kind]["articles"])])
     return f"### Attorney review notes\n- Check the names.\n\n# TITLE OF THE {kind.upper()}\n\n{arts}\n"
 
 
 class Stub:
     """Answers each drafting call by document: `replies[kind]` is a list used in order (the last one repeats)."""
+    model = "stub-model"
+
     def __init__(self, replies):
         self.replies, self.calls = replies, []
 
@@ -151,7 +158,7 @@ def test_a_malformed_reply_writes_nothing_for_that_document_and_keeps_the_others
 
 def test_a_short_first_draft_is_retried_and_the_retry_accepted(monkeypatch, alerts):
     h, jid = paid()
-    short = good("will").replace("The client's stated wish is recorded here in full. " * 60, "Short. ")
+    short = re.sub(r"(Clause [a-z]+-\d+ records the client's stated wish number \d+\. ?)+", "Short. ", good("will"))
     run(monkeypatch, jid, Stub({"will": [short, short]}))                        # strict try fails on length; lenient accepts
     assert len(mine(jid)) == 1 and "drafts_ready" in state(h)["facts"]
 
@@ -161,3 +168,10 @@ def test_running_the_job_twice_does_not_duplicate_drafts(monkeypatch, alerts):
     run(monkeypatch, jid, Stub({"will": [good("will")]}))
     run(monkeypatch, jid, Stub({"will": [good("will")]}))
     assert len(mine(jid)) == 1
+
+
+def test_a_looping_draft_is_rejected(monkeypatch, alerts):
+    h, jid = paid()
+    loop = good("will").replace("## ARTICLE TWO", "Repito esta frase sin parar. " * 50 + "\n\n## ARTICLE TWO")
+    run(monkeypatch, jid, Stub({"will": [loop]}))
+    assert mine(jid) == [] and len(alerts) == 1
