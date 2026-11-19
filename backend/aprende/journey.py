@@ -8,7 +8,7 @@ from aprende import legacy
 
 CLIENT_EVENTS = {"ai_disclosed", "consent", "names_submitted", "documents_tentative", "documents_confirmed"}
 SERVER_EVENTS = {
-    "conflict_auto", "conflict_firm", "scope_approved", "engagement_signed",
+    "conflict_auto", "conflict_firm", "scope_approved", "engagement_signed", "engagement_countersigned",
     "paid", "drafts_ready", "attorney_approved", "signed", "intake_completed",
     "client_confirmed", "changes_requested", "signing_booked", "final_lesson_completed",
     "funding_done",
@@ -61,6 +61,7 @@ def gates(facts):
     scope = _scope_currently_approved(facts)
     firm_cleared = facts.get("conflict_firm_result") == "cleared"
     engagement = "engagement_signed" in facts
+    countersigned = "engagement_countersigned" in facts
     paid = "paid" in facts
     drafts = "drafts_ready" in facts
     attorney = "attorney_approved" in facts
@@ -73,7 +74,8 @@ def gates(facts):
     may_collect_details = base_open
     may_chat = base_open
     may_sign_engagement = base_open and firm_cleared and scope
-    may_pay = may_sign_engagement and engagement
+    countersigned = "engagement_countersigned" in facts
+    may_pay = may_sign_engagement and engagement and countersigned
     may_see_documents = paid and drafts and attorney
     may_book_signing = may_see_documents and client_confirmed
     may_take_final_lesson = signed
