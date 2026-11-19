@@ -19,7 +19,7 @@ type CardProps = { d: Doc; editing: string | null; setEditing: (id: string) => v
 function DocCard({ d, editing, setEditing, changeType, setChangeType, note, setNote, sending, speak, decideOk, sendChange }: CardProps) {
   return h('section', { key: d.id, class: 'card', 'aria-label': d.name },
     h('h2', null, d.name),
-    h('ol', null, d.summary.map((s: Summary, i: number) => h('li', { key: i }, `${t('revisar.part', { n: s.article })} ${s.text}`))),
+    h('ol', { class: 'parts' }, d.summary.map((s: Summary) => h('li', { key: s.article }, h('strong', null, t('revisar.part', { n: s.article })), ' ', s.text))),
     h('button', { class: 'btn secondary', type: 'button', onClick: () => speak(d.summary.map((s: Summary) => s.text).join(' ')) }, t('revisar.listen')),
     h('details', null,
       h('summary', null, t('revisar.full')),
