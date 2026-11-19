@@ -217,5 +217,16 @@
   "plan.shifted.weekend.other": "The weekend moved this date by {n} days.",
   "plan.shifted.holiday.one": "An office holiday moved this date by 1 day.",
   "plan.shifted.holiday.other": "An office holiday moved this date by {n} days.",
-  "plan.late": "The office is a little behind on this step. We have let the team know."
+  "plan.late": "The office is a little behind on this step. We have let the team know.",
+  "acuerdo.title": "Your agreement with the office",
+  "acuerdo.intro": "Read it calmly. If you have a question, write it before signing: attorney Raval will answer it.",
+  "acuerdo.name": "Type your full name",
+  "acuerdo.accept": "I have read this agreement and I accept it",
+  "acuerdo.sign": "Sign",
+  "acuerdo.signed": "You signed the agreement. Attorney Raval signs next; we will let you know when it is ready.",
+  "acuerdo.both": "Signed by you and by attorney Raval.",
+  "acuerdo.download": "Download my copy (PDF)",
+  "acuerdo.pay": "Go to payment",
+  "acuerdo.wait": "Your agreement will be ready when attorney Raval approves your documents. We will let you know.",
+  "acuerdo.changed": "The agreement changed while you were reading it. Please review it again before signing."
 }

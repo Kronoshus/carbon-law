@@ -22,6 +22,7 @@ import { Leccion } from './screens/Leccion';
 import { Datos } from './screens/Datos';
 import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
+import { Acuerdo } from './screens/Acuerdo';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
@@ -89,6 +90,7 @@ function Screens() {
   else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
   else if (r === '/documentos') screen = h(Documentos, null);
   else if (r === '/resumen') screen = h(Resumen, null);
+  else if (r === '/acuerdo') screen = h(Acuerdo, null);
   else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
   else screen = h(Placeholder, null);
 
