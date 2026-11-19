@@ -1,92 +1,60 @@
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { t, lang } from '../../core/i18n';
-import type { I18nKey } from '../../core/i18n-keys';
+import { t } from '../../core/i18n';
 import { apiFetch } from '../../core/api';
-import { navigate } from '../../core/router';
+import './datos.css';
+import './pago.css';
 
-type Journey = { gates: { may_pay: boolean }; documents: { confirmed: string[] } };
+const money = (cents: number) => `$${Math.floor(cents / 100).toLocaleString('en-US')}`;
 
+/** Day 5: the server's total, then Stripe's own page. The app never sees a card number. */
 export function Pago() {
-  const [journey, setJourney] = useState<Journey | null>(null);
-  const [total, setTotal] = useState<number | null>(null);
-  const [mode, setMode] = useState<string>('test');
-  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<{ may: boolean; total: number; mode: string } | null>(null);
   const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const j = await (await apiFetch('/journey')).json();
-      setJourney(j);
-      const codes = (j.documents?.confirmed?.length ? j.documents.confirmed : ['will']).join(',');
-      const q = await (await apiFetch(`/payments/quote?codes=${codes}`)).json();
-      setTotal(q.total);
-      setMode(q.test_mode ? 'test' : (q.mode ?? 'test'));
-      // also read config mode if available
-      try {
-        const cfg = await (await apiFetch('/payments/config')).json();
-        if (cfg?.mode) setMode(cfg.mode);
-      } catch { /* ignore */ }
-    })();
-  }, []);
-
-  const mayPay = journey?.gates?.may_pay === true;
-
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { void (async () => {
+    const j = await (await apiFetch('/journey')).json();
+    const codes = j.documents.confirmed.join(',');
+    const total = codes ? (await (await apiFetch(`/payments/quote?codes=${codes}`)).json()).total : 0;
+    const { mode } = await (await apiFetch('/payments/config')).json();
+    setState({ may: j.gates.may_pay, total, mode });
+  })(); }, []);
   const pay = async () => {
     setBusy(true); setFailed(false);
-    try {
-      const r = await apiFetch('/payments/checkout', { method: 'POST' });
-      if (!r.ok) { setFailed(true); setBusy(false); return; }
-      const data = await r.json();
-      if (data?.url) location.assign(data.url);
-      else { setFailed(true); setBusy(false); }
-    } catch {
-      setFailed(true); setBusy(false);
-    }
+    const r = await apiFetch('/payments/checkout', { method: 'POST' }).catch(() => null);
+    if (r?.ok) { location.assign((await r.json()).url); return; }
+    setFailed(true); setBusy(false);
   };
-
-  const money = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(cents / 100);
-
-  if (!journey) return h('section', { class: 'screen' }, h('p', null, '…'));
-
-  if (!mayPay) {
-    return h('section', { class: 'screen pago-page' },
-      h('h1', null, t('pago.title')),
-      h('p', { class: 'locked' }, t('pago.locked')));
-  }
-
-  return h('section', { class: 'screen pago-page' },
+  if (!state) return h('section', { class: 'screen datos-page' }, h('h1', null, t('pago.title')));
+  return h('section', { class: 'screen datos-page' },
     h('h1', null, t('pago.title')),
-    mode === 'test' ? h('p', { class: 'test-banner', role: 'status' }, t('pago.test')) : null,
-    total !== null ? h('p', { class: 'total' }, t('pago.total', { total: money(total) })) : null,
-    h('p', { class: 'note' }, t('pago.note')),
-    failed ? h('p', { class: 'gate-error', role: 'alert' }, t('pago.error')) : null,
-    h('button', { class: 'btn', type: 'button', disabled: busy, onClick: () => void pay() }, t('pago.button')));
+    state.mode === 'test' ? h('p', { class: 'test-banner', role: 'note' }, t('pago.test')) : null,
+    state.may ? [
+      h('p', { key: 't', class: 'pay-total' }, t('pago.total', { total: money(state.total) })),
+      h('p', { key: 'n' }, t('pago.note')),
+      failed ? h('p', { key: 'e', class: 'gate-error', role: 'alert' }, t('pago.error')) : null,
+      h('button', { key: 'b', class: 'btn', type: 'button', disabled: busy, onClick: () => void pay() }, t('pago.button'))]
+      : h('p', null, t('pago.locked')));
 }
 
+/** Back from Stripe: only the webhook records a payment, so this page waits for it (up to a minute). */
 export function PagoListo() {
   const [paid, setPaid] = useState(false);
-  const [done, setDone] = useState(false);
   useEffect(() => {
-    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
-    const sid = params.get('session_id') || '';
-    let stopped = false;
+    const sid = new URLSearchParams(location.hash.split('?')[1] ?? '').get('session_id') ?? '';
+    const until = Date.now() + 60_000;
+    let timer = 0;
     const tick = async () => {
-      if (stopped) return;
-      try {
-        const r = await apiFetch(`/payments/return?session_id=${encodeURIComponent(sid)}`);
-        const data = await r.json();
-        if (data?.paid) { setPaid(true); setDone(true); stopped = true; return; }
-      } catch { /* ignore */ }
-      if (!stopped) setTimeout(tick, 2000);
+      const r = await apiFetch(`/payments/return?session_id=${encodeURIComponent(sid)}`).catch(() => null);
+      if (r?.ok && (await r.json()).paid) { setPaid(true); return; }
+      if (Date.now() < until) timer = window.setTimeout(() => void tick(), 2000);
     };
     void tick();
-    const timeout = setTimeout(() => { stopped = true; }, 60000);
-    return () => { stopped = true; clearTimeout(timeout); };
+    return () => clearTimeout(timer);
   }, []);
-  return h('section', { class: 'screen pago-listo' },
-    !paid ? h('p', { class: 'waiting' }, t('pago.waiting')) : null,
-    paid ? h('div', null,
-      h('p', { class: 'done' }, t('pago.done')),
-      h('a', { href: '#/plan', onClick: (e: Event) => { e.preventDefault(); navigate('/plan'); } }, t('pago.done'))) : null);
+  return h('section', { class: 'screen datos-page' },
+    h('h1', null, t('pago.title')),
+    paid ? [h('p', { key: 'd', class: 'confirmed', role: 'status' }, t('pago.done')),
+            h('a', { key: 'l', class: 'btn', href: '#/plan' }, t('plan.title'))]
+      : h('p', { role: 'status' }, t('pago.waiting')));
 }

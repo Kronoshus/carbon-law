@@ -1,15 +1,17 @@
--- 0013: payments (T6-02/T6-03)
-CREATE TABLE IF NOT EXISTS stripe_events (
-  id TEXT PRIMARY KEY
+-- 0013: payments (T6-02/T6-03). Stripe is the record of money, and these rows are what the app acted on.
+CREATE TABLE IF NOT EXISTS checkout_sessions (
+  id TEXT PRIMARY KEY,
+  journey_id TEXT NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS payments (
   id TEXT PRIMARY KEY,
   journey_id TEXT NOT NULL,
-  session_id TEXT NOT NULL,
+  session_id TEXT NOT NULL UNIQUE,
   amount_cents INTEGER NOT NULL,
-  paid_at TEXT NOT NULL,
-  UNIQUE (journey_id, session_id)
+  paid_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS refunds (

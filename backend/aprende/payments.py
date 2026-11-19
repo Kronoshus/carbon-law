@@ -1,28 +1,19 @@
 """Payments: Stripe checkout (test mode), webhook, refunds, config."""
-import datetime
 import hashlib
 import hmac
 import json
 import os
-import sys
 import time
 import uuid
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.dirname(HERE)
-if BACKEND not in sys.path:
-    sys.path.insert(0, BACKEND)
-
-import db
 import httpx
-
 from fastapi import APIRouter, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 import app as backend_app
+import db
 from aprende import journey, jobs, legacy, pricing
-from aprende.chat import _client_journey
 from aprende.notify import notify_staff
 
 router = APIRouter()
@@ -100,6 +91,11 @@ def _earned(jid):
     return {(d, e): c for d, e, c in db.query("SELECT document, event, amount_cents FROM discounts WHERE journey_id = ?", (jid,))}
 
 
+def _total(j):
+    """The server's price for the confirmed documents: the only amount ever charged."""
+    return int(pricing.quote(pricing.load_settings("pricing") or {}, j["facts"], j["documents"]["confirmed"], earned=_earned(j["id"]))["total"])
+
+
 def _verify_signature(raw, sig_header, secret):
     if not sig_header or not secret:
         return False
@@ -125,6 +121,7 @@ def _verify_signature(raw, sig_header, secret):
 
 @router.get("/payments/quote")
 def get_quote(codes: str = Query(...), authorization: str = Header(None)):
+    """The price card: any documents the client is looking at, with the discounts she has earned."""
     u = _auth(authorization)
     _adult_check(u)
     j = journey.get_or_create_for_user(u["id"])
@@ -153,13 +150,7 @@ def checkout(authorization: str = Header(None)):
     m = os.environ.get("STRIPE_MODE", "test").lower()
     if m == "live" and not _approved():
         raise HTTPException(503, "live payments not approved")
-    codes = list(j["documents"].get("confirmed") or [])
-    if not codes:
-        codes = list(j["documents"].get("tentative") or [])
-    settings = pricing.load_settings("pricing") or {}
-    earned = _earned(j["id"])
-    q = pricing.quote(settings, j["facts"], codes, earned=earned)
-    amount = int(q["total"])
+    amount = _total(j)
     app_origin = os.environ.get("APP_ORIGIN", "http://127.0.0.1:5173")
     success_url = f"{app_origin}/#/pago/listo?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{app_origin}/#/pago"
@@ -174,6 +165,8 @@ def checkout(authorization: str = Header(None)):
         cancel_url=cancel_url,
         idempotency_key=idempotency_key,
     )
+    db.execute("INSERT INTO checkout_sessions (id, journey_id, amount_cents, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
+               (session["id"], j["id"], amount, journey._now_iso()))
     return {"url": session["url"], "mode": mode()}
 
 
@@ -188,43 +181,26 @@ async def webhook(request: Request):
         event = json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
         return Response(status_code=400)
-    event_id = event.get("id")
-    if event_id:
-        rows = db.query("SELECT 1 FROM stripe_events WHERE id = ?", (event_id,))
-        if rows:
-            return Response(status_code=200)
-        db.execute("INSERT INTO stripe_events (id) VALUES (?)", (event_id,))
-    etype = event.get("type")
-    if etype != "checkout.session.completed":
+    if event.get("type") != "checkout.session.completed":
         return Response(status_code=200)
     obj = (event.get("data") or {}).get("object") or {}
-    if obj.get("payment_status") != "paid":
-        return Response(status_code=200)
     jid = (obj.get("metadata") or {}).get("journey_id")
-    session_id = obj.get("id")
-    amount_total = obj.get("amount_total")
     j = journey.get_journey(jid) if jid else None
-    if j is None:
+    if obj.get("payment_status") != "paid" or j is None:
         return Response(status_code=200)
-    codes = list(j["documents"].get("confirmed") or [])
-    settings = pricing.load_settings("pricing") or {}
-    earned = _earned(j["id"])
-    q = pricing.quote(settings, j["facts"], codes, earned=earned)
-    if amount_total != q["total"]:
-        notify_staff("Payment amount mismatch", f"Journey {jid}: paid {amount_total}, expected {q['total']}")
+    # The amount must be what we asked Stripe for: the session's amount, or (for a session we don't know) today's quote.
+    asked = db.query("SELECT amount_cents FROM checkout_sessions WHERE id = ? AND journey_id = ?", (obj.get("id"), jid))
+    if obj.get("amount_total") not in ({asked[0][0]} if asked else set()) | {_total(j)}:
+        notify_staff("Pago con monto distinto", f"Expediente {jid}: Stripe cobró {obj.get('amount_total')} centavos; revise antes de continuar.")
         return Response(status_code=200)
-    # record payment + apply + job + stage in one transaction
-    with db.transaction() as conn:
-        conn.execute(
-            "INSERT INTO payments (id, journey_id, session_id, amount_cents, paid_at) VALUES (?, ?, ?, ?, ?)",
-            (str(uuid.uuid4()), jid, session_id, int(amount_total), datetime.datetime.utcnow().isoformat()),
-        )
-    journey.apply(jid, "paid", {}, actor="system")
-    jobs.enqueue("draft_documents", f"draft_documents:{jid}", {"journey_id": jid})
-    try:
+    # Stripe retries until it gets a 200, sometimes concurrently: the unique session id makes recording happen once.
+    new = db.execute("INSERT INTO payments (id, journey_id, session_id, amount_cents, paid_at) VALUES (?, ?, ?, ?, ?) "
+                     "ON CONFLICT (session_id) DO NOTHING",
+                     (str(uuid.uuid4()), jid, obj.get("id"), int(obj["amount_total"]), journey._now_iso()))
+    if new:
+        journey.apply(jid, "paid", {}, actor="stripe")
+        jobs.enqueue("draft_documents", f"draft_documents:{jid}", {"journey_id": jid})
         legacy.set_stage(journey.get_journey(jid), "4 Drafting")
-    except Exception:
-        pass
     return Response(status_code=200)
 
 
@@ -236,6 +212,10 @@ def return_payment(session_id: str = Query(...), authorization: str = Header(Non
     return {"paid": "paid" in (j.get("facts") or {})}
 
 
+class LiveApproval(BaseModel):
+    approved: bool
+
+
 class RefundBody(BaseModel):
     amount_cents: int
     reason: str
@@ -243,10 +223,12 @@ class RefundBody(BaseModel):
 
 @router.post("/staff/journeys/{jid}/refunds")
 def create_refund(jid: str, body: RefundBody, authorization: str = Header(None)):
-    u = _staff(authorization, {"admin"})
+    _staff(authorization, {"admin"})
+    if journey.get_journey(jid) is None:
+        raise HTTPException(404, "journey not found")
     db.execute(
         "INSERT INTO refunds (id, journey_id, amount_cents, reason, created_at) VALUES (?, ?, ?, ?, ?)",
-        (str(uuid.uuid4()), jid, int(body.amount_cents), body.reason, datetime.datetime.utcnow().isoformat()),
+        (str(uuid.uuid4()), jid, int(body.amount_cents), body.reason, journey._now_iso()),
     )
     return {"ok": True}
 
@@ -266,10 +248,10 @@ def receipt(authorization: str = Header(None)):
 
 
 @router.put("/staff/payments/live-approval")
-def live_approval(body: dict, authorization: str = Header(None)):
+def live_approval(body: LiveApproval, authorization: str = Header(None)):
     u = _staff(authorization, {"admin"})
-    approved = bool(body.get("approved"))
-    now = datetime.datetime.utcnow().isoformat()
+    approved = body.approved
+    now = journey._now_iso()
     db.execute(
         "INSERT INTO settings (key, value_json, updated_by, updated_at) VALUES (?, ?, ?, ?) "
         "ON CONFLICT (key) DO UPDATE SET value_json = excluded.value_json, updated_by = excluded.updated_by, updated_at = excluded.updated_at",

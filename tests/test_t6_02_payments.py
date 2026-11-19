@@ -62,8 +62,9 @@ class FakeStripe:
         self.sessions = []
 
     def create_checkout_session(self, *, amount_cents, currency, description, metadata, success_url, cancel_url, idempotency_key):
-        self.sessions.append(dict(amount_cents=amount_cents, currency=currency, metadata=metadata, idempotency_key=idempotency_key))
-        return {"id": f"cs_test_{len(self.sessions)}", "url": f"https://checkout.stripe.test/{len(self.sessions)}"}
+        sid = f"cs_test_{uuid.uuid4().hex}"                       # Stripe's ids are unique; the test database is shared
+        self.sessions.append(dict(id=sid, amount_cents=amount_cents, currency=currency, metadata=metadata, idempotency_key=idempotency_key))
+        return {"id": sid, "url": f"https://checkout.stripe.test/{len(self.sessions)}"}
 
 
 @pytest.fixture
@@ -94,9 +95,9 @@ def signed(payload: bytes, secret=SECRET, t=None):
     return {"Stripe-Signature": f"t={t},v1={sig}", "Content-Type": "application/json"}
 
 
-def completed(jid, session_id="cs_test_1", event_id="evt_1", amount=None):
+def completed(jid, session_id=None, event_id="evt_1", amount=None):
     return json.dumps({"id": event_id, "type": "checkout.session.completed",
-                       "data": {"object": {"id": session_id, "payment_status": "paid", "amount_total": amount,
+                       "data": {"object": {"id": session_id or f"cs_test_{jid}_{event_id}", "payment_status": "paid", "amount_total": amount,
                                            "metadata": {"journey_id": jid}}}}).encode()
 
 
@@ -203,3 +204,24 @@ def test_refunds_are_admin_only_and_appear_on_the_receipt(stripe):
     receipt = c.get("/payments/receipt", headers=h).json()
     assert receipt["paid_cents"] == total and receipt["refunds"][0]["amount_cents"] == 50000
     assert receipt["balance_cents"] == total - 50000
+
+
+def test_concurrent_deliveries_of_one_payment_record_it_once(stripe):
+    import threading
+    h, jid = may_pay()
+    c.post("/payments/checkout", headers=h)
+    total = c.get("/payments/quote?codes=will", headers=h).json()["total"]
+    body = completed(jid, session_id=stripe.sessions[-1]["id"], event_id="evt_conc", amount=total)
+    ts = [threading.Thread(target=lambda: c.post("/payments/webhook", content=body, headers=signed(body))) for _ in range(5)]
+    [t.start() for t in ts]; [t.join() for t in ts]
+    assert db.query("SELECT COUNT(*) FROM journey_events WHERE journey_id = ? AND type = 'paid'", (jid,))[0][0] == 1
+
+
+def test_a_discount_earned_after_checkout_does_not_reject_the_payment(stripe):
+    h, jid = may_pay()
+    c.post("/payments/checkout", headers=h)
+    asked = stripe.sessions[-1]["amount_cents"]
+    journey.apply(jid, "intake_completed", {}, actor="system")                 # one more $100 off after Stripe opened
+    body = completed(jid, session_id=stripe.sessions[-1]["id"], event_id="evt_late_discount", amount=asked)
+    c.post("/payments/webhook", content=body, headers=signed(body))
+    assert "paid" in state(h)["facts"]
