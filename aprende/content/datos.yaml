@@ -1,0 +1,198 @@
+# "Tus datos": the questions a character asks after each core lesson (spec 6.1) and in the day-4 summary.
+# Written by Opus from the prototype's guion-plan and the research (docs/aprende-research.md). Attorney approval required.
+# docs: the documents a question belongs to ([] = asked for every client). No question asks about immigration status.
+- id: nombre
+  asked_after: will
+  docs: []
+  es: ¿Cuál es su nombre legal completo, como aparece en sus documentos?
+  en: What is your full legal name, as it appears on your documents?
+- id: nacimiento
+  asked_after: will
+  docs: []
+  es: ¿Cuál es su fecha de nacimiento?
+  en: What is your date of birth?
+- id: domicilio
+  asked_after: will
+  docs: []
+  es: ¿En qué ciudad, condado y estado vive actualmente?
+  en: What city, county and state do you live in now?
+- id: estado_civil
+  asked_after: will
+  docs: []
+  es: ¿Está casado o casada, tiene pareja, o es soltero o soltera? Si tiene cónyuge o pareja, dígame su nombre completo.
+  en: Are you married, do you have a partner, or are you single? If you have a spouse or partner, tell me their full name.
+- id: hijos
+  asked_after: will
+  docs: []
+  es: ¿Tiene hijos? Dígame el nombre completo y la edad de cada uno. Incluya hijos de otras relaciones, hijastros, y nietos que usted esté criando.
+  en: Do you have children? Tell me each one's full name and age. Include children from other relationships, stepchildren, and grandchildren you
+    are raising.
+- id: documentos_previos
+  asked_after: will
+  docs: []
+  es: ¿Ya tiene un testamento, un fideicomiso o alguna nota escrita a mano sobre lo que quiere? Si los tiene, ¿dónde están?
+  en: Do you already have a will, a trust, or any handwritten note about your wishes? If so, where are they?
+- id: herederos
+  asked_after: will
+  docs:
+  - will
+  - trust
+  es: ¿A quién le gustaría dejar sus bienes, y en qué proporción? Y si esa persona falleciera antes que usted, ¿quién los recibiría?
+  en: Who would you like to leave your property to, and in what shares? And if that person passed away before you, who would receive it?
+- id: legados
+  asked_after: will
+  docs:
+  - will
+  - trust
+  es: ¿Hay algún objeto o cantidad específica que quiera dejar a una persona u organización en particular?
+  en: Is there any specific item or amount you want to leave to a particular person or organization?
+- id: tutor
+  asked_after: will
+  docs:
+  - will
+  - trust
+  es: 'Si tiene hijos menores de edad, ¿a quién le gustaría nombrar como tutor para cuidarlos, y quién sería la segunda opción? Si todavía no
+    lo decide, está bien: el abogado lo ve con usted.'
+  en: 'If you have children under 18, who would you like to name as guardian to care for them, and who would be the second choice? If you have
+    not decided yet, that is fine: the attorney will go over it with you.'
+- id: albacea
+  asked_after: will
+  docs:
+  - will
+  es: ¿A quién quiere nombrar como albacea, la persona de confianza que se encargará de cumplir su testamento? ¿Y quién sería la segunda opción?
+  en: Who do you want to name as executor, the trusted person who will carry out your will? And who would be your second choice?
+- id: fid_tipo
+  asked_after: trust
+  docs:
+  - trust
+  es: 'Sobre el fideicomiso: ¿sería un fideicomiso solo suyo, o uno conjunto con su cónyuge o pareja?'
+  en: 'About the trust: would it be a trust just for you, or a joint trust with your spouse or partner?'
+- id: fid_sucesor
+  asked_after: trust
+  docs:
+  - trust
+  es: Mientras usted viva y pueda, usted maneja su fideicomiso. ¿A quién quiere nombrar para manejarlo cuando usted ya no pueda o haya fallecido?
+    ¿Y quién sería la segunda opción?
+  en: While you are alive and able, you manage your own trust. Who do you want to name to manage it when you no longer can, or after you pass
+    away? And who would be your second choice?
+- id: fid_bienes
+  asked_after: trust
+  docs:
+  - trust
+  es: ¿Cuáles de sus bienes le gustaría poner en el fideicomiso? Por ejemplo su casa, otras propiedades o sus cuentas de banco.
+  en: Which of your assets would you like to put into the trust? For example your home, other real estate, or your bank accounts.
+- id: casa_titulo
+  asked_after: trust
+  docs:
+  - will
+  - trust
+  es: Si tiene una casa o un terreno, ¿a nombre de quién está hoy? Si en la escritura todavía aparece alguien que ya falleció, dígamelo también.
+    Si no tiene, solo dígalo.
+  en: If you own a home or land, whose name is it in today? If someone who has died is still on the deed, tell me that too. If you don't own one,
+    just say so.
+- id: fid_menores
+  asked_after: trust
+  docs:
+  - trust
+  es: Si uno de sus beneficiarios todavía es joven cuando le toque recibir, ¿prefiere que reciba todo de una vez, o que el fideicomiso se lo guarde
+    hasta cierta edad? Si es así, ¿hasta qué edad?
+  en: If one of your beneficiaries is still young when it is time to receive their share, would you want them to receive everything at once, or
+    have the trust hold it until a certain age? If so, until what age?
+- id: salud_agente
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: 'Sobre la directiva de atención médica: ¿a quién quiere nombrar para tomar decisiones médicas por usted si usted no puede? ¿Y quién sería
+    la segunda opción?'
+  en: 'About the health care directive: who do you want to name to make medical decisions for you if you cannot? And who would be your second
+    choice?'
+- id: salud_vida
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: Si usted estuviera muy grave y los médicos creyeran que no se va a recuperar, ¿qué le gustaría? Algunas personas quieren que se haga todo
+    lo posible por prolongar su vida, y otras prefieren no seguir conectadas a máquinas. Dígamelo con sus propias palabras.
+  en: If you were very seriously ill and the doctors believed you would not recover, what would you want? Some people want everything possible
+    done to prolong their life, and others prefer not to be kept on machines. Please tell me in your own words.
+- id: salud_donacion
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: ¿Le gustaría donar sus órganos al fallecer? Puede decir sí, no, o que prefiere decidirlo después.
+  en: Would you like to donate your organs when you pass away? You can say yes, no, or that you would rather decide later.
+- id: salud_info
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: ¿Quiere que los médicos puedan compartir su información médica con la persona que nombró desde ahora, o solamente cuando usted ya no pueda
+    decidir?
+  en: Do you want doctors to be able to share your medical information with the person you named starting now, or only once you can no longer
+    decide for yourself?
+- id: salud_otros
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: ¿Tiene algún otro deseo sobre su atención médica? Por ejemplo sobre el alivio del dolor, sus creencias religiosas, o si prefiere entierro
+    o cremación.
+  en: Do you have any other wishes about your medical care? For example about pain relief, your religious beliefs, or whether you prefer burial
+    or cremation.
+- id: salud_residencia
+  asked_after: ahcd
+  docs:
+  - ahcd
+  es: ¿Vive usted en un hogar de ancianos o centro de cuidado, o cree que pronto se mudará a uno? Esto cambia quién puede ser testigo de su directiva.
+  en: Do you live in a nursing home or care facility, or do you think you will move to one soon? This changes who can witness your directive.
+- id: poder_agente
+  asked_after: poa
+  docs:
+  - poa
+  es: 'Sobre el poder para asuntos financieros: ¿a quién quiere nombrar como apoderado, la persona que manejaría su dinero y sus bienes si usted
+    no puede? ¿Y quién sería la segunda opción?'
+  en: 'About the financial power of attorney: who do you want to name as your agent, the person who would manage your money and property if you
+    cannot? And who would be your second choice?'
+- id: poder_inicio
+  asked_after: poa
+  docs:
+  - poa
+  es: ¿Quiere que su apoderado pueda actuar desde que usted firme el documento, o solamente si usted ya no puede tomar sus propias decisiones?
+  en: Do you want your agent to be able to act as soon as you sign the document, or only if you can no longer make your own decisions?
+- id: poder_alcance
+  asked_after: poa
+  docs:
+  - poa
+  es: ¿Quiere que su apoderado pueda encargarse de todos sus asuntos financieros, incluyendo vender o hipotecar una propiedad, o hay algo que
+    no quiere que pueda hacer?
+  en: Do you want your agent to be able to handle all of your financial matters, including selling or mortgaging real estate, or is there anything
+    you do not want them to be able to do?
+- id: poder_regalos
+  asked_after: poa
+  docs:
+  - poa
+  es: ¿Quiere que su apoderado pueda hacer regalos de su dinero o de sus bienes, por ejemplo a sus familiares? ¿O prefiere que no pueda regalar
+    nada?
+  en: Do you want your agent to be able to make gifts of your money or property, for example to family members? Or would you rather they not be
+    able to give anything away?
+- id: bienes
+  asked_after: resumen
+  docs: []
+  es: 'Cuénteme de sus bienes principales. Por ejemplo: casas o terrenos, aquí o en otro país, cuentas de banco, cuentas de retiro, vehículos,
+    negocios y seguros de vida. No necesito cantidades exactas, solo una idea general.'
+  en: 'Tell me about your main assets. For example: houses or land, here or in another country, bank accounts, retirement accounts, vehicles,
+    businesses and life insurance. I do not need exact amounts, only a general idea.'
+- id: cuentas_beneficiarios
+  asked_after: resumen
+  docs:
+  - will
+  - trust
+  es: ¿Tiene cuentas de retiro, seguros de vida u otras cuentas donde ya nombró a un beneficiario? ¿A quién nombró en cada una?
+  en: Do you have retirement accounts, life insurance, or other accounts where you already named a beneficiary? Who did you name on each?
+- id: otros
+  asked_after: resumen
+  docs: []
+  es: ¿Tiene algún otro deseo, o alguna pregunta que quiera que el abogado Raval le conteste?
+  en: Do you have any other wishes, or any question you would like attorney Raval to answer?
+- id: contacto
+  asked_after: resumen
+  docs: []
+  es: Por último, ¿cuál es el mejor número de teléfono y correo electrónico para comunicarnos con usted?
+  en: Finally, what is the best phone number and email address to reach you?
