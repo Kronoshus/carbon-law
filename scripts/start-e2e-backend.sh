@@ -2,7 +2,7 @@
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/backend"
-export CARBON_DB_PATH="${CARBON_DB_PATH:-/tmp/cl-t2-11-e2e.db}"
+export CARBON_DB_PATH="${CARBON_DB_PATH:-/tmp/cl-e2e-${PORT:-8011}.db}"   # one database per port: parallel runs never share one
 export PYTHONPATH="$ROOT/backend"
 rm -f "$CARBON_DB_PATH"
 ${PYTHON:-python} -c "import migrate; migrate.run()"
