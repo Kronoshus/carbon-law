@@ -1,2 +1,12 @@
-.plan-step--next { font-weight: 700; }
-.plan-late { color: inherit; }
+/* Mi plan: one row per step; the next step stands out; a late firm step looks like any other row */
+.plan { display: grid; gap: var(--s3); padding: var(--s4); max-inline-size: 40rem; margin-inline: auto; }
+.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.plan-step { display: grid; grid-template-columns: 2rem 1fr auto; gap: var(--s3); align-items: start; padding: var(--s3);
+             background: var(--card); border: var(--stroke) solid var(--outline); border-radius: var(--radius); }
+.plan-step.next, .plan-step.today { box-shadow: var(--ledge); background: color-mix(in oklab, var(--gold) 22%, var(--card)); }
+.plan-mark { inline-size: 1.6rem; block-size: 1.6rem; border-radius: 50%; border: var(--stroke) solid var(--outline); display: grid; place-items: center; }
+.plan-step.done .plan-mark { background: var(--teal); }
+.plan-mark .icon { inline-size: 1rem; block-size: 1rem; }
+.plan-day { font: 700 var(--step--1)/1.3 var(--font-body); color: var(--text-soft); }
+.plan-name { font-weight: 700; }
+.plan-note { font-size: var(--step--1); color: var(--text-soft); margin-block-start: var(--s1); }
