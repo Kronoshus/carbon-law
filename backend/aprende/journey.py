@@ -12,6 +12,7 @@ SERVER_EVENTS = {
     "paid", "drafts_ready", "attorney_approved", "signed", "intake_completed",
     "client_confirmed", "changes_requested", "signing_booked", "final_lesson_completed",
     "funding_done",
+    "scope_reopened",
     "lesson_completed:will", "lesson_completed:trust", "lesson_completed:ahcd", "lesson_completed:poa",
 }
 ALL_EVENTS = CLIENT_EVENTS | SERVER_EVENTS
@@ -46,6 +47,16 @@ def conflict_status(facts):
     return "pending"
 
 
+def _scope_currently_approved(facts):
+    facts = facts or {}
+    latest_approved = facts.get("scope_approved_latest") or facts.get("scope_approved")
+    latest_reopened = facts.get("scope_reopened_latest") or facts.get("scope_reopened")
+    if not latest_approved:
+        return False
+    if not latest_reopened:
+        return True
+    return latest_approved > latest_reopened
+
 def gates(facts):
     facts = facts or {}
     conflict = conflict_status(facts)
@@ -53,7 +64,7 @@ def gates(facts):
     ai = "ai_disclosed" in facts
     consent_yes = ("consent" in facts) and (facts.get("consent_answer") == "yes")
     names = "names_submitted" in facts
-    scope = "scope_approved" in facts
+    scope = _scope_currently_approved(facts)
     firm_cleared = facts.get("conflict_firm_result") == "cleared"
     engagement = "engagement_signed" in facts
     paid = "paid" in facts
@@ -130,6 +141,10 @@ def _reconstruct_facts(rows):
             facts["conflict_auto_result"] = payload["result"]
         if typ == "conflict_firm" and isinstance(payload, dict) and "result" in payload:
             facts["conflict_firm_result"] = payload["result"]
+        if typ == "scope_approved":
+            facts["scope_approved_latest"] = created_at
+        if typ == "scope_reopened":
+            facts["scope_reopened_latest"] = created_at
     return facts
 
 
@@ -197,13 +212,18 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
         row = conn.execute(
             "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
             (journey_id, event_type)).fetchone()
-        if row is not None:
-            if event_type not in ("consent", "conflict_auto", "conflict_firm"):
+        if row is not None and event_type not in ("scope_approved", "scope_reopened"):
+            if event_type in ("documents_tentative", "documents_confirmed"):
+                last = json.loads(row[0] or "{}")
+                if (last.get("codes") if isinstance(last, dict) else None) == (payload.get("codes") if isinstance(payload, dict) else None):
+                    return False
+            elif event_type not in ("consent", "conflict_auto", "conflict_firm"):
                 return False
-            last = json.loads(row[0] or "{}")
-            key = "answer" if event_type == "consent" else "result"
-            if last.get(key) == payload.get(key):
-                return False
+            else:
+                last = json.loads(row[0] or "{}")
+                key = "answer" if event_type == "consent" else "result"
+                if last.get(key) == payload.get(key):
+                    return False
         conn.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
@@ -224,9 +244,16 @@ def apply(journey_id, event_type, payload=None, actor="system"):
     j = get_journey(journey_id)
     if j is None:
         raise ValueError("journey not found")
-    inserted = _insert_event(j["id"], event_type, payload or {}, actor, _now_iso())
+    payload = payload or {}
+    scope_was_approved = _scope_currently_approved(j.get("facts") or {}) if event_type == "documents_confirmed" else False
+    prev_confirmed = list(j.get("documents", {}).get("confirmed") or []) if event_type == "documents_confirmed" else []
+    inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())
     if not inserted:
         return get_journey(j["id"])
+    if event_type == "documents_confirmed":
+        new_codes = list(payload.get("codes") or [])
+        if scope_was_approved and sorted(prev_confirmed) != sorted(new_codes):
+            _insert_event(j["id"], "scope_reopened", {}, actor, _now_iso())
     if event_type == "names_submitted":
         mid = legacy.ensure_matter(get_journey(j["id"]))
         if mid:

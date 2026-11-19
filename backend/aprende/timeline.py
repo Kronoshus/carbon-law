@@ -14,7 +14,7 @@ from aprende.notify import notify_staff
 LA = ZoneInfo("America/Los_Angeles")
 UTC = datetime.timezone.utc
 DAY = datetime.timedelta(days=1)
-DEFAULT_TURNAROUND = {"conflict_bd": 2, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}
+DEFAULT_TURNAROUND = {"conflict_bd": 2, "scope_bd": 2, "scope_change_bd": 1, "review_bd": 3, "revise_bd": 2}
 NOMINAL = {"lesson_will": 1, "lesson_trust": 2, "lesson_ahcd": 3, "lesson_poa": 4, "pay": 5, "attorney_review": 8,
            "client_review": 9, "changes": 10, "signing": 13, "final_lesson": 14}
 DONE_BY = {"lesson_will": "lesson_completed:will", "lesson_trust": "lesson_completed:trust",
@@ -57,7 +57,11 @@ def _dates(facts, turnaround, cal, changes):
     out = {}
     for step, doc in (("lesson_will", "will"), ("lesson_trust", "trust"), ("lesson_ahcd", "ahcd"), ("lesson_poa", "poa")):
         out[step] = (on(f"lesson_completed:{doc}", start + (NOMINAL[step] - 1) * DAY), None)
-    scope_done = cal.add(on("documents_tentative", start + DAY) - DAY, t["scope_bd"])
+    reopen_key = "scope_reopened_latest" if "scope_reopened_latest" in facts else ("scope_reopened" if "scope_reopened" in facts else None)
+    if reopen_key is not None:
+        scope_done = cal.add(on(reopen_key, start), t.get("scope_change_bd", 1))
+    else:
+        scope_done = cal.add(on("documents_tentative", start + DAY) - DAY, t["scope_bd"])
     conflict_done = cal.add(on("names_submitted", start) - DAY, t["conflict_bd"])
     pay = on("paid", max(start + 4 * DAY, scope_done + DAY, conflict_done + DAY))
     out["pay"] = (pay, None)

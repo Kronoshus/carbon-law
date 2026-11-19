@@ -6,7 +6,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "backend"))
 
 import app  # noqa: F401  (ensures repo root on path)
-from aprende import content
+from aprende import content, conflicts
 
 BUNDLE_DIR = os.path.join(ROOT, "aprende", "content")
 bundle = content.load_dir(BUNDLE_DIR)
@@ -17,4 +17,5 @@ for lesson in bundle["lessons"]:
             if it.get("legal"):
                 content.approve(it["id"], attorney="attorney@example.com")
             content.publish(it["id"], actor="paralegal@example.com")
+conflicts.replace_list("name\nRoberto Méndez\n")
 print("seeded e2e content")
