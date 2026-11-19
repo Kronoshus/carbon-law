@@ -91,7 +91,7 @@ export function Aprender() {
       h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: t(CHARACTER_NAME[current.character]), title: title(current) }) : t('map.hostDone'))) : null,
     h(PriceCard, { codes: ['will'] }),
     (tentative !== null && (tentative.length === 0) && core.some((ls) => ls.unit === 'trust' && ls.status === 'done'))
-      ? h('a', { class: 'card', href: '#/documentos' }, t('docs.title')) : null,
+      ? h('a', { class: 'card docs-card', href: '#/documentos' }, h('strong', null, t('docs.title')), h('span', null, t('docs.body'))) : null,
     h('h2', { class: 'banner' }, t('map.learn'), h('small', null, t('map.learn.sub'))),
     h('ol', { class: 'path' }, core.map(node)),
     h('h2', { class: 'banner' }, t('map.step.pay'), h('small', null, t('map.step.pay.day'))),

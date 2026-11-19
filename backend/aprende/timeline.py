@@ -57,9 +57,9 @@ def _dates(facts, turnaround, cal, changes):
     out = {}
     for step, doc in (("lesson_will", "will"), ("lesson_trust", "trust"), ("lesson_ahcd", "ahcd"), ("lesson_poa", "poa")):
         out[step] = (on(f"lesson_completed:{doc}", start + (NOMINAL[step] - 1) * DAY), None)
-    reopen_key = "scope_reopened_latest" if "scope_reopened_latest" in facts else ("scope_reopened" if "scope_reopened" in facts else None)
-    if reopen_key is not None:
-        scope_done = cal.add(on(reopen_key, start), t.get("scope_change_bd", 1))
+    reopened = facts.get("scope_reopened_latest", facts.get("scope_reopened"))
+    if reopened:                                       # a changed choice restarts the attorney's scope review (spec 6.2)
+        scope_done = cal.add(_local(reopened), t["scope_change_bd"])
     else:
         scope_done = cal.add(on("documents_tentative", start + DAY) - DAY, t["scope_bd"])
     conflict_done = cal.add(on("names_submitted", start) - DAY, t["conflict_bd"])

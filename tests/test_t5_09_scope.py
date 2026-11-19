@@ -92,3 +92,20 @@ def test_a_reopened_scope_gets_one_business_day_on_the_timeline():
     moved = {s["step"]: s for s in timeline.plan({"started_at": start, "scope_reopened": reopened}, {}, [], now)}
     assert plain["pay"]["date"] == "2026-12-06"
     assert moved["pay"]["date"] == "2026-12-08"           # reopened Friday → reviewed Monday → pay Tuesday
+
+
+def test_approving_twice_records_one_approval():
+    h = client()
+    jid = ready(h)
+    send(h, "documents_confirmed", codes=["will"])
+    journey.apply(jid, "scope_approved", {}, actor="attorney@example.com")
+    journey.apply(jid, "scope_approved", {}, actor="attorney@example.com")
+    assert db.query("SELECT COUNT(*) FROM journey_events WHERE journey_id = ? AND type = 'scope_approved'", (jid,))[0][0] == 1
+
+
+def test_changing_the_tentative_choice_is_recorded():
+    h = client()
+    ready(h)
+    send(h, "documents_tentative", codes=["will"])
+    send(h, "documents_tentative", codes=["will", "trust"])
+    assert state(h)["documents"]["tentative"] == ["will", "trust"]

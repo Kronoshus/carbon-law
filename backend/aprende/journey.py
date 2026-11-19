@@ -48,14 +48,8 @@ def conflict_status(facts):
 
 
 def _scope_currently_approved(facts):
-    facts = facts or {}
-    latest_approved = facts.get("scope_approved_latest") or facts.get("scope_approved")
-    latest_reopened = facts.get("scope_reopened_latest") or facts.get("scope_reopened")
-    if not latest_approved:
-        return False
-    if not latest_reopened:
-        return True
-    return latest_approved > latest_reopened
+    """The attorney's latest scope decision stands: approved, unless the client changed documents since (spec 6.2)."""
+    return facts.get("scope_current", "scope_approved" in facts)
 
 def gates(facts):
     facts = facts or {}
@@ -141,8 +135,8 @@ def _reconstruct_facts(rows):
             facts["conflict_auto_result"] = payload["result"]
         if typ == "conflict_firm" and isinstance(payload, dict) and "result" in payload:
             facts["conflict_firm_result"] = payload["result"]
-        if typ == "scope_approved":
-            facts["scope_approved_latest"] = created_at
+        if typ in ("scope_approved", "scope_reopened"):          # events come in order: the last one decides
+            facts["scope_current"] = typ == "scope_approved"
         if typ == "scope_reopened":
             facts["scope_reopened_latest"] = created_at
     return facts
@@ -245,6 +239,8 @@ def apply(journey_id, event_type, payload=None, actor="system"):
     if j is None:
         raise ValueError("journey not found")
     payload = payload or {}
+    if event_type == "scope_approved" and _scope_currently_approved(j["facts"]):
+        return j                                                  # already approved: a repeat is a no-op
     scope_was_approved = _scope_currently_approved(j.get("facts") or {}) if event_type == "documents_confirmed" else False
     prev_confirmed = list(j.get("documents", {}).get("confirmed") or []) if event_type == "documents_confirmed" else []
     inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())

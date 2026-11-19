@@ -3,6 +3,8 @@ import { defineConfig } from '@playwright/test';
 const executablePath = process.env.PW_CHROMIUM;
 
 export default defineConfig({
+  // Each page renders the 3D character in software; more than a few at once starves a desktop CPU (local runs only).
+  workers: process.env.CI ? undefined : 4,
   timeout: 60000,
   projects: [
     {

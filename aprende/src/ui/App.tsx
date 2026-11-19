@@ -96,7 +96,7 @@ function Screens() {
     if (!authed) return h(Bienvenida, null);
     return screen;
   }
-  if (r.startsWith('/inicio/')) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);
+  if (r.startsWith('/inicio/') || datosMatch) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);   // one thing at a time
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
