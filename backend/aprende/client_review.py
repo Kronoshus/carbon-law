@@ -1,7 +1,4 @@
 """Client review of attorney-approved documents (T6-06)."""
-import base64
-import datetime
-import json
 import os
 import uuid
 
@@ -77,12 +74,7 @@ def _gate_fail():
 
 @router.get("/review/documents")
 def get_review_documents(lang: str = "es", authorization: str = Header(None)):
-    try:
-        j, open_ = _client_journey(authorization, "may_see_documents")
-    except HTTPException as e:
-        if e.status_code in (401, 403):
-            raise
-        raise
+    j, open_ = _client_journey(authorization, "may_see_documents")
     if not open_:
         return _gate_fail()
     is_en = (lang == "en")
@@ -107,12 +99,7 @@ def get_review_documents(lang: str = "es", authorization: str = Header(None)):
 
 @router.post("/review/documents/{doc_id}")
 def post_review_document(doc_id: str, body: ReviewDecision, authorization: str = Header(None)):
-    try:
-        j, open_ = _client_journey(authorization, "may_see_documents")
-    except HTTPException as e:
-        if e.status_code in (401, 403):
-            raise
-        raise
+    j, open_ = _client_journey(authorization, "may_see_documents")
     if not open_:
         return _gate_fail()
     if doc_id not in backend_app.documents:
@@ -129,44 +116,17 @@ def post_review_document(doc_id: str, body: ReviewDecision, authorization: str =
             raise HTTPException(422, "invalid change_type")
         if not note:
             raise HTTPException(422, "note required")
-        # store decision
-        with backend_app._request_lock:
-            db.execute(
-                "INSERT INTO client_reviews (id, document_id, journey_id, decision, change_type, note, at) VALUES (?,?,?,?,?,?,?)",
-                (str(uuid.uuid4()), doc_id, j["id"], "change", ct, note, backend_app.now_iso()))
-            backend_app.save_data()
-        # create legacy change request
-        mid = j.get("matter_id")
-        cr = {
-            "matter_id": mid,
-            "requested_by": _user_email(j["user_id"]),
-            "change_type": ct,
-            "affected_documents": d["name"],
-            "required_attorney_decision": True,
-            "impact": "Revisión: 2 días hábiles",
-            "status": "Open",
-            "note": note,
-        }
-        # replicate POST /change-requests logic
-        rec = dict(cr)
-        rec["id"] = str(uuid.uuid4())
-        rec["created_at"] = backend_app.now_iso()
-        tid = str(uuid.uuid4())
-        backend_app.tasks[tid] = {"id": tid, "matter_id": mid, "title": f"Review change: {ct}",
-                                 "owner": backend_app.matters[mid].get("owner", "Unassigned"), "due_date": None,
-                                 "status": "Open", "blocker": "None", "created_at": backend_app.now_iso()}
-        rec["task_id"] = tid
-        backend_app.changes.append(rec)
-        backend_app.log_audit(rec["requested_by"], "create", "change_request", rec["id"], ct)
-        backend_app.save_data()
+        db.execute("INSERT INTO client_reviews (id, document_id, journey_id, decision, change_type, note, at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (str(uuid.uuid4()), doc_id, j["id"], "change", ct, note, journey._now_iso()))
+        email = _user_email(j["user_id"])
+        backend_app.record_change_request({"matter_id": j["matter_id"], "requested_by": email, "change_type": ct,
+                                           "affected_documents": d["name"], "required_attorney_decision": True,
+                                           "impact": "Revisión: 2 días hábiles", "status": "Open", "note": note}, email)
         journey.apply(j["id"], "changes_requested", {}, actor="system")
         legacy.set_stage(journey.get_journey(j["id"]), "5 Review Queue")
     else:
-        with backend_app._request_lock:
-            db.execute(
-                "INSERT INTO client_reviews (id, document_id, journey_id, decision, change_type, note, at) VALUES (?,?,?,?,?,?,?)",
-                (str(uuid.uuid4()), doc_id, j["id"], "ok", None, None, backend_app.now_iso()))
-            backend_app.save_data()
+        db.execute("INSERT INTO client_reviews (id, document_id, journey_id, decision, change_type, note, at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (str(uuid.uuid4()), doc_id, j["id"], "ok", None, None, journey._now_iso()))
         # check all ok
         current = _current_approved_docs(journey.get_journey(j["id"]))
         all_ok = all(_latest_decision(dd["id"], j["id"]) == "ok" for dd in current) and len(current) > 0

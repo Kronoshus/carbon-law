@@ -5,20 +5,25 @@ import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
 import { navigate } from '../../core/router';
 import './datos.css';
+import './revisar.css';
 
 type Summary = { article: number; text: string };
 type Doc = { id: string; name: string; version: number; content: string; decision: 'ok' | 'change' | null; summary: Summary[] };
 
 const CHANGE_TYPES = ['Beneficiary change', 'Fiduciary change', 'Asset change', 'Guardian change', 'Distribution age change', 'Title change', 'Contact or address change', 'Appointment change', 'Document scope change'];
 
-function DocCard({ d, editing, setEditing, changeType, setChangeType, note, setNote, sending, setDocs, speak, decideOk, sendChange }: any) {
+type CardProps = { d: Doc; editing: string | null; setEditing: (id: string) => void; changeType: string; setChangeType: (v: string) => void;
+  note: string; setNote: (v: string) => void; sending: boolean; speak: (text: string) => void; decideOk: (id: string) => Promise<void>;
+  sendChange: (id: string) => Promise<void> };
+
+function DocCard({ d, editing, setEditing, changeType, setChangeType, note, setNote, sending, speak, decideOk, sendChange }: CardProps) {
   return h('section', { key: d.id, class: 'card', 'aria-label': d.name },
     h('h2', null, d.name),
     h('ol', null, d.summary.map((s: Summary, i: number) => h('li', { key: i }, `${t('revisar.part', { n: s.article })} ${s.text}`))),
     h('button', { class: 'btn secondary', type: 'button', onClick: () => speak(d.summary.map((s: Summary) => s.text).join(' ')) }, t('revisar.listen')),
     h('details', null,
       h('summary', null, t('revisar.full')),
-      h('div', null, d.content)),
+      h('div', { class: 'document-text' }, d.content)),
     d.decision === 'ok'
       ? h('p', { role: 'status' }, t('revisar.decided.ok'))
       : d.decision === 'change'
@@ -90,7 +95,7 @@ export function Revisar() {
   return h('section', { class: 'screen datos-page' },
     h('h1', null, t('revisar.title')),
     h('p', null, t('revisar.body')),
-    docs.map((d) => DocCard({ d, editing, setEditing, changeType, setChangeType, note, setNote, sending, setDocs, speak, decideOk, sendChange })),
+    docs.map((d) => h(DocCard, { key: d.id, d, editing, setEditing, changeType, setChangeType, note, setNote, sending, speak, decideOk, sendChange })),
     allOk ? h('div', { class: 'revisar-all' },
       h('p', null, t('revisar.all')),
       h('button', { class: 'btn', type: 'button', onClick: () => navigate('/cita?kind=signing') }, t('revisar.book'))) : null);
