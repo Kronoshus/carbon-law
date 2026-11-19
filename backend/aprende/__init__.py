@@ -1,1 +1,1 @@
-APRENDE_PREFIXES = ("/journey", "/characters", "/payments", "/learn", "/progress", "/chat", "/conflicts", "/datos", "/engagement", "/staff")
+APRENDE_PREFIXES = ("/journey", "/characters", "/payments", "/learn", "/progress", "/chat", "/conflicts", "/datos", "/engagement", "/staff", "/signed-documents", "/funding-checklist")

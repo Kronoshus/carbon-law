@@ -1538,6 +1538,8 @@ app.include_router(_rst.router)
 # Aprende engagement routes (T6-01)
 from aprende import routes_engagement as _ren
 app.include_router(_ren.router)
+from aprende import routes_signing as _rsi
+app.include_router(_rsi.router)
 
 if __name__ == "__main__":
     import uvicorn

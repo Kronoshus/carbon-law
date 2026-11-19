@@ -14,7 +14,7 @@ async function signUp(page: Page) {
 test('signed documents and the trust checklist download with the client\'s token', async ({ page }) => {
   await signUp(page);
   const id = 'k'.repeat(40);
-  await page.route('**/signed-documents', (r) => r.fulfill({ json: [{ id, name: 'Pour-over will', url: `/signed-documents/${id}` }] }));
+  await page.route('**/signed-documents', (r) => r.fulfill({ json: [{ id, name: 'Pour-over will', filename: 'will-signed.pdf', url: `/signed-documents/${id}` }] }));
   await page.route(`**/signed-documents/${id}`, (r) => r.fulfill({ body: '%PDF-1.4', contentType: 'application/pdf' }));
   await page.route('**/funding-checklist', (r) => r.fulfill({ body: '# Trust Funding Checklist', contentType: 'text/markdown' }));
   await page.goto('/#/firmados');
