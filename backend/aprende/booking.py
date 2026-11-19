@@ -30,41 +30,23 @@ def notify_staff(title, message):
 
 
 def send_confirmation(to, subject, body):
-    webhook = os.environ.get("EMAIL_WEBHOOK_URL")
-    if webhook:
-        try:
-            import urllib.request
-            payload = json.dumps({"to": to, "subject": subject, "body": body,
-                                 "from": os.environ.get("SMTP_FROM", "info@carbonlaw.com"),
-                                 "secret": os.environ.get("EMAIL_WEBHOOK_SECRET", "")}).encode()
-            req = urllib.request.Request(webhook, data=payload, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                if json.loads(resp.read()).get("ok") is True:
-                    return True
-        except Exception:
-            pass
-    host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    user = os.environ.get("SMTP_USER")
-    password = os.environ.get("SMTP_PASS")
-    if not user or not password:
-        return False
-    try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        msg = MIMEMultipart()
-        msg["From"] = os.environ.get("SMTP_FROM", "info@carbonlaw.com")
-        msg["To"] = to
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
-        with smtplib.SMTP(host, port, timeout=8) as server:
-            server.starttls()
-            server.login(user, password)
-            server.send_message(msg)
-        return True
-    except Exception:
-        return False
+    return backend_app.send_email(to, subject, body)
+
+
+WEEKDAYS = {"es": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+            "en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+MONTHS = {"es": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+          "en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]}
+KIND = {"signing": ("la firma de sus documentos", "your document signing"), "consultation": ("su consulta con el abogado Raval", "your consultation with attorney Raval")}
+
+
+def confirmation(kind, start_utc):
+    """The confirmation email, in Spanish then English, with the Los Angeles date and time."""
+    t = start_utc.astimezone(LA)
+    hm = f"{t.hour % 12 or 12}:{t.minute:02d}"
+    es = f"Su cita para {KIND[kind][0]}: {WEEKDAYS['es'][t.weekday()]} {t.day} de {MONTHS['es'][t.month - 1]} de {t.year}, a las {hm} {'a. m.' if t.hour < 12 else 'p. m.'} (hora de California)."
+    en = f"Your appointment for {KIND[kind][1]}: {WEEKDAYS['en'][t.weekday()]}, {MONTHS['en'][t.month - 1]} {t.day}, {t.year}, at {hm} {'a.m.' if t.hour < 12 else 'p.m.'} (California time)."
+    return es + "\nPuede cambiarla o cancelarla en la aplicación hasta 24 horas antes.\n\n" + en + "\nYou can change or cancel it in the app up to 24 hours before.\n\nCarbon Law Group"
 
 
 def _now_iso():
@@ -290,15 +272,7 @@ class PatchBody(BaseModel):
 def put_availability(body: AvailabilityBody, authorization: str = Header(None)):
     _staff(authorization)
     hours, slot_minutes = _validate_availability(body.hours, body.slot_minutes)
-    _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes})
-    # reset booking state when availability is redefined (keeps tests isolated)
-    try:
-        with db.transaction() as conn:
-            conn.execute("DELETE FROM booking_blocks")
-            conn.execute("DELETE FROM bookings")
-            conn.commit()
-    except Exception:
-        pass
+    _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes})   # existing bookings are kept
     return {"availability": {"hours": hours, "slot_minutes": slot_minutes}}
 
 
@@ -360,11 +334,7 @@ def post_booking(body: BookingBody, authorization: str = Header(None)):
         journey.apply(j["id"], "signing_booked", {}, actor="system")
     email = _user_email(user["id"])
     if email:
-        la_dt = start_utc.astimezone(LA)
-        time_part = la_dt.strftime("%I:%M").lstrip("0")
-        date_part = la_dt.strftime("%Y")
-        body_text = "Su cita: {} {}\nYour appointment: {} {}".format(date_part, time_part, date_part, time_part)
-        send_confirmation(email, "Confirmacion de cita / Appointment confirmation", body_text)
+        send_confirmation(email, "Confirmación de su cita / Appointment confirmation", confirmation(body.kind, start_utc))
     notify_staff("New booking", "A {} booking was made. Journey: {}".format(body.kind, j["id"]))
     return {"id": booking_id, "kind": body.kind, "start": start_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "local": start_utc.astimezone(LA).strftime("%Y-%m-%dT%H:%M:%S")}

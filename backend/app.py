@@ -355,6 +355,11 @@ Once you sign up, you can review documents, schedule appointments, and message y
 Best,
 Carbon Law Group
 """
+    return send_email(to_email, subject, body)
+
+
+def send_email(to_email, subject, body):
+    """Send a plain-text email through the firm's webhook or SMTP. False when neither is configured or sending fails."""
     webhook = os.environ.get("EMAIL_WEBHOOK_URL")
     if webhook:
         try:

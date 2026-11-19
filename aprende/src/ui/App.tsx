@@ -31,7 +31,6 @@ function Screens() {
   const r = route.value;
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const datosMatch = r.match(/^\/datos\/(.+)$/);
-  const citaMatch = r === '/cita';
   const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 

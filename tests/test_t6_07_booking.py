@@ -148,14 +148,14 @@ def test_a_consultation_needs_the_four_core_lessons(sent):
 def test_signing_needs_the_client_to_have_confirmed_the_documents(sent):
     setup()
     h, jid = lessons_done()
-    r = c.post("/booking", json={"kind": "signing", "start": utc(2027, 3, 16, 9)}, headers=h)
+    r = c.post("/booking", json={"kind": "signing", "start": utc(2027, 3, 16, 11)}, headers=h)
     assert r.status_code == 409 and r.json()["missing"] == ["may_book_signing"]
     for ev, p in (("ai_disclosed", {}), ("consent", {"answer": "yes"}), ("names_submitted", {"names": ["Ana Torres"]}),
                   ("conflict_auto", {"result": "clear"}), ("conflict_firm", {"result": "cleared"}), ("scope_approved", {}),
                   ("engagement_signed", {}), ("paid", {}), ("drafts_ready", {}),
                   ("attorney_approved", {}), ("client_confirmed", {})):
         journey.apply(jid, ev, p, actor="system")
-    r = c.post("/booking", json={"kind": "signing", "start": utc(2027, 3, 16, 9)}, headers=h)
+    r = c.post("/booking", json={"kind": "signing", "start": utc(2027, 3, 16, 11)}, headers=h)    # 9:00 is taken above
     assert r.status_code == 200, r.text
     assert "signing_booked" in state(h)["facts"]
 
@@ -245,3 +245,11 @@ def test_slots_say_why_a_kind_is_locked():
     assert r.status_code == 409 and r.json()["missing"] == ["may_book_signing"]
     r = c.get("/booking/slots?kind=consultation&from=2027-03-16&days=1", headers=h)
     assert r.status_code == 409 and r.json()["missing"] == ["core_lessons"]
+
+
+def test_changing_the_hours_keeps_existing_bookings(sent):
+    setup()
+    h, _ = lessons_done()
+    c.post("/booking", json={"kind": "consultation", "start": utc(2027, 3, 25, 9)}, headers=h)
+    setup()
+    assert [b["start"] for b in c.get("/booking", headers=h).json()] == [utc(2027, 3, 25, 9)]
