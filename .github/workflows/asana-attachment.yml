@@ -1,0 +1,22 @@
+name: Asana PR attachment
+# Attaches this PR to any Asana task linked in its description.
+# Needs the ASANA_SECRET repo secret (https://github.integrations.asana.plus/auth?domainId=ghactions);
+# skips until it is set. Asana says this works on Premium, Business and Enterprise plans only.
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    env:
+      ASANA_SECRET: ${{ secrets.ASANA_SECRET }}
+    steps:
+      - name: Attach PR to Asana task
+        if: env.ASANA_SECRET != ''
+        uses: Asana/create-app-attachment-github-action@v1.3
+        with:
+          asana-secret: ${{ secrets.ASANA_SECRET }}
+          # Estate Planning AI Product roadmap only
+          allowed-projects: |
+            1220675583325073
