@@ -1518,8 +1518,8 @@ app.include_router(_rj.router)
 from aprende import routes_characters as _rc
 app.include_router(_rc.router)
 
-# Aprende payments routes (T4-08)
-from aprende import routes_payments as _rp
+# Aprende payments routes (T4-08 / T6-02)
+from aprende import payments as _rp
 app.include_router(_rp.router)
 
 # Aprende learn routes (T4-03)
@@ -1551,6 +1551,8 @@ app.include_router(_ren.router)
 # Aprende booking routes (T6-07)
 from aprende import booking as _rb
 app.include_router(_rb.router)
+from aprende import routes_signing as _rsi
+app.include_router(_rsi.router)
 
 # Aprende client review routes (T6-06)
 from aprende import client_review as _rcr
