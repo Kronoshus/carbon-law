@@ -217,6 +217,7 @@ def test_engagement_and_payment_need_the_firms_own_clearance():
     journey.apply(jid, "scope_approved", {}, actor="attorney@example.com")
     assert state(h)["gates"]["may_sign_engagement"] is False          # automatic clear alone is not enough
     journey.apply(jid, "engagement_signed", {}, actor="client")       # even if a letter were somehow signed
+    journey.apply(jid, "engagement_countersigned", {}, actor="attorney@example.com")
     assert state(h)["gates"]["may_pay"] is False
     journey.apply(jid, "conflict_firm", {"result": "cleared"}, actor="staff@example.com")
     assert state(h)["gates"]["may_pay"] is True
