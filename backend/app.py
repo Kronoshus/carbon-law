@@ -1549,6 +1549,10 @@ app.include_router(_ren.router)
 from aprende import booking as _rb
 app.include_router(_rb.router)
 
+# Aprende client review routes (T6-06)
+from aprende import client_review as _rcr
+app.include_router(_rcr.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
