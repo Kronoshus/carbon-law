@@ -113,7 +113,7 @@ export function Perfil() {
   }
 
   return (
-    <main class="screen perfil">
+    <div class="screen perfil">
       <h1>{t('perfil.title')}</h1>
       <section class="field">
         <label for="lang">{t('perfil.language')}</label>
@@ -140,7 +140,7 @@ export function Perfil() {
       {installed === 'installed' ? <p role="status">{t('perfil.installed')}</p> : null}
       {installed === 'cancelled' ? <p role="status">{t('perfil.installCancelled')}</p> : null}
       <button type="button" onClick={() => void onSignOut()}>{t('top.signout')}</button>
-    </main>
+    </div>
   );
 }
 
