@@ -143,7 +143,14 @@ async function openReview(item) {
   apprBtn.type = "button"; apprBtn.className = "btn"; apprBtn.textContent = "Aprobar";
 
   apprBtn.addEventListener("click", async () => {
-    await reviewFetch("/staff/journeys/" + item.journey_id + "/review", "POST", { decision: "approve" });
+    const msg = document.getElementById("reviewMessage");
+    try {
+      await reviewFetch("/staff/journeys/" + item.journey_id + "/review", "POST", { decision: "approve" });
+    } catch (e) {                                   // e.g. a cited section that is not on the verified list
+      if (msg) msg.textContent = String(e.message || e);
+      return;
+    }
+    if (msg) msg.textContent = "";
     await loadReviewQueue();
     detail.hidden = true;
   });
