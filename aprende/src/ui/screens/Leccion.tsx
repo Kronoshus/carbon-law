@@ -102,7 +102,7 @@ export function Leccion({ id }: { id: string }) {
     if (res.ok) setFeedback((await res.json()) as Feedback);
   };
 
-  if (failure) return h(Frame, { title: lesson?.title ?? '' }, h('p', { class: 'lesson-note', role: 'alert' }, t(failure === 'locked' ? 'leccion.locked' : 'leccion.error')),
+  if (failure) return h(Frame, { title: t(failure === 'locked' ? 'leccion.locked' : 'leccion.error') }, h('p', { class: 'lesson-note', role: 'alert' }, t(failure === 'locked' ? 'leccion.locked' : 'leccion.error')),
     h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back')));
   if (!lesson || !state) return h(Frame, { title: '' }, h('p', { class: 'lesson-note', role: 'status' }, t('leccion.loading')));
 
@@ -130,6 +130,7 @@ export function Leccion({ id }: { id: string }) {
   if (!item) return null;
 
   return h('div', { class: 'lesson-player' }, bar, h('main', null,
+    item.kind === 'explain' ? h('h1', { class: 'visually-hidden' }, lesson.title) : null,
     h('div', { class: 'stage-wrap' }, h(CharacterStage, { character, state: charState, onEngine: (e) => { engine.current = e; setEngineTick((n) => n + 1); } })),
     item.kind === 'explain'           // a question is on screen as its heading; only explanations need the bubble
       ? h('div', { class: 'talk' }, h('p', { class: 'bubble', 'aria-live': 'polite' }, spoken(item),

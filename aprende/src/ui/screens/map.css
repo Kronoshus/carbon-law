@@ -1,6 +1,6 @@
 /* Course map (design doc §7.1, docs/aprende/screens/mapa.html) */
 .map { display: grid; gap: var(--s3); padding-block-end: var(--s6); }
-.map-chips { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); }
+.map-chips { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s2); }
 .map-chips .chip .icon { inline-size: 1.4rem; block-size: 1.4rem; }
 .map-day { margin: 0; font: 800 var(--step-0)/1 var(--font-display); }
 .map .host { display: grid; grid-template-columns: 4rem 1fr; gap: var(--s3); align-items: center; }
@@ -14,7 +14,7 @@
 ol.path { list-style: none; margin: 0; padding: var(--s2) 0; display: grid; gap: var(--s3); position: relative; }
 ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 50%; translate: -50% 0; inline-size: 0.5rem;
                   background: radial-gradient(circle, var(--marigold) 45%, transparent 50%) 0 0 / 0.5rem 1rem repeat-y; opacity: .7; }
-.node { position: relative; display: flex; align-items: center; gap: var(--s3); inline-size: fit-content; color: var(--text); text-decoration: none; }
+.node { position: relative; display: flex; align-items: center; gap: var(--s3); max-inline-size: 100%; color: var(--text); text-decoration: none; flex-wrap: wrap; }
 .node:nth-child(odd) { margin-inline-start: 18%; }
 .node:nth-child(even) { margin-inline-start: 42%; }
 .disc { position: relative; display: grid; place-items: center; inline-size: 4.5rem; block-size: 4.5rem; flex: none; border-radius: 50%;
@@ -32,7 +32,7 @@ ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-
 .node.current { margin-inline-start: 6% !important; }
 .current .disc { inline-size: 5.5rem; block-size: 5.5rem; background: var(--marigold); padding: 0; overflow: clip; }
 .current .disc img { inline-size: 100%; block-size: 100%; }
-.current .card { padding: var(--s3); display: grid; gap: var(--s2); inline-size: 13.5rem; box-shadow: var(--ledge); }
+.current .card { padding: var(--s3); display: grid; gap: var(--s2); max-inline-size: min(13.5rem, 100%); box-shadow: var(--ledge); }
 .current .node-label { background: none; padding: 0; }
 .current .btn { padding-block: var(--s2); }
 .pulse { @media (prefers-reduced-motion: no-preference) { animation: pulse 2.4s ease-in-out infinite; } }

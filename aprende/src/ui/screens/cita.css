@@ -2,7 +2,7 @@
 .kind { color: var(--text-soft); font-weight: 600; }
 .slot-day h3 { font-size: var(--step-0); margin-block-end: var(--s2); }
 .slot-day h3::first-letter { text-transform: uppercase; }
-.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); gap: var(--s2); }
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(6rem, 100%), 1fr)); gap: var(--s2); }
 .slot { min-block-size: var(--tap); border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card);
         color: var(--text); font: 700 var(--step-0)/1 var(--font-body); box-shadow: var(--ledge); cursor: pointer; }
 .slot:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }

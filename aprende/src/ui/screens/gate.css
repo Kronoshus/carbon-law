@@ -1,6 +1,6 @@
 /* Day-1 gate screens: full screen, the character above, one primary action */
 .gate { background: var(--paper); padding-block: var(--s2) var(--s6); }
-.gate-body { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; max-inline-size: 36rem; margin-inline: auto; }
+.gate-body { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; max-inline-size: min(36rem, 100%); margin-inline: auto; }
 .gate-body h1 { font-size: var(--step-2); }
 .gate-body > .btn { inline-size: 100%; }
 .gate-choice { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
