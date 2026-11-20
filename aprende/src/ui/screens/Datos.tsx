@@ -52,7 +52,11 @@ export function Datos({ group }: { group: string }) {
       if (r.status >= 500) { setProblem('server'); setBusy(false); return; }
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
-      const mine = d.text ? [...msgs, { role: 'assistant' as const, content: d.history, shown: d.text, reasoning_content: d.reasoning }] : msgs;
+      let mine: Msg[] = d.text ? [...msgs, { role: 'assistant' as const, content: d.history, shown: d.text, reasoning_content: d.reasoning }] : msgs;
+      const answered = [...msgs].reverse().find((m) => m.role === 'user')?.question_id;
+      if (d.next_question?.text && answered && d.next_question.id !== answered) {     // on to a new question: say it (attorney-approved text)
+        mine = [...mine, { role: 'assistant', content: d.next_question.text }];
+      }
       keep({ msgs: mine, next: d.next_question, done: !d.next_question });
       if (d.text) { engine.current?.cancel(); void engine.current?.speak(d.text, l); }
       await count();

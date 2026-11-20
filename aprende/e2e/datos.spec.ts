@@ -95,3 +95,26 @@ test('the summary: answers by document, a correction, the gaps, and confirming',
   await expect(page.getByText('Documentos confirmados', { exact: false })).toBeVisible();
   expect((await api(page, '/journey')).documents.confirmed).toEqual(['will']);
 });
+
+
+test('after the character thanks her for an answer, the next question is on screen', async ({ page }) => {
+  await cleared(page);
+  let turn = 0;
+  // As the persona asks (personas.yaml, intake mode): once the answer is complete the character only thanks the client and
+  // tags [DONE]; it does not know the next question. The server's reply names the next question.
+  await page.route('**/chat', async (route) => {
+    turn += 1;
+    const first = turn === 1;
+    await route.fulfill({ json: { text: first ? '¿A quién quiere nombrar como apoderado?' : 'Gracias, lo anoté.',
+      history: first ? '¿A quién quiere nombrar como apoderado?' : 'Gracias, lo anoté. [DONE: poder_agente]', reasoning: null,
+      covered: first ? [] : ['poder_agente'], open: [], docs: [], attorney_question: false,
+      next_question: first ? { id: 'poder_agente', text: 'texto del servidor 1' }
+        : { id: 'poder_inicio', text: '¿Quiere que su apoderado pueda actuar desde que usted firme?' } } });
+  });
+  await page.goto('/#/datos/poa');
+  await expect(page.getByText('¿A quién quiere nombrar como apoderado?')).toBeVisible();
+  await page.getByLabel('Su respuesta').fill('Mi hija Sofía Torres');
+  await page.getByRole('button', { name: 'Enviar' }).click();
+  await expect(page.getByText('Gracias, lo anoté.')).toBeVisible();
+  await expect(page.locator('.transcript li.them').last()).toHaveText('¿Quiere que su apoderado pueda actuar desde que usted firme?');
+});
