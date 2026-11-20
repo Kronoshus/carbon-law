@@ -493,6 +493,12 @@ SEED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.
 DATOS_SEED_PATH = os.path.join(SEED_DIR, "datos.yaml")
 SUMMARIES_SEED_PATH = os.path.join(SEED_DIR, "summaries.yaml")
 
+class InvalidError(Exception):
+    def __init__(self, errors):
+        self.errors = errors
+        super().__init__("invalid")
+
+
 class LanguageError(Exception):
     def __init__(self, missing):
         self.missing = missing
@@ -578,6 +584,39 @@ def missing_languages(body):
                 missing.append(lang)
     return [l for l in ("es", "en") if l in missing]
 
+def version_errors(entry_id, body):
+    kind = _kind_of(entry_id)
+    if kind in ("datos", "summary"):
+        return []
+    rows = db.query("SELECT lesson_id, step_id, kind, legal, sensitive, character FROM content_items WHERE id = ?", (entry_id,))
+    if not rows:
+        return []
+    lesson_id, step_id, item_kind, legal, sensitive, character = rows[0]
+    lrows = db.query("SELECT unit, title_es, title_en FROM content_lessons WHERE id = ?", (lesson_id,))
+    if lrows:
+        unit, title_es, title_en = lrows[0][0], lrows[0][1], lrows[0][2]
+    else:
+        unit, title_es, title_en = None, None, None
+    srows = db.query("SELECT title_es, title_en FROM content_steps WHERE id = ?", (step_id,))
+    if srows:
+        stitle_es, stitle_en = srows[0][0], srows[0][1]
+    else:
+        stitle_es, stitle_en = None, None
+    src_rows = db.query("SELECT id, kind, cite, url, read_on FROM content_sources ORDER BY id")
+    sources = [{"id": r[0], "kind": r[1], "cite": r[2], "url": r[3], "read_on": r[4]} for r in src_rows]
+    item = {"id": entry_id, "kind": item_kind, "legal": bool(legal),
+            "sensitive": bool(sensitive), "character": character}
+    if isinstance(body, dict):
+        for k in ("es", "en", "answer", "source"):
+            if k in body:
+                item[k] = body[k]
+    lesson = {"id": lesson_id, "unit": unit, "title": {"es": title_es, "en": title_en}, "steps": []}
+    step = {"id": step_id, "title": {"es": stitle_es, "en": stitle_en}, "items": [item]}
+    lesson["steps"].append(step)
+    bundle = {"sources": sources, "lessons": [lesson]}
+    return [e for e in validate(bundle) if entry_id in e]
+
+
 ITEM_ALLOWED = {"es", "en", "answer", "source"}
 
 def _validate_shape(kind, body):
@@ -618,9 +657,10 @@ def _entry_versions(entry_id):
     out = []
     for r in rows:
         att, at = _approval(entry_id, r[0])
-        out.append({"version": r[0], "state": r[1], "body": json.loads(r[2]), "created_by": r[3], "created_at": r[4],
+        body = json.loads(r[2])
+        out.append({"version": r[0], "state": r[1], "body": body, "created_by": r[3], "created_at": r[4],
                     "submitted_by": r[5], "submitted_at": r[6], "approved_by": att, "approved_at": at,
-                    "published_by": r[7], "published_at": r[8]})
+                    "published_by": r[7], "published_at": r[8], "errors": version_errors(entry_id, body)})
     return out
 
 def _pending_version(entry_id):
@@ -767,6 +807,9 @@ def submit(entry_id, actor):
     missing = missing_languages(body)
     if missing:
         raise LanguageError(missing)
+    errs = version_errors(entry_id, body)
+    if errs:
+        raise InvalidError(errs)
     with db.transaction():
         db.execute("UPDATE content_versions SET state='review', submitted_by=?, submitted_at=? WHERE entry_id=? AND version=?",
                    (actor, _now(), entry_id, newest["version"]))
@@ -784,6 +827,9 @@ def _publish_transition(entry_id, version, actor):
     missing = missing_languages(body)
     if missing:
         raise LanguageError(missing)
+    errs = version_errors(entry_id, body)
+    if errs:
+        raise InvalidError(errs)
     pending = _pending_version(entry_id)
     if pending is None or pending["version"] != version:
         raise NoVersionError()
