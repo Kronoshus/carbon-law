@@ -294,5 +294,6 @@
   "preguntas.title": "Preguntas para el abogado",
   "preguntas.answer": "Respuesta del abogado Raval:",
   "preguntas.waiting": "El abogado Raval todavía no ha respondido.",
-  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí."
+  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí.",
+  "popup.signedOut": "Inicie sesión en el panel para ver su día."
 }

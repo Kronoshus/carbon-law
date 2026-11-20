@@ -37,3 +37,20 @@ ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-
 .current .btn { padding-block: var(--s2); }
 .pulse { @media (prefers-reduced-motion: no-preference) { animation: pulse 2.4s ease-in-out infinite; } }
 @keyframes pulse { 50% { scale: 1.05; } }
+
+@media (max-height: 700px) {
+  .map { gap: var(--s2); }
+  .map-chips { gap: var(--s1); }
+  .map-chips .chip { font-size: var(--step--1); }
+  .map-day { font-size: var(--step-0); }
+  .map .host { gap: var(--s2); }
+  .map .host img { inline-size: 3rem; block-size: 3rem; }
+  .map .bubble { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map .card.price { order: 10; }
+}
+
+@media (max-width: 320px) {
+  .node.current { margin-inline-start: 4% !important; }
+  .current .card { inline-size: 12rem; }
+  .current .disc { inline-size: 4.75rem; block-size: 4.75rem; }
+}
