@@ -1,19 +1,12 @@
 """FastAPI routes for Aprende conflicts (staff-only, T5-03)."""
 from pydantic import BaseModel, Field
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 
 import app as backend_app
-from aprende import conflicts, journey
+from aprende import auth, conflicts, journey
 
 router = APIRouter()
-
-
-def _staff(authorization):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    u, _ = backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
-    return u
 
 
 class ListBody(BaseModel):
@@ -25,27 +18,24 @@ class DecisionBody(BaseModel):
 
 
 @router.post("/conflicts/list")
-def upload_list(body: ListBody, authorization: str = Header(None)):
-    _staff(authorization)
+def upload_list(body: ListBody, user: dict = Depends(auth.staff())):
     return conflicts.replace_list(body.csv)
 
 
 @router.delete("/conflicts/list")
-def delete_list(authorization: str = Header(None)):
-    _staff(authorization)
+def delete_list(user: dict = Depends(auth.staff())):
     conflicts.delete_list()
     return {"ok": True}
 
 
 @router.get("/conflicts/queue")
-def get_queue(authorization: str = Header(None)):
-    _staff(authorization)
+def get_queue(user: dict = Depends(auth.staff())):
     return conflicts.queue()
 
 
 @router.post("/conflicts/{journey_id}/decision")
-def decide(journey_id: str, body: DecisionBody, authorization: str = Header(None)):
-    u = _staff(authorization)
+def decide(journey_id: str, body: DecisionBody, user: dict = Depends(auth.staff())):
+    u = user
     if body.result not in ("cleared", "flagged"):
         raise HTTPException(422, "result must be cleared or flagged")
     try:

@@ -3,13 +3,13 @@ import base64
 import datetime
 import re
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
 import app as backend_app
 import db
-from aprende import journey, legacy, timeline
+from aprende import auth, journey, legacy, timeline
 from carbon_intake import docx as make_docx, unverified_cites
 
 router = APIRouter()
@@ -85,8 +85,7 @@ def get_draft(doc_id: str, authorization: str = Header(None)):
 
 
 @router.get("/staff/drafts/{doc_id}/docx")
-def get_draft_docx(doc_id: str, authorization: str = Header(None)):
-    _auth(authorization, {"attorney", "admin"})
+def get_draft_docx(doc_id: str, user: dict = Depends(auth.staff("attorney", "admin"))):
     if doc_id not in backend_app.documents:
         raise HTTPException(404, "document not found")
     d = backend_app.documents[doc_id]
@@ -95,8 +94,8 @@ def get_draft_docx(doc_id: str, authorization: str = Header(None)):
 
 
 @router.post("/staff/drafts/{doc_id}/versions")
-def new_version(doc_id: str, body: Version, authorization: str = Header(None)):
-    u, _ = _auth(authorization, {"attorney", "admin"})
+def new_version(doc_id: str, body: Version, user: dict = Depends(auth.staff("attorney", "admin"))):
+    u = user
     if doc_id not in backend_app.documents:
         raise HTTPException(404, "document not found")
     old = backend_app.documents[doc_id]
@@ -116,8 +115,8 @@ def new_version(doc_id: str, body: Version, authorization: str = Header(None)):
 
 
 @router.post("/staff/journeys/{jid}/review")
-def review_journey(jid: str, body: Decision, authorization: str = Header(None)):
-    u, _ = _auth(authorization, {"attorney", "admin"})
+def review_journey(jid: str, body: Decision, user: dict = Depends(auth.staff("attorney", "admin"))):
+    u = user
     j = journey.get_journey(jid)
     if not j:
         raise HTTPException(404, "journey not found")
