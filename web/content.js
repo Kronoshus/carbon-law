@@ -22,7 +22,7 @@ async function loadEntries() {
   currentKind = kind;
   const data = await api(`/staff/content?kind=${kind}`);
   const box = document.getElementById("contentEntries");
-  box.innerHTML = "";
+  box.replaceChildren();
   for (const e of data.entries) {
     const btn = document.createElement("button");
     btn.type = "button";

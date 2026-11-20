@@ -26,11 +26,8 @@ def get_datos(j, lang="es"):
              db.query("SELECT question_id, status, answer FROM datos_answers WHERE journey_id = ?", (j["id"],))}
     qs = []
     for q in applicable(j):
-        body = live.get("datos:" + q["id"], {"es": q["lang"] if False else q["es"], "en": q["en"]})
-        text = body.get(lang, body.get("es" if lang=="es" else "en"))
-        # fallback
-        if text is None:
-            text = q[lang]
+        body = live.get("datos:" + q["id"], {"es": q["es"], "en": q["en"]})
+        text = body[lang]
         qs.append({"id": q["id"], "asked_after": q["asked_after"], "docs": q["docs"], "text": text,
                    "status": saved.get(q["id"], ("open", None))[0], "answer": saved.get(q["id"], ("open", None))[1]})
     open_ = [q["id"] for q in qs if q["status"] == "open"]

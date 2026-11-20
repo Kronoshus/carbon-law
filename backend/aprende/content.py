@@ -489,9 +489,6 @@ if __name__ == "__main__":
     main()
 
 
-# ---------------------------------------------------------------------------
-# T7-01 content management with attorney approval
-# ---------------------------------------------------------------------------
 SEED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "aprende", "content")
 DATOS_SEED_PATH = os.path.join(SEED_DIR, "datos.yaml")
 SUMMARIES_SEED_PATH = os.path.join(SEED_DIR, "summaries.yaml")
@@ -506,7 +503,6 @@ class NoDraftError(Exception):
 class NoVersionError(Exception):
     pass
 
-
 def _seed_datos():
     with open(DATOS_SEED_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f) or []
@@ -515,7 +511,6 @@ def _seed_summaries():
     with open(SUMMARIES_SEED_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
-
 def _kind_of(entry_id):
     if entry_id.startswith("datos:"):
         return "datos"
@@ -523,53 +518,39 @@ def _kind_of(entry_id):
         return "summary"
     return "item"
 
-
 def _is_legal(kind, entry_id):
     if kind in ("datos", "summary"):
         return True
     rows = db.query("SELECT legal FROM content_items WHERE id = ?", (entry_id,))
     return bool(rows and rows[0][0])
 
-
-def _now_iso():
-    return _now()
-
-
-def _item_body_from_row(row):
-    # row: id, kind, character, source_id, answer, version, state, payload_es, payload_en, legal
-    body = {"es": json.loads(row[7]), "en": json.loads(row[8])}
-    if row[4] is not None:
+def _item_body(row):
+    # row indices: character at 4? We'll pass a dict-like tuple from content_items:
+    # (id, kind, legal, sensitive, character, source_id, answer, version, state, payload_es, payload_en)
+    body = {"es": json.loads(row[9]), "en": json.loads(row[10])}
+    if row[6] is not None:
         try:
-            body["answer"] = json.loads(row[4])
+            body["answer"] = json.loads(row[6])
         except Exception:
-            body["answer"] = row[4]
-    if row[3] is not None:
-        body["source"] = row[3]
+            body["answer"] = row[6]
+    if row[5] is not None:
+        body["source"] = row[5]
     return body
 
-
 def _ensure_item_seed(entry_id):
-    rows = db.query("SELECT id, lesson_id, kind, legal, sensitive, character, source_id, answer, version, state, payload_json_es, payload_json_en FROM content_items WHERE id = ?", (entry_id,))
+    rows = db.query("SELECT id, kind, legal, sensitive, character, source_id, answer, version, state, payload_json_es, payload_json_en FROM content_items WHERE id = ?", (entry_id,))
     if not rows:
         return
     r = rows[0]
     existing = db.query("SELECT 1 FROM content_versions WHERE entry_id = ?", (entry_id,))
     if existing:
         return
-    body = {"es": json.loads(r[10]), "en": json.loads(r[11])}
-    if r[7] is not None:
-        try:
-            body["answer"] = json.loads(r[7])
-        except Exception:
-            body["answer"] = r[7]
-    if r[6] is not None:
-        body["source"] = r[6]
-    state = "published" if r[9] == "published" else "review"
+    body = _item_body(r)
+    state = "published" if r[8] == "published" else "review"
     db.execute(
         "INSERT INTO content_versions (entry_id, version, kind, body_json, state, created_by, created_at) VALUES (?,?,?,?,?,?,?)",
-        (entry_id, r[8], "item", json.dumps(body, ensure_ascii=False), state, "import", _now()),
+        (entry_id, r[7], "item", json.dumps(body, ensure_ascii=False), state, "import", _now()),
     )
-
 
 def _all_strings_ok(obj):
     if isinstance(obj, str):
@@ -580,11 +561,8 @@ def _all_strings_ok(obj):
         return all(_all_strings_ok(v) for v in obj.values())
     return True
 
-
 def missing_languages(body):
     missing = []
-    if not isinstance(body, dict):
-        return ["es", "en"]
     for lang in ("es", "en"):
         if lang not in body:
             missing.append(lang)
@@ -596,35 +574,17 @@ def missing_languages(body):
         elif isinstance(val, (dict, list)):
             if not _all_strings_ok(val):
                 missing.append(lang)
-        else:
-            # non-string present but maybe empty? treat as present
-            pass
-    # dedup preserve order
-    out = []
-    for l in ("es", "en"):
-        if l in missing and l not in out:
-            out.append(l)
-    return out
-
+    return [l for l in ("es", "en") if l in missing]
 
 ITEM_ALLOWED = {"es", "en", "answer", "source"}
-DATOS_ALLOWED = {"es", "en"}
-SUMMARY_ALLOWED = {"es", "en"}
-
 
 def _validate_shape(kind, body):
     if not isinstance(body, dict):
         raise ValueError("body must be object")
-    if kind == "item":
-        allowed = ITEM_ALLOWED
-    elif kind == "datos":
-        allowed = DATOS_ALLOWED
-    else:
-        allowed = SUMMARY_ALLOWED
+    allowed = ITEM_ALLOWED if kind == "item" else {"es", "en"}
     for k in body:
         if k not in allowed:
-            raise ValueError(f"extra key {k}")
-
+            raise ValueError("extra key")
 
 def _max_version(entry_id, kind):
     mx = 0
@@ -635,21 +595,15 @@ def _max_version(entry_id, kind):
         rows = db.query("SELECT version FROM content_items WHERE id = ?", (entry_id,))
         if rows and rows[0][0] is not None:
             mx = max(mx, rows[0][0])
-    if kind in ("datos", "summary") and mx == 0:
-        mx = 0  # seed version 0
     return mx
-
 
 def _newest_version_row(entry_id):
     rows = db.query("SELECT version, state, body_json, created_by, created_at, submitted_by, submitted_at, published_by, published_at FROM content_versions WHERE entry_id = ? ORDER BY version DESC", (entry_id,))
     if not rows:
         return None
     r = rows[0]
-    return {
-        "version": r[0], "state": r[1], "body_json": r[2], "created_by": r[3], "created_at": r[4],
-        "submitted_by": r[5], "submitted_at": r[6], "published_by": r[7], "published_at": r[8],
-    }
-
+    return {"version": r[0], "state": r[1], "body_json": r[2], "created_by": r[3], "created_at": r[4],
+            "submitted_by": r[5], "submitted_at": r[6], "published_by": r[7], "published_at": r[8]}
 
 def _approval(entry_id, version):
     rows = db.query("SELECT attorney, approved_at FROM content_approvals WHERE item_id = ? AND version = ?", (entry_id, version))
@@ -657,28 +611,15 @@ def _approval(entry_id, version):
         return None, None
     return rows[0][0], rows[0][1]
 
-
 def _entry_versions(entry_id):
     rows = db.query("SELECT version, state, body_json, created_by, created_at, submitted_by, submitted_at, published_by, published_at FROM content_versions WHERE entry_id = ? ORDER BY version DESC", (entry_id,))
     out = []
     for r in rows:
-        ver = r[0]
-        att, at = _approval(entry_id, ver)
-        out.append({
-            "version": ver,
-            "state": r[1],
-            "body": json.loads(r[2]),
-            "created_by": r[3],
-            "created_at": r[4],
-            "submitted_by": r[5],
-            "submitted_at": r[6],
-            "approved_by": att,
-            "approved_at": at,
-            "published_by": r[7],
-            "published_at": r[8],
-        })
+        att, at = _approval(entry_id, r[0])
+        out.append({"version": r[0], "state": r[1], "body": json.loads(r[2]), "created_by": r[3], "created_at": r[4],
+                    "submitted_by": r[5], "submitted_at": r[6], "approved_by": att, "approved_at": at,
+                    "published_by": r[7], "published_at": r[8]})
     return out
-
 
 def _pending_version(entry_id):
     rows = db.query("SELECT version, state FROM content_versions WHERE entry_id = ? AND state IN ('draft','review') ORDER BY version DESC LIMIT 1", (entry_id,))
@@ -686,39 +627,59 @@ def _pending_version(entry_id):
         return None
     return {"version": rows[0][0], "state": rows[0][1]}
 
+def _seed_body(entry_id):
+    kind = _kind_of(entry_id)
+    if kind == "datos":
+        qid = entry_id.split(":", 1)[1]
+        for q in _seed_datos():
+            if q["id"] == qid:
+                return {"es": q["es"], "en": q["en"]}
+    elif kind == "summary":
+        part = entry_id.split(":", 1)[1]
+        doc, art = part.rsplit(".", 1)
+        for a in _seed_summaries().get(doc, []):
+            if a["article"] == int(art):
+                return {"es": a["es"], "en": a["en"]}
+    return None
+
+def _published_body(entry_id):
+    rows = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND state='published' ORDER BY version DESC LIMIT 1", (entry_id,))
+    if rows:
+        return json.loads(rows[0][0])
+    return None
 
 def entries(kind):
     if kind not in ("item", "datos", "summary"):
-        raise KeyError(kind)
+        raise ValueError("bad_kind")
     out = []
     if kind == "item":
         rows = db.query("SELECT i.id, i.lesson_id, i.legal, i.version, i.state FROM content_items i ORDER BY i.id")
-        # group? one per item
         for r in rows:
             iid = r[0]
-            _ensure_item_seed(iid)
             live_version = r[3] if r[4] == "published" else None
             pending = _pending_version(iid)
+            if pending is None and r[4] != "published":
+                pending = {"version": r[3], "state": "review"}
             out.append({"entry_id": iid, "kind": "item", "legal": bool(r[2]), "lesson_id": r[1],
                         "live_version": live_version, "pending": pending})
     elif kind == "datos":
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='datos' AND state='published'")}
+        # build one map entry_id->body not needed; pending per entry
         for q in _seed_datos():
             eid = "datos:" + q["id"]
-            # live version
             pub_rows = db.query("SELECT MAX(version) FROM content_versions WHERE entry_id = ? AND state='published'", (eid,))
             live_version = pub_rows[0][0] if (pub_rows and pub_rows[0][0] is not None) else 0
-            pending = _pending_version(eid)
-            out.append({"entry_id": eid, "kind": "datos", "legal": True, "live_version": live_version, "pending": pending})
+            out.append({"entry_id": eid, "kind": "datos", "legal": True, "live_version": live_version,
+                        "pending": _pending_version(eid)})
     else:
         for doc, arts in _seed_summaries().items():
             for a in arts:
                 eid = f"summary:{doc}.{a['article']}"
                 pub_rows = db.query("SELECT MAX(version) FROM content_versions WHERE entry_id = ? AND state='published'", (eid,))
                 live_version = pub_rows[0][0] if (pub_rows and pub_rows[0][0] is not None) else 0
-                pending = _pending_version(eid)
-                out.append({"entry_id": eid, "kind": "summary", "legal": True, "live_version": live_version, "pending": pending})
+                out.append({"entry_id": eid, "kind": "summary", "legal": True, "live_version": live_version,
+                            "pending": _pending_version(eid)})
     return out
-
 
 def entry(entry_id):
     kind = _kind_of(entry_id)
@@ -731,60 +692,29 @@ def entry(entry_id):
         r = rows[0]
         live = None
         if r[8] == "published":
-            live = {"version": r[7], "body": {"es": json.loads(r[9]), "en": json.loads(r[10])}}
-            if r[6] is not None:
-                try:
-                    live["body"]["answer"] = json.loads(r[6])
-                except Exception:
-                    live["body"]["answer"] = r[6]
-            if r[5] is not None:
-                live["body"]["source"] = r[5]
-            if r[6] is not None:
-                try:
-                    live["body"]["answer"] = json.loads(r[6])
-                except Exception:
-                    live["body"]["answer"] = r[6]
-            if r[5] is not None:
-                live["body"]["source"] = r[5]
+            live = {"version": r[7], "body": _item_body(r)}
         versions = _entry_versions(entry_id)
         return {"entry_id": entry_id, "kind": kind, "legal": legal, "live": live, "versions": versions}
-    # datos/summary
-    # live version
-    pub_rows = db.query("SELECT version, body_json FROM content_versions WHERE entry_id = ? AND state='published' ORDER BY version DESC LIMIT 1", (entry_id,))
-    if pub_rows:
-        live = {"version": pub_rows[0][0], "body": json.loads(pub_rows[0][1])}
-    else:
-        # seed version 0
-        if kind == "datos":
-            qid = entry_id.split(":",1)[1]
-            for q in _seed_datos():
-                if q["id"] == qid:
-                    live = {"version": 0, "body": {"es": q["es"], "en": q["en"]}}
-                    break
-        else:
-            # summary:doc.article
-            part = entry_id.split(":",1)[1]
-            doc, art = part.rsplit(".",1)
-            art_n = int(art)
-            for a in _seed_summaries().get(doc, []):
-                if a["article"] == art_n:
-                    live = {"version": 0, "body": {"es": a["es"], "en": a["en"]}}
-                    break
-        if live is None:
-            raise KeyError(entry_id)
-    # validate entry exists in seed
     if kind == "datos":
-        qid = entry_id.split(":",1)[1]
+        qid = entry_id.split(":", 1)[1]
         if qid not in {q["id"] for q in _seed_datos()}:
             raise KeyError(entry_id)
     else:
-        part = entry_id.split(":",1)[1]
-        doc, art = part.rsplit(".",1)
+        part = entry_id.split(":", 1)[1]
+        doc, art = part.rsplit(".", 1)
         if doc not in _seed_summaries():
             raise KeyError(entry_id)
+    pb = _published_body(entry_id)
+    if pb is not None:
+        pub_rows = db.query("SELECT version FROM content_versions WHERE entry_id = ? AND state='published' ORDER BY version DESC LIMIT 1", (entry_id,))
+        live = {"version": pub_rows[0][0], "body": pb}
+    else:
+        sb = _seed_body(entry_id)
+        if sb is None:
+            raise KeyError(entry_id)
+        live = {"version": 0, "body": sb}
     versions = _entry_versions(entry_id)
     return {"entry_id": entry_id, "kind": kind, "legal": legal, "live": live, "versions": versions}
-
 
 def save_draft(entry_id, body, actor):
     kind = _kind_of(entry_id)
@@ -794,34 +724,29 @@ def save_draft(entry_id, body, actor):
         if not db.query("SELECT 1 FROM content_items WHERE id = ?", (entry_id,)):
             raise KeyError(entry_id)
     else:
-        # validate exists
-        entry(entry_id)  # raises KeyError
+        entry(entry_id)
     mx = _max_version(entry_id, kind)
     new_ver = mx + 1
-    # determine newest
     newest = _newest_version_row(entry_id)
-    if newest is not None and newest["state"] == "draft":
-        # update in place
-        db.execute("UPDATE content_versions SET body_json = ? WHERE entry_id = ? AND version = ?",
-                   (json.dumps(body, ensure_ascii=False), entry_id, newest["version"]))
-        backend_app.log_audit(actor, "content_draft", "content", entry_id, f"version={newest['version']}")
-        return {"entry_id": entry_id, "version": newest["version"], "state": "draft"}
-    if newest is not None and newest["state"] == "review":
-        # mark superseded
-        db.execute("UPDATE content_versions SET state = 'superseded' WHERE entry_id = ? AND version = ?",
-                   (entry_id, newest["version"]))
-    # create new draft
-    db.execute(
-        "INSERT INTO content_versions (entry_id, version, kind, body_json, state, created_by, created_at) VALUES (?,?,?,?,?,?,?)",
-        (entry_id, new_ver, kind, json.dumps(body, ensure_ascii=False), "draft", actor, _now()),
-    )
-    backend_app.log_audit(actor, "content_draft", "content", entry_id, f"version={new_ver}")
-    return {"entry_id": entry_id, "version": new_ver, "state": "draft"}
-
+    with db.transaction():
+        if newest is not None and newest["state"] == "draft":
+            db.execute("UPDATE content_versions SET body_json = ? WHERE entry_id = ? AND version = ?",
+                       (json.dumps(body, ensure_ascii=False), entry_id, newest["version"]))
+            ver = newest["version"]
+        else:
+            if newest is not None and newest["state"] == "review":
+                db.execute("UPDATE content_versions SET state = 'superseded' WHERE entry_id = ? AND version = ?",
+                           (entry_id, newest["version"]))
+            db.execute(
+                "INSERT INTO content_versions (entry_id, version, kind, body_json, state, created_by, created_at) VALUES (?,?,?,?,?,?,?)",
+                (entry_id, new_ver, kind, json.dumps(body, ensure_ascii=False), "draft", actor, _now()),
+            )
+            ver = new_ver
+        backend_app.log_audit(actor, "content_draft", "content", entry_id, f"version={ver}")
+    return {"entry_id": entry_id, "version": ver, "state": "draft"}
 
 def submit(entry_id, actor):
     kind = _kind_of(entry_id)
-    # ensure
     if kind == "item":
         _ensure_item_seed(entry_id)
     newest = _newest_version_row(entry_id)
@@ -831,14 +756,13 @@ def submit(entry_id, actor):
     missing = missing_languages(body)
     if missing:
         raise LanguageError(missing)
-    db.execute("UPDATE content_versions SET state='review', submitted_by=?, submitted_at=? WHERE entry_id=? AND version=?",
-               (actor, _now(), entry_id, newest["version"]))
-    backend_app.log_audit(actor, "content_submit", "content", entry_id, f"version={newest['version']}")
+    with db.transaction():
+        db.execute("UPDATE content_versions SET state='review', submitted_by=?, submitted_at=? WHERE entry_id=? AND version=?",
+                   (actor, _now(), entry_id, newest["version"]))
+        backend_app.log_audit(actor, "content_submit", "content", entry_id, f"version={newest['version']}")
     return {"entry_id": entry_id, "version": newest["version"], "state": "review"}
 
-
-def _publish_transition(entry_id, version, actor, legal):
-    # version must exist
+def _publish_transition(entry_id, version, actor):
     rows = db.query("SELECT state, body_json, kind FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
     if not rows:
         raise NoVersionError()
@@ -849,63 +773,46 @@ def _publish_transition(entry_id, version, actor, legal):
     missing = missing_languages(body)
     if missing:
         raise LanguageError(missing)
-    # pending check: version must be pending (newest draft/review)
     pending = _pending_version(entry_id)
     if pending is None or pending["version"] != version:
         raise NoVersionError()
-    # previous published -> superseded
     db.execute("UPDATE content_versions SET state='superseded' WHERE entry_id = ? AND state='published' AND version <> ?",
                (entry_id, version))
-    # set published
     db.execute("UPDATE content_versions SET state='published', published_by=?, published_at=? WHERE entry_id = ? AND version = ?",
                (actor, _now(), entry_id, version))
     if kind == "item":
-        # write into content_items
-        item_body = body
-        payload_es = item_body.get("es", {})
-        payload_en = item_body.get("en", {})
-        answer_val = item_body.get("answer", None)
-        has_answer = "answer" in item_body
-        answer_json = json.dumps(answer_val, ensure_ascii=False) if has_answer else None
-        source_id = item_body.get("source")
-        db.execute("""UPDATE content_items SET payload_json_es=?, payload_json_en=?, answer=?, source_id=?, version=?, state='published' WHERE id=?""",
-                   (json.dumps(payload_es, ensure_ascii=False), json.dumps(payload_en, ensure_ascii=False), answer_json, source_id, version, entry_id))
+            item_body = body
+            payload_es = item_body.get("es", {})
+            payload_en = item_body.get("en", {})
+            answer_val = item_body.get("answer", None)
+            has_answer = "answer" in item_body
+            answer_json = json.dumps(answer_val, ensure_ascii=False) if has_answer else None
+            source_id = item_body.get("source")
+            db.execute("UPDATE content_items SET payload_json_es=?, payload_json_en=?, answer=?, source_id=?, version=?, state='published' WHERE id=?",
+                       (json.dumps(payload_es, ensure_ascii=False), json.dumps(payload_en, ensure_ascii=False), answer_json, source_id, version, entry_id))
     return body
-
 
 def approve_version(entry_id, version, attorney):
     kind = _kind_of(entry_id)
     if kind == "item":
         _ensure_item_seed(entry_id)
     legal = _is_legal(kind, entry_id)
-    # pending review version
     rows = db.query("SELECT state FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
-    if not rows:
-        raise NoVersionError()
-    if rows[0][0] != "review":
+    if not rows or rows[0][0] != "review":
         raise NoVersionError()
     pending = _pending_version(entry_id)
     if pending is None or pending["version"] != version or pending["state"] != "review":
         raise NoVersionError()
-    body = None
-    # languages
-    r2 = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
-    body = json.loads(r2[0][0])
-    missing = missing_languages(body)
-    if missing:
-        raise LanguageError(missing)
-    # publish transition (no PermissionError for attorney)
-    _publish_transition(entry_id, version, attorney, legal)
-    # approval record
-    existing = db.query("SELECT version FROM content_approvals WHERE item_id=? AND version=?", (entry_id, version))
-    if existing:
-        db.execute("UPDATE content_approvals SET attorney=?, approved_at=? WHERE item_id=? AND version=?", (attorney, _now(), entry_id, version))
-    else:
-        db.execute("INSERT INTO content_approvals (item_id, version, attorney, approved_at) VALUES (?,?,?,?)", (entry_id, version, attorney, _now()))
-    backend_app.log_audit(attorney, "content_approve", "content", entry_id, f"version={version}")
+    with db.transaction():
+        _publish_transition(entry_id, version, attorney)
+        existing = db.query("SELECT version FROM content_approvals WHERE item_id=? AND version=?", (entry_id, version))
+        if existing:
+            db.execute("UPDATE content_approvals SET attorney=?, approved_at=? WHERE item_id=? AND version=?", (attorney, _now(), entry_id, version))
+        else:
+            db.execute("INSERT INTO content_approvals (item_id, version, attorney, approved_at) VALUES (?,?,?,?)", (entry_id, version, attorney, _now()))
+        backend_app.log_audit(attorney, "content_approve", "content", entry_id, f"version={version}")
     approved_at = db.query("SELECT approved_at FROM content_approvals WHERE item_id=? AND version=?", (entry_id, version))[0][0]
     return {"entry_id": entry_id, "version": version, "state": "published", "approved_by": attorney, "approved_at": approved_at}
-
 
 def publish_version(entry_id, version, actor):
     kind = _kind_of(entry_id)
@@ -915,46 +822,94 @@ def publish_version(entry_id, version, actor):
     if legal:
         raise PermissionError("attorney_approval_required")
     rows = db.query("SELECT state FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
-    if not rows:
+    if not rows or rows[0][0] not in ("draft", "review"):
         raise NoVersionError()
     pending = _pending_version(entry_id)
     if pending is None or pending["version"] != version:
         raise NoVersionError()
-    if rows[0][0] not in ("draft", "review"):
-        raise NoVersionError()
-    r2 = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
-    body = json.loads(r2[0][0])
-    missing = missing_languages(body)
-    if missing:
-        raise LanguageError(missing)
-    _publish_transition(entry_id, version, actor, legal)
-    backend_app.log_audit(actor, "content_publish", "content", entry_id, f"version={version}")
+    with db.transaction():
+        _publish_transition(entry_id, version, actor)
+        backend_app.log_audit(actor, "content_publish", "content", entry_id, f"version={version}")
     return {"entry_id": entry_id, "version": version, "state": "published"}
 
-
 def live_entries(kind):
-    if kind == "item":
-        # not needed but return empty? spec only datos/summary
-        return {}
+    out = {}
     if kind == "datos":
-        out = {}
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='datos' AND state='published'")}
         for q in _seed_datos():
             eid = "datos:" + q["id"]
-            pub = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND state='published' ORDER BY version DESC LIMIT 1", (eid,))
-            if pub:
-                out[eid] = json.loads(pub[0][0])
-            else:
-                out[eid] = {"es": q["es"], "en": q["en"]}
+            out[eid] = json.loads(published[eid]) if eid in published else {"es": q["es"], "en": q["en"]}
         return out
     if kind == "summary":
-        out = {}
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='summary' AND state='published'")}
         for doc, arts in _seed_summaries().items():
             for a in arts:
                 eid = f"summary:{doc}.{a['article']}"
-                pub = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND state='published' ORDER BY version DESC LIMIT 1", (eid,))
-                if pub:
-                    out[eid] = json.loads(pub[0][0])
-                else:
-                    out[eid] = {"es": a["es"], "en": a["en"]}
+                out[eid] = json.loads(published[eid]) if eid in published else {"es": a["es"], "en": a["en"]}
         return out
-    return {}
+    return out
+
+def preview(entry_id, version, lang):
+    kind = _kind_of(entry_id)
+    if version == 0:
+        if kind == "item":
+            rows = db.query("SELECT id, kind, legal, sensitive, character, source_id, answer, version, state, payload_json_es, payload_json_en FROM content_items WHERE id = ?", (entry_id,))
+            if not rows:
+                raise KeyError(entry_id)
+            body = _item_body(rows[0])
+        else:
+            body = _seed_body(entry_id)
+            if body is None:
+                raise KeyError(entry_id)
+    else:
+        rows = db.query("SELECT body_json FROM content_versions WHERE entry_id = ? AND version = ?", (entry_id, version))
+        if not rows:
+            raise KeyError("version:"+str(version))
+        body = json.loads(rows[0][0])
+    if kind == "item":
+        rows = db.query("SELECT kind, character, lesson_id FROM content_items WHERE id = ?", (entry_id,))
+        if not rows:
+            raise KeyError(entry_id)
+        item_kind, char, lesson_id = rows[0][0], rows[0][1], rows[0][2]
+        if char is None:
+            lrows = db.query("SELECT character FROM content_lessons WHERE id = ?", (lesson_id,))
+            char = lrows[0][0] if lrows else None
+        payload = body.get("es" if lang == "es" else "en", {})
+        # build serve-like output without answer/explain
+        out_item = {"id": entry_id, "kind": item_kind}
+        if char:
+            out_item["character"] = char
+        for k, v in payload.items():
+            if k not in ("explain",):
+                out_item[k] = v
+        # remove answer if present
+        out_item.pop("answer", None)
+        explain = payload.get("explain")
+        return {"character": char, "item": out_item, "explain": explain}
+    else:
+        text = body.get("es" if lang == "es" else "en")
+        return {"character": None, "text": text}
+
+def _item_kind(entry_id):
+    rows = db.query("SELECT kind FROM content_items WHERE id = ?", (entry_id,))
+    if not rows:
+        raise KeyError(entry_id)
+    return rows[0][0]
+
+
+def live_entries(kind):
+    out = {}
+    if kind == "datos":
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='datos' AND state='published'")}
+        for q in _seed_datos():
+            eid = "datos:" + q["id"]
+            out[eid] = json.loads(published[eid]) if eid in published else {"es": q["es"], "en": q["en"]}
+        return out
+    if kind == "summary":
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='summary' AND state='published'")}
+        for doc, arts in _seed_summaries().items():
+            for a in arts:
+                eid = f"summary:{doc}.{a['article']}"
+                out[eid] = json.loads(published[eid]) if eid in published else {"es": a["es"], "en": a["en"]}
+        return out
+    return out

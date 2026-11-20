@@ -78,16 +78,16 @@ def get_review_documents(lang: str = "es", authorization: str = Header(None)):
     if not open_:
         return _gate_fail()
     is_en = (lang == "en")
+    live = content.live_entries("summary")
     docs = []
     for d in _current_approved_docs(j):
         kind = NAME_TO_KIND.get(d.get("name"))
         summary = []
         if kind in _SUMMARIES:
-            live = content.live_entries("summary")
             for art in _SUMMARIES[kind]:
                 eid = f"summary:{kind}.{art['article']}"
                 body = live.get(eid, {"es": art["es"], "en": art["en"]})
-                text = body.get("en" if is_en else "es", art["en" if is_en else "es"])
+                text = body["en" if is_en else "es"]
                 summary.append({"article": art["article"], "text": text})
         docs.append({
             "id": d["id"],
