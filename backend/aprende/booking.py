@@ -306,11 +306,8 @@ def post_booking(body: BookingBody, user: dict = Depends(auth.client_user), j: d
     if email:
         send_confirmation(email, "Confirmación de su cita / Appointment confirmation", confirmation(body.kind, start_utc))
     notify_staff("New booking", "A {} booking was made. Journey: {}".format(body.kind, j["id"]))
-    try:
-        from aprende import reminders as _rem
-        _rem.schedule_appointment(booking_id, start_utc)
-    except Exception:
-        pass
+    from aprende import reminders                      # cycle: reminders uses booking.when
+    reminders.schedule_appointment(booking_id, start_utc)
     return {"id": booking_id, "kind": body.kind, "start": start_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "local": start_utc.astimezone(LA).strftime("%Y-%m-%dT%H:%M:%S")}
 
@@ -373,11 +370,8 @@ def patch_booking(booking_id: str, body: PatchBody, user: dict = Depends(auth.cl
         if "unique" in msg or "duplicate" in msg or "constraint" in msg:
             return JSONResponse(status_code=409, content={"error": "taken"})
         raise
-    try:
-        from aprende import reminders as _rem
-        _rem.schedule_appointment(booking_id, new_start)
-    except Exception:
-        pass
+    from aprende import reminders
+    reminders.schedule_appointment(booking_id, new_start)
     return {"id": booking_id, "kind": kind, "start": new_start.strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 

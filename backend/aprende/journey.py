@@ -29,7 +29,7 @@ DOC_CODES = {"will", "trust", "poa", "ahcd"}
 
 
 def _now_iso():
-    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
 
 
 def conflict_status(facts):

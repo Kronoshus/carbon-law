@@ -64,9 +64,7 @@ def _deliver(sub, data):
                 status = int(str(exc).split()[0])
             except (ValueError, IndexError):
                 status = 0
-        if status in (404, 410):
-            db.execute("DELETE FROM push_subscriptions WHERE endpoint = ?", (sub["endpoint"],))
-        return status if status else 0
+        return status or 0
     except Exception:
         return 0
 
@@ -81,8 +79,8 @@ def send(journey_id, texts, url):
         t = (texts.get(lang) or texts.get("es") or {})
         payload = json.dumps({"title": t.get("title"), "body": t.get("body"), "url": url})
         status = _deliver(sub, payload)
-        if status in (404, 410):
+        if status in (404, 410):                                   # the browser dropped it
             db.execute("DELETE FROM push_subscriptions WHERE endpoint = ?", (endpoint,))
-        elif status and 200 <= status < 300:
+        elif 200 <= status < 300:
             deliveries += 1
     return deliveries

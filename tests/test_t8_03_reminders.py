@@ -58,7 +58,8 @@ def utc(y, m, d, hh, mm=0):
 
 
 def at(iso):
-    return datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    t = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    return t if t.tzinfo else t.replace(tzinfo=UTC)                          # journey facts are naive UTC
 
 
 @pytest.fixture(autouse=True)
@@ -199,7 +200,7 @@ def test_the_daily_tick_is_a_registered_job_that_queues_the_next(out, clock):
 
 # ---------------------------------------------------------------- the appointment reminder
 
-def setup_hours():
+def setup_hours():                                                           # afternoon slots: test_t6_07 books the mornings in the same database
     assert c.put("/staff/availability", json={"hours": ALL_DAY, "slot_minutes": {"signing": 60, "consultation": 30}},
                  headers=staff()).status_code == 200
     assert c.put("/staff/holidays", json={"dates": []}, headers=staff()).status_code == 200
@@ -223,7 +224,7 @@ def test_an_appointment_reminder_goes_out_24_hours_before_by_email_and_push(out)
     h, jid = lessons_done()
     reminders_on(h); subscribe(h)
     email = c.get("/auth/me", headers=h).json()["email"]
-    start = utc(2027, 3, 16, 9)
+    start = utc(2027, 3, 16, 14)
     bid = book(h, start)
     rows = db.query("SELECT run_after FROM jobs WHERE kind = 'appointment_reminder' AND key LIKE ?", (f"%{bid}%",))
     assert len(rows) == 1
@@ -232,7 +233,7 @@ def test_an_appointment_reminder_goes_out_24_hours_before_by_email_and_push(out)
     assert len(out["email"]) == 1
     to, subject, body = out["email"][0]
     assert to == email and subject == "Recordatorio de su cita / Appointment reminder"
-    assert "9:00 a. m." in body and "9:00 a.m." in body and "16 de marzo" in body and "March 16" in body
+    assert "2:00 p. m." in body and "2:00 p.m." in body and "16 de marzo" in body and "March 16" in body
     assert "hora de California" in body and "California time" in body
     assert [e for e, _ in out["push"]] == [SUB["endpoint"]] and out["push"][0][1]["url"] == "#/cita"
     assert all("Ana" not in s and "Torres" not in s for s in out["staff"])
@@ -241,7 +242,7 @@ def test_an_appointment_reminder_goes_out_24_hours_before_by_email_and_push(out)
 def test_without_reminders_on_the_appointment_reminder_is_email_only(out):
     setup_hours()
     h, _ = lessons_done()
-    bid = book(h, utc(2027, 3, 17, 9))
+    bid = book(h, utc(2027, 3, 17, 14))
     run("appointment_reminder", f"%{bid}%")
     assert len(out["email"]) == 1 and out["push"] == []
 
@@ -249,11 +250,11 @@ def test_without_reminders_on_the_appointment_reminder_is_email_only(out):
 def test_a_rescheduled_or_cancelled_appointment_reminds_only_for_the_live_time(out):
     setup_hours()
     h, _ = lessons_done()
-    bid = book(h, utc(2027, 3, 18, 9))
-    assert c.patch(f"/booking/{bid}", json={"start": utc(2027, 3, 19, 10)}, headers=h).status_code == 200
+    bid = book(h, utc(2027, 3, 18, 14))
+    assert c.patch(f"/booking/{bid}", json={"start": utc(2027, 3, 19, 15)}, headers=h).status_code == 200
     assert run("appointment_reminder", f"%{bid}%") == 2                       # the old job and the new one
-    assert len(out["email"]) == 1 and "10:00 a. m." in out["email"][0][2] and "19 de marzo" in out["email"][0][2]
-    bid2 = book(h, utc(2027, 3, 22, 9))
+    assert len(out["email"]) == 1 and "3:00 p. m." in out["email"][0][2] and "19 de marzo" in out["email"][0][2]
+    bid2 = book(h, utc(2027, 3, 22, 14))
     assert c.delete(f"/booking/{bid2}", headers=h).status_code == 200
     run("appointment_reminder", f"%{bid2}%")
     assert len(out["email"]) == 1                                             # nothing for a cancelled appointment
@@ -262,7 +263,7 @@ def test_a_rescheduled_or_cancelled_appointment_reminds_only_for_the_live_time(o
 def test_an_appointment_booked_less_than_a_day_ahead_gets_only_its_confirmation(out):
     setup_hours()
     h, _ = lessons_done()
-    bid = book(h, utc(2027, 3, 11, 9))                                        # 13 hours after the clock's now
+    bid = book(h, utc(2027, 3, 10, 14))                                        # 10 hours after the clock's now
     assert db.query("SELECT id FROM jobs WHERE kind = 'appointment_reminder' AND key LIKE ?", (f"%{bid}%",)) == []
 
 

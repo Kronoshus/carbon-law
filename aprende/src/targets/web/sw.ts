@@ -20,9 +20,7 @@ self.addEventListener('fetch', (event: any) => {
   const req = event.request;
   const API_ORIGIN = (import.meta.env && import.meta.env.VITE_API_ORIGIN) || '';
   const kind = cacheKind({ url: req.url, method: req.method, mode: req.mode, destination: req.destination }, (self as any).registration.scope, API_ORIGIN);
-  // apiOrigin not passed; sw-rules derives from scope origin if empty? Check: allowedOrigins adds new URL(apiOrigin || scope, scope).origin => scope origin. Fine for same origin. For separate API origin, need apiOrigin. We don't know at runtime? registration scope only. But test uses api origin carbon-law.onrender.com. Service worker scope is app origin. Need apiOrigin. Hmm.
   if (!kind) return;
-  // We need api origin; infer from a known constant? The brief says apiOrigin param. In sw, we can pass self origin? But API may be different origin. For push/lesson from API origin, cacheKind checks allowedOrigins includes scope origin and apiOrigin. If we pass empty, only scope origin. Test expects lesson from API origin carbon-law.onrender.com to be cached by sw? The e2e test caches /learn/lessons/will on API origin? Wait fetch goes through Vite proxy in dev, so same origin scope? In e2e, page fetches /learn/lessons/will (relative) => same origin as page (carbon.../aprende? Actually scope origin carbon.bailment.tech). Hmm test URL API maybe not used in browser fetch; they use relative /learn/lessons/will. cacheKind with apiOrigin '' allows scope origin. OK.
   if (kind === 'shell' && req.mode === 'navigate') {
     event.respondWith((async () => {
       try {
