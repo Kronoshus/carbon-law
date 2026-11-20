@@ -237,3 +237,40 @@ def test_an_open_conflict_review_past_its_due_date_alerts_once(monkeypatch, aler
     timeline.tick(utc(at(2026, 12, 4, 9)))
     timeline.tick(utc(at(2026, 12, 7, 9)))
     assert len(mine()) == 1 and "conflict_review" in mine()[0][1]
+
+
+ATTORNEY_EMAIL = "t5-04-attorney@example.com"
+backend.users[ATTORNEY_EMAIL] = {"id": str(uuid.uuid4()), "name": "Pankaj Raval", "email": ATTORNEY_EMAIL, "role": "attorney",
+                                 "password_hash": backend.hash_pw("t5-04-attorney-password"),
+                                 "created_at": datetime.datetime.utcnow().isoformat()}
+
+
+def attorney():
+    token = c.post("/auth/login", json={"email": ATTORNEY_EMAIL, "password": "t5-04-attorney-password"}).json()["token"]
+    return {"Authorization": "Bearer " + token}
+
+
+def test_an_on_time_wednesday_journey_raises_no_scope_alert(monkeypatch, alerts):
+    """Spec 6.1 day 2: the tentative choice "starts the attorney's scope review now, so the engagement letter is ready on
+    day 5"; 6.2: "Day 2 gives the attorney days 2-4". A Wednesday client chooses on Thursday, the review is due Friday,
+    and the attorney approves on Friday, before she confirms the same documents on Saturday (day 4)."""
+    clock = {"now": at(2026, 12, 2)}                                             # Wednesday, day 1
+    monkeypatch.setattr(journey, "_now_iso", lambda: clock["now"])
+    h = client()
+    jid = state(h)["id"]
+    send(h, "ai_disclosed"); send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
+    journey.apply(jid, "conflict_auto", {"result": "clear"}, actor="system")
+    clock["now"] = at(2026, 12, 3)                                               # Thursday, day 2
+    send(h, "documents_tentative", codes=["will", "trust"])
+    journey.apply(jid, "conflict_firm", {"result": "cleared"}, actor="staff@example.com")
+    clock["now"] = at(2026, 12, 4)                                               # Friday, day 3: the scope review's due date
+    assert steps({**state(h)["facts"], "started_at": state(h)["started_at"]}, clock["now"])["pay"]["date"] == "2026-12-06"
+    assert c.post(f"/staff/journeys/{jid}/scope-approval", headers=attorney()).status_code == 200
+    clock["now"] = at(2026, 12, 5)                                               # Saturday, day 4: she confirms the same two
+    send(h, "documents_confirmed", codes=["trust", "will"])
+    for day in (3, 4, 5, 6, 7):
+        timeline.tick(utc(at(2026, 12, day, 9)))
+    assert [a for a in alerts if jid in a[1]] == []
+    clock["now"] = at(2026, 12, 6)                                               # Sunday, day 5: the letter is ready
+    j = state(h)
+    assert j["gates"]["may_sign_engagement"] is True and "scope_reopened" not in j["facts"]
