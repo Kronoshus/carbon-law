@@ -26,6 +26,7 @@ async function loadEntries() {
   for (const e of data.entries) {
     const btn = document.createElement("button");
     btn.type = "button";
+    btn.className = "btn secondary sm";
     btn.textContent = e.entry_id;
     btn.addEventListener("click", () => openEntry(e.entry_id));
     box.appendChild(btn);
@@ -135,25 +136,26 @@ function renderDetail(d) {
 
   // buttons
   const btns = document.createElement("div");
-  const saveBtn = document.createElement("button"); saveBtn.type="button"; saveBtn.textContent="Guardar borrador";
-  const submitBtn = document.createElement("button"); submitBtn.type="button"; submitBtn.textContent="Enviar a revisión";
-  const previewBtn = document.createElement("button"); previewBtn.type="button"; previewBtn.textContent="Vista previa";
+  btns.className = "content-actions";
+  const saveBtn = document.createElement("button"); saveBtn.type="button"; saveBtn.className="btn secondary sm"; saveBtn.textContent="Guardar borrador";
+  const submitBtn = document.createElement("button"); submitBtn.type="button"; submitBtn.className="btn sm"; submitBtn.textContent="Enviar a revisión";
+  const previewBtn = document.createElement("button"); previewBtn.type="button"; previewBtn.className="btn secondary sm"; previewBtn.textContent="Vista previa";
   btns.appendChild(saveBtn); btns.appendChild(submitBtn); btns.appendChild(previewBtn);
 
   const isLegal = d.legal;
   const isAttorney = user() && user().role === "attorney";
   if (isLegal) {
     if (isAttorney && isPending) {
-      const ab = document.createElement("button"); ab.type="button"; ab.textContent = `Aprobar versión ${pend.version}`;
+      const ab = document.createElement("button"); ab.type="button"; ab.className="btn sm"; ab.textContent = `Aprobar versión ${pend.version}`;
       ab.addEventListener("click", () => approveVersion(pend.version));
       btns.appendChild(ab);
     } else {
-      const txt = document.createElement("span"); txt.textContent = "Solo el abogado puede aprobar y publicar este contenido.";
+      const txt = document.createElement("p"); txt.textContent = "Solo el abogado puede aprobar y publicar este contenido.";
       box.appendChild(txt);
     }
   } else {
     if (isPending) {
-      const pb = document.createElement("button"); pb.type="button"; pb.textContent = `Publicar versión ${pend.version}`;
+      const pb = document.createElement("button"); pb.type="button"; pb.className="btn sm"; pb.textContent = `Publicar versión ${pend.version}`;
       pb.addEventListener("click", () => publishVersion(pend.version));
       btns.appendChild(pb);
     }
