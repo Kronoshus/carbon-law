@@ -233,6 +233,14 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
     return True
 
 
+def _scope_codes(j):
+    """The documents the attorney's latest scope approval covers: recorded with it, else the confirmed choice."""
+    rows = db.query("SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = 'scope_approved' "
+                    "ORDER BY created_at DESC, id DESC LIMIT 1", (j["id"],))
+    codes = (json.loads(rows[0][0] or "{}") if rows else {}).get("codes")
+    return list(codes) if codes is not None else list(j["documents"]["confirmed"])
+
+
 def apply(journey_id, event_type, payload=None, actor="system"):
     if event_type not in ALL_EVENTS:
         raise ValueError("unknown event type")
@@ -243,7 +251,7 @@ def apply(journey_id, event_type, payload=None, actor="system"):
     if event_type == "scope_approved" and _scope_currently_approved(j["facts"]):
         return j                                                  # already approved: a repeat is a no-op
     scope_was_approved = _scope_currently_approved(j.get("facts") or {}) if event_type == "documents_confirmed" else False
-    prev_confirmed = list(j.get("documents", {}).get("confirmed") or []) if event_type == "documents_confirmed" else []
+    prev_confirmed = _scope_codes(j) if scope_was_approved else []
     inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())
     if not inserted:
         return get_journey(j["id"])
