@@ -1,12 +1,12 @@
 """FastAPI routes for the Aprende journey."""
 import datetime
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
-from aprende import journey, timeline
+from aprende import auth, journey, timeline
 
 router = APIRouter()
 
@@ -15,34 +15,15 @@ class JourneyEventBody(BaseModel):
     payload: dict = Field(default_factory=dict)
 
 
-def _auth(authorization):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    u, _ = backend_app.require_auth(authorization)
-    return u
-
-
-def _adult_check(u):
-    if u.get("role") != "client":
-        raise HTTPException(403, "staff have no journey")
-    if "adult_confirmed_at" not in u:
-        raise HTTPException(403, "adult confirmation required")
-
-
 @router.get("/journey")
-def get_journey(authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def get_journey(user: dict = Depends(auth.client_user)):
+    j = journey.get_or_create_for_user(user["id"])
     j["timeline"] = timeline.for_journey(j, datetime.datetime.now(datetime.timezone.utc))
     return j
 
 
 @router.post("/journey/events")
-def post_event(body: JourneyEventBody, authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def post_event(body: JourneyEventBody, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     etype = body.type
     payload = body.payload or {}
     if etype not in journey.ALL_EVENTS:
@@ -72,15 +53,12 @@ def post_event(body: JourneyEventBody, authorization: str = Header(None)):
     required = journey.REQUIRED_GATE.get(etype, "may_disclose")
     if not g.get(required, False):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": [required]})
-    updated = journey.apply(j["id"], etype, payload, actor=u.get("email") or "client")
+    updated = journey.apply(j["id"], etype, payload, actor=user.get("email") or "client")
     return updated
 
 
 @router.get("/journey/questions")
-def list_questions(authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def list_questions(user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     rows = db.query("SELECT id, question, created_at, answer, answered_at FROM attorney_questions WHERE journey_id = ? ORDER BY created_at DESC, id",
                     (j["id"],))
     return {"questions": [{"id": r[0], "question": r[1], "created_at": r[2], "answer": r[3], "answered_at": r[4]} for r in rows]}

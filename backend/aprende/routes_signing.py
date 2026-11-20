@@ -1,12 +1,12 @@
 """Routes for signing, executed documents, and funding (T6-08)."""
 import base64
 import datetime
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
 import app as backend_app
-from aprende import jobs, journey, legacy, signing
+from aprende import auth, jobs, journey, legacy, signing
 
 router = APIRouter()
 
@@ -39,8 +39,8 @@ class ExecutedBody(BaseModel):
 
 
 @router.post("/staff/journeys/{jid}/executed")
-def upload_executed(jid: str, body: ExecutedBody, authorization: str = Header(None)):
-    u = _staff(authorization, {"paralegal", "attorney", "admin"})
+def upload_executed(jid: str, body: ExecutedBody, user: dict = Depends(auth.staff())):
+    u = user
     j = journey.get_journey(jid)
     if j is None:
         raise HTTPException(404, "journey not found")
@@ -64,16 +64,12 @@ def upload_executed(jid: str, body: ExecutedBody, authorization: str = Header(No
 
 
 @router.get("/signed-documents")
-def list_signed(authorization: str = Header(None)):
-    user, j = _client(authorization)
+def list_signed(user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     return signing.list_for_journey(j["id"])
 
 
 @router.get("/signed-documents/{did}")
-def get_signed(did: str, authorization: str = Header(None)):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    user, _ = backend_app.require_auth(authorization)
+def get_signed(did: str, user: dict = Depends(auth.client_user)):
     doc = signing.get_document(did)
     if doc is None:
         raise HTTPException(404, "not found")
@@ -86,8 +82,7 @@ def get_signed(did: str, authorization: str = Header(None)):
 
 
 @router.get("/funding-checklist")
-def get_checklist(authorization: str = Header(None)):
-    user, j = _client(authorization)
+def get_checklist(user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     try:
         text = signing.funding_checklist_text(j)
     except ValueError:
@@ -99,8 +94,8 @@ def get_checklist(authorization: str = Header(None)):
 
 
 @router.post("/staff/journeys/{jid}/funding-done")
-def funding_done(jid: str, authorization: str = Header(None)):
-    u = _staff(authorization, {"paralegal", "attorney", "admin"})
+def funding_done(jid: str, user: dict = Depends(auth.staff())):
+    u = user
     j = journey.get_journey(jid)
     if j is None:
         raise HTTPException(404, "journey not found")

@@ -1,16 +1,9 @@
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
-from . import content
+from . import auth, content
 
 router = APIRouter()
-
-def _staff(authorization):
-    if not authorization:
-        raise HTTPException(status_code=401, detail={"error": "unauthorized"})
-    import app as backend_app
-    u, _ = backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
-    return u
 
 def _map(e):
     msg = str(e)
@@ -31,8 +24,7 @@ def _map(e):
     return 400, {"error": msg}
 
 @router.get("/staff/content")
-def list_entries(kind: str = "item", authorization: str | None = Header(default=None)):
-    _staff(authorization)
+def list_entries(kind: str = "item", user: dict = Depends(auth.staff())):
     try:
         return {"entries": content.entries(kind)}
     except Exception as e:
@@ -40,8 +32,7 @@ def list_entries(kind: str = "item", authorization: str | None = Header(default=
         return JSONResponse(status_code=st, content=body)
 
 @router.get("/staff/content/{entry_id:path}/preview")
-def preview(entry_id: str, version: int = 0, lang: str = "es", authorization: str | None = Header(default=None)):
-    _staff(authorization)
+def preview(entry_id: str, version: int = 0, lang: str = "es", user: dict = Depends(auth.staff())):
     try:
         return content.preview(entry_id, version, lang)
     except Exception as e:
@@ -49,8 +40,7 @@ def preview(entry_id: str, version: int = 0, lang: str = "es", authorization: st
         return JSONResponse(status_code=st, content=body)
 
 @router.get("/staff/content/{entry_id:path}")
-def get_entry(entry_id: str, authorization: str | None = Header(default=None)):
-    _staff(authorization)
+def get_entry(entry_id: str, user: dict = Depends(auth.staff())):
     try:
         return content.entry(entry_id)
     except Exception as e:
@@ -58,8 +48,8 @@ def get_entry(entry_id: str, authorization: str | None = Header(default=None)):
         return JSONResponse(status_code=st, content=body)
 
 @router.put("/staff/content/{entry_id:path}/draft")
-def save_draft(entry_id: str, payload: dict, authorization: str | None = Header(default=None)):
-    u = _staff(authorization)
+def save_draft(entry_id: str, payload: dict, user: dict = Depends(auth.staff())):
+    u = user
     try:
         return content.save_draft(entry_id, payload.get("body"), u["email"])
     except Exception as e:
@@ -67,8 +57,8 @@ def save_draft(entry_id: str, payload: dict, authorization: str | None = Header(
         return JSONResponse(status_code=st, content=body)
 
 @router.post("/staff/content/{entry_id:path}/submit")
-def submit(entry_id: str, authorization: str | None = Header(default=None)):
-    u = _staff(authorization)
+def submit(entry_id: str, user: dict = Depends(auth.staff())):
+    u = user
     try:
         return content.submit(entry_id, u["email"])
     except Exception as e:
@@ -76,8 +66,8 @@ def submit(entry_id: str, authorization: str | None = Header(default=None)):
         return JSONResponse(status_code=st, content=body)
 
 @router.post("/staff/content/{entry_id:path}/approve")
-def approve(entry_id: str, payload: dict, authorization: str | None = Header(default=None)):
-    u = _staff(authorization)
+def approve(entry_id: str, payload: dict, user: dict = Depends(auth.staff("attorney"))):
+    u = user
     if u["role"] != "attorney":
         return JSONResponse(status_code=403, content={"error": "attorney_only"})
     try:
@@ -87,8 +77,8 @@ def approve(entry_id: str, payload: dict, authorization: str | None = Header(def
         return JSONResponse(status_code=st, content=body)
 
 @router.post("/staff/content/{entry_id:path}/publish")
-def publish(entry_id: str, payload: dict, authorization: str | None = Header(default=None)):
-    u = _staff(authorization)
+def publish(entry_id: str, payload: dict, user: dict = Depends(auth.staff())):
+    u = user
     try:
         return content.publish_version(entry_id, payload.get("version"), u["email"])
     except Exception as e:

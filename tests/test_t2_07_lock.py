@@ -8,6 +8,8 @@ import threading
 import time
 import uuid
 
+import pytest
+
 os.environ.setdefault("DATABASE_URL", "")
 os.environ.setdefault("CARBON_DB_PATH", tempfile.mktemp(suffix=".db"))
 sys.path.insert(0, "backend")
@@ -30,11 +32,15 @@ def staff_token():
     return None
 
 
-# test-only slow Aprende route
-@backend.app.get("/journey/__slow")
-async def _slow():
-    await asyncio.sleep(2)
-    return {"ok": True}
+@pytest.fixture(autouse=True)
+def slow_route():
+    """A test-only slow Aprende route, removed afterwards so the T7-07 route matrix never sees it."""
+    async def _slow():
+        await asyncio.sleep(2)
+        return {"ok": True}
+    backend.app.add_api_route("/journey/__slow", _slow)
+    yield
+    backend.app.router.routes[:] = [r for r in backend.app.router.routes if getattr(r, "path", None) != "/journey/__slow"]
 
 
 def test_slow_aprende_request_does_not_block_legacy():

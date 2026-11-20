@@ -7,36 +7,16 @@ import time
 import uuid
 
 import httpx
-from fastapi import APIRouter, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 import app as backend_app
 import db
-from aprende import journey, jobs, legacy, pricing
+from aprende import analytics, auth, journey, jobs, legacy, pricing
 from aprende.notify import notify_staff
 
 router = APIRouter()
-
-
-def _auth(authorization):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    u, _ = backend_app.require_auth(authorization)
-    return u
-
-
-def _adult_check(u):
-    if u.get("role") != "client":
-        raise HTTPException(403, "staff have no journey")
-    if "adult_confirmed_at" not in u:
-        raise HTTPException(403, "adult confirmation required")
-
-
-def _staff(authorization, roles):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    return backend_app.require_auth(authorization, roles)[0]
 
 
 def _approved():
@@ -120,11 +100,9 @@ def _verify_signature(raw, sig_header, secret):
 
 
 @router.get("/payments/quote")
-def get_quote(codes: str = Query(...), authorization: str = Header(None)):
+def get_quote(codes: str = Query(...), user: dict = Depends(auth.client_user)):
     """The price card: any documents the client is looking at, with the discounts she has earned."""
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+    j = journey.get_or_create_for_user(user["id"])
     code_list = [c.strip() for c in codes.split(",") if c.strip()]
     if any(c not in pricing.DOC_CODES for c in code_list):
         raise HTTPException(422, "invalid codes")
@@ -135,16 +113,13 @@ def get_quote(codes: str = Query(...), authorization: str = Header(None)):
 
 
 @router.get("/payments/config")
-def get_config(authorization: str = Header(None)):
-    _auth(authorization)
+def get_config(user: dict = Depends(auth.signed_in)):
     return {"mode": mode()}
 
 
 @router.post("/payments/checkout")
-def checkout(authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def checkout(user: dict = Depends(auth.client_user)):
+    j = journey.get_or_create_for_user(user["id"])
     if not j["gates"].get("may_pay"):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": ["may_pay"]})
     m = os.environ.get("STRIPE_MODE", "test").lower()
@@ -167,6 +142,7 @@ def checkout(authorization: str = Header(None)):
     )
     db.execute("INSERT INTO checkout_sessions (id, journey_id, amount_cents, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
                (session["id"], j["id"], amount, journey._now_iso()))
+    analytics.record(j["id"], "checkout_started")
     return {"url": session["url"], "mode": mode()}
 
 
@@ -208,10 +184,8 @@ async def webhook(request: Request):
 
 
 @router.get("/payments/return")
-def return_payment(session_id: str = Query(...), authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def return_payment(session_id: str = Query(...), user: dict = Depends(auth.client_user)):
+    j = journey.get_or_create_for_user(user["id"])
     return {"paid": "paid" in (j.get("facts") or {})}
 
 
@@ -225,8 +199,7 @@ class RefundBody(BaseModel):
 
 
 @router.post("/staff/journeys/{jid}/refunds")
-def create_refund(jid: str, body: RefundBody, authorization: str = Header(None)):
-    _staff(authorization, {"admin"})
+def create_refund(jid: str, body: RefundBody, user: dict = Depends(auth.staff("admin"))):
     if journey.get_journey(jid) is None:
         raise HTTPException(404, "journey not found")
     db.execute(
@@ -237,10 +210,8 @@ def create_refund(jid: str, body: RefundBody, authorization: str = Header(None))
 
 
 @router.get("/payments/receipt")
-def receipt(authorization: str = Header(None)):
-    u = _auth(authorization)
-    _adult_check(u)
-    j = journey.get_or_create_for_user(u["id"])
+def receipt(user: dict = Depends(auth.client_user)):
+    j = journey.get_or_create_for_user(user["id"])
     jid = j["id"]
     rows = db.query("SELECT amount_cents FROM payments WHERE journey_id = ?", (jid,))
     paid_cents = int(sum(r[0] for r in rows)) if rows else 0
@@ -251,8 +222,8 @@ def receipt(authorization: str = Header(None)):
 
 
 @router.put("/staff/payments/live-approval")
-def live_approval(body: LiveApproval, authorization: str = Header(None)):
-    u = _staff(authorization, {"admin"})
+def live_approval(body: LiveApproval, user: dict = Depends(auth.staff("admin"))):
+    u = user
     approved = body.approved
     now = journey._now_iso()
     db.execute(

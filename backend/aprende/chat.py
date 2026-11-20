@@ -8,14 +8,14 @@ import re
 import uuid
 
 import yaml
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, content, datos, firm, journey, learn
+from aprende import auth, characters, content, datos, firm, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -53,17 +53,9 @@ def _fill(text, **values):
 
 def _persona(character, lang, mode, **values):
     live = content.live_entries("persona")
-    shared_body = live["persona:shared"]
-    shared_text = shared_body["text"]
-    char_seed = PERSONAS["characters"][character]
-    char_body = live[f"persona:characters.{character}"]
-    c_name = char_body["name"]
-    c_persona = char_body["persona"]
-    mode_seed = PERSONAS["modes"][mode]
-    mode_body = live[f"persona:modes.{mode}"]
-    mode_text = mode_body["text"]
-    parts = (shared_text, c_persona, mode_text)
-    return _fill("\n\n".join(parts), name=c_name[lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
+    c = live[f"persona:characters.{character}"]
+    parts = (live["persona:shared"]["text"], c["persona"], live[f"persona:modes.{mode}"]["text"])
+    return _fill("\n\n".join(parts), name=c["name"][lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
 
 
 def system_prompt(character, lesson_id, lang):
@@ -124,7 +116,7 @@ def _messages(raw):
 
 
 @router.post("/chat")
-async def post_chat(body: ChatBody, authorization: str = Header(None)):
+async def post_chat(body: ChatBody, authorization: str = Header(None), user: dict = Depends(auth.client_user)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
     if not firm.switch("ai_chat"):

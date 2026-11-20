@@ -3,14 +3,13 @@ import os
 import uuid
 
 import yaml
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 import app as backend_app
 import db
-from aprende import journey, legacy, content
-from aprende.chat import _client_journey
+from aprende import auth, content, journey, legacy
 
 router = APIRouter()
 
@@ -73,8 +72,8 @@ def _gate_fail():
 
 
 @router.get("/review/documents")
-def get_review_documents(lang: str = "es", authorization: str = Header(None)):
-    j, open_ = _client_journey(authorization, "may_see_documents")
+def get_review_documents(lang: str = "es", user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+    open_ = j["gates"].get("may_see_documents", False)
     if not open_:
         return _gate_fail()
     is_en = (lang == "en")
@@ -101,8 +100,8 @@ def get_review_documents(lang: str = "es", authorization: str = Header(None)):
 
 
 @router.post("/review/documents/{doc_id}")
-def post_review_document(doc_id: str, body: ReviewDecision, authorization: str = Header(None)):
-    j, open_ = _client_journey(authorization, "may_see_documents")
+def post_review_document(doc_id: str, body: ReviewDecision, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+    open_ = j["gates"].get("may_see_documents", False)
     if not open_:
         return _gate_fail()
     if doc_id not in backend_app.documents:
