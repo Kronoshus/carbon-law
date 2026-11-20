@@ -8,7 +8,7 @@ import uuid
 import yaml
 
 import db
-from aprende import journey
+from aprende import journey, content
 
 QUESTIONS = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "..", "..", "aprende", "content", "datos.yaml"),
                                 encoding="utf-8"))
@@ -21,11 +21,18 @@ def applicable(j):
 
 
 def get_datos(j, lang="es"):
+    live = content.live_entries("datos")
     saved = {qid: (status, answer) for qid, status, answer in
              db.query("SELECT question_id, status, answer FROM datos_answers WHERE journey_id = ?", (j["id"],))}
-    qs = [{"id": q["id"], "asked_after": q["asked_after"], "docs": q["docs"], "text": q[lang],
-           "status": saved.get(q["id"], ("open", None))[0], "answer": saved.get(q["id"], ("open", None))[1]}
-          for q in applicable(j)]
+    qs = []
+    for q in applicable(j):
+        body = live.get("datos:" + q["id"], {"es": q["lang"] if False else q["es"], "en": q["en"]})
+        text = body.get(lang, body.get("es" if lang=="es" else "en"))
+        # fallback
+        if text is None:
+            text = q[lang]
+        qs.append({"id": q["id"], "asked_after": q["asked_after"], "docs": q["docs"], "text": text,
+                   "status": saved.get(q["id"], ("open", None))[0], "answer": saved.get(q["id"], ("open", None))[1]})
     open_ = [q["id"] for q in qs if q["status"] == "open"]
     return {"questions": qs, "open": open_, "completed": not open_}
 
