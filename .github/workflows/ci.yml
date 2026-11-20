@@ -54,6 +54,13 @@ jobs:
         run: cd aprende && npm run build:web
       - name: build extension
         run: cd aprende && npm run build:ext
+      - name: pack + check extension
+        run: cd aprende && npm run pack:ext && node scripts/check-extension.mjs dist/aprende-extension.zip
+      - name: upload extension zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: aprende-extension
+          path: aprende/dist/aprende-extension.zip
       - name: i18n parity
         run: cd aprende && npm run i18n:check
 
