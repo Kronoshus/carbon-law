@@ -33,6 +33,17 @@ jobs:
       - name: avatar-intake check
         run: cd avatar-intake && python server.py --check
 
+  render:
+    # Builds and starts the backend the way Render does: repo root, root requirements.txt only, Python 3.11.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: start as on Render and answer /health
+        run: bash scripts/render-check.sh
+
   frontend:
     runs-on: ubuntu-latest
     steps:
