@@ -17,5 +17,6 @@ def test_the_worker_process_registers_a_handler_for_every_job_the_app_queues(tmp
             "print(','.join(sorted(jobs.HANDLERS)))\n")
     env = {**os.environ, "CARBON_DB_PATH": str(tmp_path / "worker.db"), "DATABASE_URL": ""}
     r = subprocess.run([sys.executable, "-c", code], cwd=os.path.join(ROOT, "backend"), env=env, capture_output=True, text=True, timeout=120)
-    assert r.returncode == 0, r.stderr
-    assert QUEUED <= set(r.stdout.strip().splitlines()[-1].split(","))
+    assert r.returncode == 0 and "Traceback" not in r.stderr, r.stderr                  # the worker starts
+    handlers = set(r.stdout.strip().split(","))
+    assert QUEUED <= handlers, f"no handler for {sorted(QUEUED - handlers)}"
