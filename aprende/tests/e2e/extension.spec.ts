@@ -43,6 +43,8 @@ test('popup reads journey and opens side panel', async () => {
     });
   });
 
+  await page.route('**/settings/public', (route) => route.fulfill({ json: { switches: { ai_chat: true, voice_recording: true, extension: true } } }));
+
   await page.goto(`chrome-extension://${extId}/popup.html`);
   await expect(page.getByText('Racha: 0')).toBeVisible();
   await expect(page.getByText('Día 3 de 14')).toBeVisible();

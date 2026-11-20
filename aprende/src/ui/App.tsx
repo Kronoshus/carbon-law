@@ -9,13 +9,14 @@ import './tokens.css';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';
-import { getToken } from '../core/api';
+import { getToken, extensionOff } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
 import { InicioIa, InicioConsentimiento, InicioNoAcepto, InicioNombres, InicioEspera } from './screens/Inicio';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
+import { NoDisponible } from './screens/NoDisponible';
 import { Plan } from './screens/Plan';
 import { Aprender } from './screens/Aprender';
 import { Leccion } from './screens/Leccion';
@@ -79,6 +80,8 @@ function Screens() {
   if (ready && import.meta.env?.DEV && r === '/dev/personaje') {
     return h(DevCharacter, null);
   }
+
+  if (extensionOff.value) return h(NoDisponible, null);
 
   if (!ready) return null;
 

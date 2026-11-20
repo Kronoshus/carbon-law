@@ -1,4 +1,5 @@
 import { getPlatform } from '../platform';
+import { signal } from '@preact/signals';
 import { navigate } from './router';
 
 export const TOKEN_KEY = 'aprende_token';
@@ -28,6 +29,13 @@ export async function apiFetch(path: string, options: ApiOptions = {}): Promise<
   if (token) h.set('Authorization', `Bearer ${token}`);
   const body = json !== undefined ? JSON.stringify(json) : (options as RequestInit).body;
   const res = await fetch(`${API_ORIGIN}${path}`, { ...rest, headers: h, body });
+  if (res.status === 503) {
+    try {
+      const clone = res.clone();
+      const j = await clone.json();
+      if (j && j.error === 'extension_off') extensionOff.value = true;
+    } catch { /* ignore */ }
+  }
   if (res.status === 401) {
     await platform.storage.remove(TOKEN_KEY);
     if (typeof window !== 'undefined' && !window.location.hash.startsWith('#/bienvenida') && !window.location.hash.startsWith('#/entrar') && !window.location.hash.startsWith('#/cuenta-nueva')) {
@@ -36,3 +44,5 @@ export async function apiFetch(path: string, options: ApiOptions = {}): Promise<
   }
   return res;
 }
+
+export const extensionOff = signal(false);
