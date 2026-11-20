@@ -13,6 +13,7 @@ export function Bienvenida() {
         <a href="#/entrar" class="btn secondary">{t('bienvenida.signin')}</a>
       </div>
       <p class="note">{t('bienvenida.note')}</p>
+      <p><a href="#/privacidad">{t('privacy.link')}</a></p>
     </main>
   );
 }
