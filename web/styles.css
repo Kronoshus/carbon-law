@@ -61,6 +61,11 @@ body::before { display: none; }
 .content-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 #contentDetail textarea { width: 100%; min-height: 64px; }
 .content-preview { white-space: pre-wrap; }
+#contentEntries:empty { display: none; }
+#clientes td.late { color: #b42318; font-weight: 600; }
+.client-questions { list-style: none; padding: 0; }
+.client-question { border-top: 1px solid #eee; padding: 10px 0; }
+.client-question textarea { width: 100%; min-height: 64px; }
 @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .sidebar { display: none; } .main-content { padding: 18px; } }
 
 /* Stats */

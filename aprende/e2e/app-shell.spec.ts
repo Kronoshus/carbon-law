@@ -21,7 +21,7 @@ test('signup in Spanish lands on the day-1 gate without tabs; the app has tabs w
 test('rail replaces tabs above 64em', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aprende_token', 'tok'));   // before any page: no public-page redirect
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto('/#/preguntas');                                               // a page that makes no API call
+  await page.goto('/#/perfil');                                                  // a page that makes no API call
   await expect(page.locator('nav.rail')).toBeVisible();
   await expect(page.locator('nav.tabs')).toBeHidden();
 });
