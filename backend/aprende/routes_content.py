@@ -1,7 +1,6 @@
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
-import json
 from . import content
 
 router = APIRouter()
@@ -9,13 +8,8 @@ router = APIRouter()
 def _staff(authorization):
     if not authorization:
         raise HTTPException(status_code=401, detail={"error": "unauthorized"})
-    token = authorization.split(" ", 1)[-1]
-    from app import get_user_from_token
-    u = get_user_from_token(token)
-    if not u:
-        raise HTTPException(status_code=401, detail={"error": "unauthorized"})
-    if u["role"] == "client":
-        raise HTTPException(status_code=403, detail={"error": "forbidden"})
+    import app as backend_app
+    u, _ = backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
     return u
 
 def _map(e):
@@ -28,7 +22,7 @@ def _map(e):
         return 403, {"error": str(e)}
     if isinstance(e, KeyError):
         return 404, {"error": str(e)}
-    if "extra key" in msg or "body must be object" in msg or "bad_kind" in msg:
+    if isinstance(e, content.ShapeError):
         return 422, {"error": "bad_shape"}
     return 400, {"error": msg}
 

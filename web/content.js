@@ -43,7 +43,7 @@ function renderDetail(d) {
   const box = document.getElementById("contentDetail");
   box.hidden = false;
   // clear
-  box.innerHTML = "";
+  box.replaceChildren();
   const h = document.createElement("h3");
   h.textContent = d.entry_id;
   box.appendChild(h);
