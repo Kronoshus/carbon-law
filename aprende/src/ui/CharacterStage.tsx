@@ -27,6 +27,8 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
     let idleId: number | null = null;
     let io: IntersectionObserver | null = null;
     let onVis: (() => void) | null = null;
+    let onInput: (() => void) | null = null;
+    let resumeId = 0;
     const run = async () => {
       const { CharacterEngine } = await import('../core/character/engine');
       if (cancelled || !canvasRef.current) return;
@@ -45,6 +47,14 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
           io.observe(canvas);
           onVis = () => { if (document.hidden) eng.pauseRendering?.(); else eng.resumeRendering?.(); };
           document.addEventListener('visibilitychange', onVis);
+          // a tap gets the main thread: the character holds still for a moment while the answer is checked (INP)
+          onInput = () => {
+            eng.pauseRendering();
+            window.clearTimeout(resumeId);
+            resumeId = window.setTimeout(() => { if (!document.hidden) eng.resumeRendering(); }, 300);
+          };
+          document.addEventListener('pointerdown', onInput, { capture: true });
+          document.addEventListener('keydown', onInput, { capture: true });
         }
       }
     };
@@ -59,6 +69,8 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
       if (idleId !== null) { if (idle) cancelIdleCallback(idleId); else window.clearTimeout(idleId); }
       if (io) io.disconnect();
       if (onVis) document.removeEventListener('visibilitychange', onVis);
+      if (onInput) { document.removeEventListener('pointerdown', onInput, { capture: true }); document.removeEventListener('keydown', onInput, { capture: true }); }
+      window.clearTimeout(resumeId);
       engineRef.current?.unmount(); engineRef.current = null;
     };
   }, [character]);
