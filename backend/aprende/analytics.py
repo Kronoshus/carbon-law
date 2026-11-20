@@ -19,22 +19,13 @@ EVENTS = {
     "final_lesson_completed": set(), "step_late": {"step"},
 }
 
-_ANALYTICS_MAP = {
-    "consent": ("consent", lambda p: {"answer": p.get("answer")} if "answer" in p else {}),
-    "conflict_auto": ("conflict_auto", lambda p: {"result": p.get("result")} if "result" in p else {}),
-    "documents_tentative": ("documents_tentative", lambda p: {"codes": p.get("codes")} if "codes" in p else {}),
-    "engagement_signed": ("engagement_signed", lambda p: {}),
-    "paid": ("paid", lambda p: {}),
-    "drafts_ready": ("drafts_ready", lambda p: {}),
-    "attorney_approved": ("attorney_approved", lambda p: {}),
-    "client_confirmed": ("client_confirmed", lambda p: {}),
-    "changes_requested": ("changes_requested", lambda p: {}),
-    "signing_booked": ("signing_booked", lambda p: {}),
-    "signed": ("signed", lambda p: {}),
-    "final_lesson_completed": ("final_lesson_completed", lambda p: {}),
-    "intake_completed": ("datos_completed", lambda p: {}),
+# journey event type -> (analytics event type, payload keys it keeps)
+FROM_JOURNEY = {
+    "consent": ("consent", ("answer",)), "conflict_auto": ("conflict_auto", ("result",)),
+    "documents_tentative": ("documents_tentative", ("codes",)), "intake_completed": ("datos_completed", ()),
+    **{t: (t, ()) for t in ("engagement_signed", "paid", "drafts_ready", "attorney_approved", "client_confirmed",
+                            "changes_requested", "signing_booked", "signed", "final_lesson_completed")},
 }
-JOURNEY_ANALYTICS_MAP = _ANALYTICS_MAP
 
 
 _VALUE_RE = re.compile(r"^[a-z0-9_.:-]*$")
@@ -79,11 +70,11 @@ def record(journey_id, type_, props=None, *, conn=None):
 
 
 def from_journey_event(journey_id, event_type, payload=None, conn=None):
-    mapping = _ANALYTICS_MAP.get(event_type)
-    if not mapping:
+    if event_type not in FROM_JOURNEY:
         return None
-    ev_type, prop_fn = mapping
-    return record(journey_id, ev_type, prop_fn(payload or {}), conn=conn)
+    ev_type, keys = FROM_JOURNEY[event_type]
+    payload = payload or {}
+    return record(journey_id, ev_type, {k: payload[k] for k in keys if k in payload}, conn=conn)
 
 
 def record_once(journey_id, type_, props=None, *, conn=None):
@@ -92,7 +83,7 @@ def record_once(journey_id, type_, props=None, *, conn=None):
     lesson_id = props.get("lesson_id")
     if lesson_id is not None:
         sql = "SELECT 1 FROM events WHERE journey_id = ? AND type = ? AND props_json LIKE ? LIMIT 1"
-        param = (journey_id, type_, f'%{lesson_id}%')
+        param = (journey_id, type_, '%' + json.dumps({"lesson_id": lesson_id})[1:-1] + '%')
     else:
         sql = "SELECT 1 FROM events WHERE journey_id = ? AND type = ? LIMIT 1"
         param = (journey_id, type_)
