@@ -61,6 +61,9 @@ function renderDetail(d) {
     p2.textContent = `Pendiente: versión ${pend.version} (${pend.state === "draft" ? "borrador" : "en revisión"})`;
     box.appendChild(p2);
   }
+  const shownVer = isPending ? pend : (d.live ? d.versions.find(v => v && v.version === d.live.version) : (d.versions.length ? d.versions[0] : null));
+  const shownErrors = shownVer ? (shownVer.errors || []) : [];
+  const hasErrors = shownErrors.length > 0;
   // choose body to edit: pending version body else live body
   let body = null;
   if (isPending) body = pend.body;
@@ -134,11 +137,28 @@ function renderDetail(d) {
   }
   box.appendChild(form);
 
+  if (hasErrors) {
+    const lbl = document.createElement("p");
+    lbl.textContent = "Errores del validador:";
+    box.appendChild(lbl);
+    const ul = document.createElement("ul");
+    ul.className = "content-errors";
+    for (const e of shownErrors) {
+      const li = document.createElement("li");
+      li.textContent = e;
+      ul.appendChild(li);
+    }
+    box.appendChild(ul);
+    const warn = document.createElement("p");
+    warn.textContent = "No se puede enviar ni publicar mientras haya errores.";
+    box.appendChild(warn);
+  }
   // buttons
   const btns = document.createElement("div");
   btns.className = "content-actions";
   const saveBtn = document.createElement("button"); saveBtn.type="button"; saveBtn.className="btn secondary sm"; saveBtn.textContent="Guardar borrador";
   const submitBtn = document.createElement("button"); submitBtn.type="button"; submitBtn.className="btn sm"; submitBtn.textContent="Enviar a revisión";
+  submitBtn.disabled = hasErrors;
   const previewBtn = document.createElement("button"); previewBtn.type="button"; previewBtn.className="btn secondary sm"; previewBtn.textContent="Vista previa";
   btns.appendChild(saveBtn); btns.appendChild(submitBtn); btns.appendChild(previewBtn);
 
@@ -147,6 +167,7 @@ function renderDetail(d) {
   if (isLegal) {
     if (isAttorney && isPending) {
       const ab = document.createElement("button"); ab.type="button"; ab.className="btn sm"; ab.textContent = `Aprobar versión ${pend.version}`;
+      ab.disabled = hasErrors;
       ab.addEventListener("click", () => approveVersion(pend.version));
       btns.appendChild(ab);
     } else {
@@ -156,6 +177,7 @@ function renderDetail(d) {
   } else {
     if (isPending) {
       const pb = document.createElement("button"); pb.type="button"; pb.className="btn sm"; pb.textContent = `Publicar versión ${pend.version}`;
+      pb.disabled = hasErrors;
       pb.addEventListener("click", () => publishVersion(pend.version));
       btns.appendChild(pb);
     }
