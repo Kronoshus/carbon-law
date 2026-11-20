@@ -232,7 +232,7 @@ export async function openAdminReview(context: BrowserContext): Promise<Page> {
 /** In the review queue, the attorney opens the client's document, edits its text and uploads the revised version. */
 export async function attorneyRevises(context: BrowserContext, clientName: string, addition: string) {
   const admin = await openAdminReview(context);
-  await admin.getByRole('button', { name: clientName, exact: true }).click();
+  await admin.locator('#reviewQueueRows').getByRole('button', { name: clientName, exact: true }).click();
   const text = admin.getByLabel('Texto corregido');
   await expect(text).toHaveCount(1);                                    // only the document she asked to change
   await text.fill(`${await text.inputValue()}\n\n${addition}\n`);
@@ -244,11 +244,11 @@ export async function attorneyRevises(context: BrowserContext, clientName: strin
 
 export async function attorneyApproves(context: BrowserContext, clientName: string) {
   const admin = await openAdminReview(context);
-  await admin.getByRole('button', { name: clientName, exact: true }).click();
+  await admin.locator('#reviewQueueRows').getByRole('button', { name: clientName, exact: true }).click();
   await expect(admin.locator('.draft').first()).toBeVisible();
   await expect(admin.locator('mark.complete')).toHaveCount(0);
   await admin.getByRole('button', { name: 'Aprobar' }).click();
-  await expect(admin.getByRole('button', { name: clientName, exact: true })).toHaveCount(0);   // gone from the queue
+  await expect(admin.locator('#reviewQueueRows').getByRole('button', { name: clientName, exact: true })).toHaveCount(0);   // gone from the queue
   await admin.close();
 }
 

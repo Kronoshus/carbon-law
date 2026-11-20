@@ -13,11 +13,11 @@ async function phone(page: Page, context: BrowserContext): Promise<ClientApp> {
     token: async () => (await page.evaluate(() => localStorage.getItem('aprende_token')))! };
 }
 
-for (const [weekday, label] of [[3, 'Wednesday'], [4, 'Thursday']] as const) {
+for (const [weekday, label, name] of [[3, 'Wednesday', 'Ana Torres'], [4, 'Thursday', 'Luis Torres']] as const) {
   test(`a new client who starts on a ${label} goes through the whole journey, each step on its planned day`, async ({ page, context }) => {
     const c = await phone(page, context);
     const start = await nextWeekday(weekday);
-    await releaseJourney(c, start);
+    await releaseJourney(c, start, name);
   });
 }
 
@@ -59,7 +59,7 @@ test('a late attorney review raises the staff alert once, and the client only re
       .toEqual(['attorney_review']);
     expect(dbCounts(jid).timeline_alerts).toBe(1);
     const admin = await openAdminReview(context);
-    await expect(admin.getByRole('row').filter({ has: admin.getByRole('button', { name: 'Mateo Torres', exact: true }) })).toContainText('⚠');
+    await expect(admin.locator('#reviewQueueRows tr').filter({ has: admin.getByRole('button', { name: 'Mateo Torres', exact: true }) })).toContainText('⚠');
     await admin.close();
   });
   await test.step('An hour later the check runs again, and the alert is not sent twice', async () => {
