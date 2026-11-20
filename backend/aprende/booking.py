@@ -7,8 +7,8 @@ from zoneinfo import ZoneInfo
 
 import app as backend_app
 import db
-from aprende import journey
-from fastapi import APIRouter, Header, HTTPException, Query
+from aprende import auth, journey
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -118,25 +118,6 @@ def _validate_availability(hours, slot_minutes):
         if not isinstance(v, int) or v <= 0 or (v % 30) != 0:
             raise HTTPException(422, "minutes must be multiple of 30")
     return hours, slot_minutes
-
-
-def _staff(authorization):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    u, _ = backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
-    return u
-
-
-def _client(authorization):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    user, _ = backend_app.require_auth(authorization)
-    if user.get("role") != "client":
-        raise HTTPException(403, "staff have no journey")
-    if "adult_confirmed_at" not in user:
-        raise HTTPException(403, "adult confirmation required")
-    j = journey.get_or_create_for_user(user["id"])
-    return user, j
 
 
 def _is_real_local(dt_local):
@@ -271,24 +252,23 @@ class PatchBody(BaseModel):
 
 
 @router.put("/staff/availability")
-def put_availability(body: AvailabilityBody, authorization: str = Header(None)):
-    _staff(authorization)
+def put_availability(body: AvailabilityBody, user: dict = Depends(auth.staff())):
     hours, slot_minutes = _validate_availability(body.hours, body.slot_minutes)
     _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes})   # existing bookings are kept
     return {"availability": {"hours": hours, "slot_minutes": slot_minutes}}
 
 
 @router.put("/staff/holidays")
-def put_holidays(body: HolidaysBody, authorization: str = Header(None)):
-    _staff(authorization)
+def put_holidays(body: HolidaysBody, user: dict = Depends(auth.staff())):
+
     dates = [str(d) for d in body.dates]
     _save_setting("holidays", dates)
     return {"holidays": dates}
 
 
 @router.get("/booking/slots")
-def get_slots(kind: str, from_: str = Query(..., alias="from"), days: int = 1, authorization: str = Header(None)):
-    user, j = _client(authorization)
+def get_slots(kind: str, from_: str = Query(..., alias="from"), days: int = 1, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+    pass
     missing = _gate_missing(j, kind)
     if missing:
         return JSONResponse(status_code=409, content={"error": "gate", "missing": missing})
@@ -301,8 +281,8 @@ def get_slots(kind: str, from_: str = Query(..., alias="from"), days: int = 1, a
 
 
 @router.post("/booking")
-def post_booking(body: BookingBody, authorization: str = Header(None)):
-    user, j = _client(authorization)
+def post_booking(body: BookingBody, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+
     missing = _gate_missing(j, body.kind)
     if missing:
         return JSONResponse(status_code=409, content={"error": "gate", "missing": missing})
@@ -343,8 +323,8 @@ def post_booking(body: BookingBody, authorization: str = Header(None)):
 
 
 @router.get("/booking")
-def get_booking(authorization: str = Header(None)):
-    user, j = _client(authorization)
+def get_booking(user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+
     rows = db.query("SELECT id, kind, start_utc, end_utc, status FROM bookings WHERE journey_id = ? AND status = 'active'", (j["id"],))
     out = []
     for r in rows:
@@ -353,8 +333,8 @@ def get_booking(authorization: str = Header(None)):
 
 
 @router.delete("/booking/{booking_id}")
-def delete_booking(booking_id: str, authorization: str = Header(None)):
-    user, j = _client(authorization)
+def delete_booking(booking_id: str, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+
     rows = db.query("SELECT id, journey_id, start_utc FROM bookings WHERE id = ?", (booking_id,))
     if not rows or rows[0][1] != j["id"]:
         raise HTTPException(404, "not found")
@@ -369,8 +349,8 @@ def delete_booking(booking_id: str, authorization: str = Header(None)):
 
 
 @router.patch("/booking/{booking_id}")
-def patch_booking(booking_id: str, body: PatchBody, authorization: str = Header(None)):
-    user, j = _client(authorization)
+def patch_booking(booking_id: str, body: PatchBody, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+
     rows = db.query("SELECT id, journey_id, kind, start_utc FROM bookings WHERE id = ?", (booking_id,))
     if not rows or rows[0][1] != j["id"]:
         raise HTTPException(404, "not found")
@@ -404,8 +384,8 @@ def patch_booking(booking_id: str, body: PatchBody, authorization: str = Header(
 
 
 @router.get("/staff/bookings")
-def staff_bookings(from_: str = Query(..., alias="from"), days: int = 1, authorization: str = Header(None)):
-    _staff(authorization)
+def staff_bookings(from_: str = Query(..., alias="from"), days: int = 1, user: dict = Depends(auth.staff())):
+
     start_date = datetime.date.fromisoformat(from_)
     end_date = start_date + datetime.timedelta(days=days)
     start_utc = datetime.datetime.combine(start_date, datetime.time.min, tzinfo=LA).astimezone(UTC)

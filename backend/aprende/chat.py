@@ -8,14 +8,14 @@ import re
 import uuid
 
 import yaml
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, content, datos, journey, learn
+from aprende import auth, characters, content, datos, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -115,7 +115,7 @@ def _messages(raw):
 
 
 @router.post("/chat")
-async def post_chat(body: ChatBody, authorization: str = Header(None)):
+async def post_chat(body: ChatBody, authorization: str = Header(None), user: dict = Depends(auth.client_user)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
     if body.mode not in ("learn", "intake"):
