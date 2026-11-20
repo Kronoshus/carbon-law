@@ -792,15 +792,10 @@ def _publish_transition(entry_id, version, actor):
     db.execute("UPDATE content_versions SET state='published', published_by=?, published_at=? WHERE entry_id = ? AND version = ?",
                (actor, _now(), entry_id, version))
     if kind == "item":
-        item_body = body
-        payload_es = item_body.get("es", {})
-        payload_en = item_body.get("en", {})
-        answer_val = item_body.get("answer", None)
-        has_answer = "answer" in item_body
-        answer_json = json.dumps(answer_val, ensure_ascii=False) if has_answer else None
-        source_id = item_body.get("source")
+        answer = json.dumps(body["answer"], ensure_ascii=False) if "answer" in body else None
         db.execute("UPDATE content_items SET payload_json_es=?, payload_json_en=?, answer=?, source_id=?, version=?, state='published' WHERE id=?",
-                   (json.dumps(payload_es, ensure_ascii=False), json.dumps(payload_en, ensure_ascii=False), answer_json, source_id, version, entry_id))
+                   (json.dumps(body["es"], ensure_ascii=False), json.dumps(body["en"], ensure_ascii=False), answer,
+                    body.get("source"), version, entry_id))
     return body
 
 def approve_version(entry_id, version, attorney):
