@@ -9,7 +9,7 @@ import uuid
 from zoneinfo import ZoneInfo
 
 import db
-from aprende import clock, journey as journeys
+from aprende import analytics, characters, clock, journey as journeys
 
 PASS = 0.8
 DISCOUNT_UNITS = ("will", "trust", "ahcd", "poa")      # completing these emits lesson_completed:<unit> (a $100 discount)
@@ -87,11 +87,12 @@ def _rng(journey_id, item_id):
     return random.Random(int(hashlib.sha256(f"{journey_id}:{item_id}".encode()).hexdigest(), 16))
 
 
-def _serve(item, lang, journey_id):
+def _serve(item, lang, journey_id, host):
     payload = json.loads(item["es"] if lang == "es" else item["en"])
     out = {"id": item["id"], "kind": item["kind"]}
-    if item["character"]:
-        out["character"] = item["character"]
+    char = characters.item_character(item["character"], host)
+    if char:
+        out["character"] = char
     if item["sensitive"]:
         out["sensitive"] = True
     if item["kind"] == "match":
@@ -113,7 +114,7 @@ def get_map(journey):
     for lesson in lessons:
         status, unlock = _status(journey, lesson, lessons, done)
         units.setdefault(lesson["unit"], []).append({
-            "id": lesson["id"], "day": lesson["day"], "character": lesson["character"],
+            "id": lesson["id"], "day": lesson["day"], "character": characters.lesson_character(lesson["unit"], lesson["character"]),
             "title": {"es": lesson["title_es"], "en": lesson["title_en"]}, "status": status,
             "unlock_at": unlock.isoformat() if unlock else None})
     return {"units": [{"id": unit, "lessons": ls} for unit, ls in units.items()]}
@@ -124,9 +125,11 @@ def get_lesson(journey, lesson_id, lang):
     steps = {sid: {"id": sid, "title": t_es if lang == "es" else t_en, "items": []} for sid, t_es, t_en in
              db.query("SELECT id, title_es, title_en FROM content_steps WHERE lesson_id = ? ORDER BY position", (lesson_id,))}
     for item in _items(lesson_id):
-        steps[item["step_id"]]["items"].append(_serve(item, lang, journey["id"]))
+        host = characters.lesson_character(lesson["unit"], lesson["character"])
+        steps[item["step_id"]]["items"].append(_serve(item, lang, journey["id"], host))
+    analytics.record_once(journey["id"], "lesson_started", {"lesson_id": lesson_id})
     return {"id": lesson["id"], "title": lesson["title_es"] if lang == "es" else lesson["title_en"],
-            "character": lesson["character"], "sensitive": bool(lesson["sensitive"]),
+            "character": characters.lesson_character(lesson["unit"], lesson["character"]), "sensitive": bool(lesson["sensitive"]),
             "steps": [s for s in steps.values() if s["items"]]}
 
 
@@ -169,9 +172,8 @@ def submit_attempt(journey, item_id, answer, lang="es"):
         conn.execute("INSERT INTO item_attempts (id, journey_id, item_id, version, attempt, correct, created_at) "
                      "VALUES (?, ?, ?, ?, ?, ?, ?)", (str(uuid.uuid4()), journey["id"], item_id, item["version"], attempt,
                                                       1 if correct else 0, at))
-        conn.execute("INSERT INTO events (id, journey_id, type, props_json, created_at) VALUES (?, ?, ?, ?, ?)",
-                     (str(uuid.uuid4()), journey["id"], "item_answered",
-                      json.dumps({"item_id": item_id, "correct": correct, "attempt": attempt}), at))
+        analytics.record(journey["id"], "item_answered",
+                          {"item_id": item_id, "correct": correct, "attempt": attempt}, conn=conn)
         if correct:
             from aprende import motivation       # motivation imports learn (for the clock)
             awarded = motivation.award_petal_tx(conn, journey["id"], "item_correct", item_id, motivation.PETAL_ITEM, at)
@@ -196,6 +198,7 @@ def complete_lesson(journey, lesson_id):
             conn.execute("INSERT INTO lesson_completions (journey_id, lesson_id, completed_at) VALUES (?, ?, ?) "
                          "ON CONFLICT (journey_id, lesson_id) DO NOTHING", (journey["id"], lesson_id, at))
             motivation.award_petal_tx(conn, journey["id"], "lesson_complete", lesson_id, motivation.PETAL_LESSON, at)
+        analytics.record(journey["id"], "lesson_completed", {"lesson_id": lesson_id})
         if lesson["unit"] in DISCOUNT_UNITS:
             journeys.apply(journey["id"], f"lesson_completed:{lesson['unit']}", {}, actor="system")
         elif lesson["unit"] == "final":

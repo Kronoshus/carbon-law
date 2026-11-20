@@ -199,12 +199,12 @@ def get_or_create_for_user(user_id, tz="America/Los_Angeles"):
     return get_journey_by_user(user_id)
 
 
-def _insert_event(journey_id, event_type, payload, actor, created_at):
+def _insert_event(journey_id, event_type, payload, actor, created_at, conn=None):
     """Record an event unless it repeats the latest one of its type (a resend is a no-op). For consent and the conflict
     results only an unchanged answer is a repeat, so a changed decision is always recorded. Read and insert happen in one
     transaction, so concurrent requests cannot both insert. Earned discounts are recorded in the same transaction."""
-    with db.transaction() as conn:
-        row = conn.execute(
+    def _work(c):
+        row = c.execute(
             "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
             (journey_id, event_type)).fetchone()
         if row is not None and event_type not in ("scope_approved", "scope_reopened"):
@@ -219,18 +219,22 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
                 key = "answer" if event_type == "consent" else "result"
                 if last.get(key) == payload.get(key):
                     return False
-        conn.execute(
+        c.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
-        r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
+        r = c.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
         settings = json.loads(r[0]) if r else {}
         for doc, cfg in (settings.get("discounts") or {}).items():
             if event_type in (cfg.get("events") or []):
-                conn.execute(
+                c.execute(
                     "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
                     "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
                     (str(uuid.uuid4()), journey_id, doc, event_type, int(cfg["amount"]), created_at))
-    return True
+        return True
+    if conn is None:
+        with db.transaction() as c:
+            return _work(c)
+    return _work(conn)
 
 
 def _scope_codes(j):
@@ -252,7 +256,11 @@ def apply(journey_id, event_type, payload=None, actor="system"):
         return j                                                  # already approved: a repeat is a no-op
     scope_was_approved = _scope_currently_approved(j.get("facts") or {}) if event_type == "documents_confirmed" else False
     prev_confirmed = _scope_codes(j) if scope_was_approved else []
-    inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())
+    with db.transaction() as _conn:
+        inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso(), conn=_conn)
+        if inserted:
+            from aprende import analytics as _analytics  # cycle: analytics imports journey
+            _analytics.from_journey_event(j["id"], event_type, payload, conn=_conn)
     if not inserted:
         return get_journey(j["id"])
     if event_type == "documents_confirmed":

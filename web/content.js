@@ -74,7 +74,19 @@
 
     const form = document.createElement("div");
     // render textareas
-    if (typeof body.es === "string") {
+    if (body && body.text !== undefined && body.es === undefined) {
+      const ta = makeTa("text", body.text || "");
+      form.appendChild(labelWrap("text", ta));
+      form.dataset.fields = JSON.stringify(["text"]);
+    } else if (body && (body.name !== undefined || body.persona !== undefined)) {
+      const n = body.name || {};
+      const taEs = makeTa("name (es)", n.es || "");
+      const taEn = makeTa("name (en)", n.en || "");
+      const taP = makeTa("persona", body.persona || "");
+      form.appendChild(labelWrap("name (es)", taEs));
+      form.appendChild(labelWrap("name (en)", taEn));
+      form.appendChild(labelWrap("persona", taP));
+    } else if (typeof body.es === "string") {
       // datos/summary
       const esTa = makeTa("texto (es)", body.es || "");
       const enTa = makeTa("texto (en)", body.en || "");
@@ -207,6 +219,16 @@
 
   function collectBody() {
     const box = document.getElementById("contentDetail");
+    const textTa = box.querySelector('textarea[aria-label="text"]');
+    if (textTa) {
+      return { text: textTa.value };
+    }
+    const nameEs = box.querySelector('textarea[aria-label="name (es)"]');
+    if (nameEs) {
+      const nameEn = box.querySelector('textarea[aria-label="name (en)"]').value;
+      const persona = box.querySelector('textarea[aria-label="persona"]').value;
+      return { name: { es: nameEs.value, en: nameEn }, persona };
+    }
     const tas = box.querySelectorAll("textarea");
     // detect datos/summary: textareas with aria-label texto (es)
     const textoEs = box.querySelector('textarea[aria-label="texto (es)"]');

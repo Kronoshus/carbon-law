@@ -52,8 +52,9 @@ def _fill(text, **values):
 
 
 def _persona(character, lang, mode, **values):
-    c = PERSONAS["characters"][character]
-    parts = (PERSONAS["shared"], c["persona"], PERSONAS["modes"][mode])
+    live = content.live_entries("persona")
+    c = live[f"persona:characters.{character}"]
+    parts = (live["persona:shared"]["text"], c["persona"], live[f"persona:modes.{mode}"]["text"])
     return _fill("\n\n".join(parts), name=c["name"][lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
 
 
@@ -122,7 +123,8 @@ async def post_chat(body: ChatBody, authorization: str = Header(None), user: dic
         return JSONResponse(status_code=503, content={"error": "ai_chat_off"})
     if body.mode not in ("learn", "intake"):
         raise HTTPException(422, "unsupported mode")
-    if body.character not in PERSONAS["characters"] or characters.get(body.character) is None:
+    _ch = characters.get(body.character)
+    if body.character not in PERSONAS["characters"] or _ch is None or not _ch["enabled"]:
         raise HTTPException(422, "unknown character")
     if body.mode == "learn" and not db.query("SELECT id FROM content_lessons WHERE id = ?", (body.lesson_id or "",)):
         raise HTTPException(404, "lesson not found")
