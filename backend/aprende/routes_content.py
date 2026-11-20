@@ -11,6 +11,8 @@ def _map(e):
         return 422, {"error": "invalid", "errors": e.errors}
     if isinstance(e, content.LanguageError):
         return 422, {"error": "languages", "missing": e.missing}
+    if isinstance(e, content.PlaceholderError):
+        return 422, {"error": "placeholders", "missing": e.missing}
     if isinstance(e, content.NoDraftError) or isinstance(e, content.NoVersionError):
         return 409, {"error": "no_draft"}
     if isinstance(e, PermissionError):
