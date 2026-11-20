@@ -1,7 +1,7 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import {
   asClient, asStaff, addDays, attorneyApproves, dbCounts, disclosureAndConsent, FAKES, giveNames, journey, laTime, modelCalls,
-  moveTo, nextWeekday, openAdminReview, releaseJourney, serverNow, signUp, type ClientApp,
+  moveTo, nextWeekday, openAdminReview, releaseJourney, signUp, type ClientApp,
 } from './journey-steps';
 
 // T8-06 (Opus): the release criteria of brief section 5, end to end, on a phone, in Spanish, on the fake clock.
@@ -9,7 +9,6 @@ import {
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'es-US', timezoneId: 'America/Los_Angeles' });
 
 async function phone(page: Page, context: BrowserContext): Promise<ClientApp> {
-  await context.clock.install({ time: await serverNow() });
   return { page, context, go: async (hash) => { await page.goto(`/#${hash}`); },
     token: async () => (await page.evaluate(() => localStorage.getItem('aprende_token')))! };
 }

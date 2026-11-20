@@ -89,11 +89,12 @@ export async function nextWeekday(weekday: number): Promise<string> {
   return d;
 }
 
-/** Move the server's clock and the browser's clock to the same moment. */
+/** Move the server's clock and the browser's date to the same moment. The browser's timers stay real (a fake timer
+ *  clock stalls the 3D characters); the app only needs the date, for example to show the right week of signing slots. */
 export async function moveTo(c: ClientApp, when: Date) {
   const r = await call('POST', '/e2e/clock', null, { now: when.toISOString() });
   expect(r.status, 'the server clock moved').toBe(200);
-  await c.context.clock.setSystemTime(when);
+  await c.context.clock.setFixedTime(when);
 }
 
 // --- the plan ---
@@ -163,7 +164,8 @@ export async function takeLesson(c: ClientApp, lessonId: string) {
     } else {
       await page.getByRole('button', { name: 'Continuar' }).click();
     }
-    await expect.poll(async () => (await celebration.isVisible()) || (await bar.getAttribute('value')) !== before).toBe(true);
+    await expect.poll(async () => (await celebration.isVisible()) || (await bar.getAttribute('value')) !== before,
+      { timeout: 30_000 }).toBe(true);                                 // a new character loads in software rendering
   }
   await expect(celebration.getByRole('heading')).toHaveText(/Lección completada|Gracias por pensar en esto con calma/);
 }

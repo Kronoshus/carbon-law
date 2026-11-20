@@ -1,7 +1,7 @@
 import { test, chromium } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { API, nextWeekday, releaseJourney, serverNow, type ClientApp } from '../../e2e/journey-steps';
+import { API, nextWeekday, releaseJourney, type ClientApp } from '../../e2e/journey-steps';
 
 // T8-06 (Opus): the same release journey in the Chrome side panel (brief section 5: "the same works in the Chrome side
 // panel"). Needs `npm run build:ext`. Runs in the "release" project, after every other test, one test at a time.
@@ -29,7 +29,6 @@ test('a new client goes through the whole journey in the Chrome side panel, each
     const response = await route.fetch({ url: `${API}${u.pathname}${u.search}`, headers: { ...route.request().headers(), origin: `chrome-extension://${extId}` } });
     await route.fulfill({ response });
   });
-  await context.clock.install({ time: await serverNow() });
   const page = await context.newPage();
   const c: ClientApp = {
     page, context,
