@@ -1,0 +1,86 @@
+# T7-07 access matrix (Opus, t7-tests). One entry per Aprende route ("METHOD /path" exactly as in app.routes).
+# tests/test_t7_07_rbac_audit.py generates the calls for every role from this file and app.routes:
+# a route without an entry fails, and an entry without a route fails unless it names the ticket that adds the route.
+#
+# roles:  client     the signed-in client, own journey only; staff get 403
+#         staff      paralegal, attorney, admin; a client gets 403
+#         signed_in  any signed-in user
+#         public     no sign-in (the Stripe webhook checks its signature instead)
+#         [..]       only the listed staff roles; everyone else 403
+# other:  true = the path names a client's resource; another client gets 403 or 404 and never the resource
+# Anonymous gets 401 everywhere except public routes.
+
+GET /staff: {roles: staff}
+GET /journey: {roles: client}
+POST /journey/events: {roles: client}
+GET /characters: {roles: signed_in}
+PATCH /characters/{char_id}: {roles: staff}
+GET /payments/quote: {roles: client}
+GET /payments/config: {roles: signed_in}
+POST /payments/checkout: {roles: client}
+POST /payments/webhook: {roles: public}
+GET /payments/return: {roles: client}
+POST /staff/journeys/{jid}/refunds: {roles: [admin]}
+GET /payments/receipt: {roles: client}
+PUT /staff/payments/live-approval: {roles: [admin]}
+GET /learn/map: {roles: client}
+GET /learn/lessons/{lesson_id}: {roles: client}
+POST /learn/attempts: {roles: client}
+POST /learn/lessons/{lesson_id}/complete: {roles: client}
+POST /chat: {roles: client}
+GET /chat/attorney-questions: {roles: staff}
+GET /progress: {roles: client}
+PUT /progress/reminders: {roles: client}
+POST /conflicts/list: {roles: staff}
+DELETE /conflicts/list: {roles: staff}
+GET /conflicts/queue: {roles: staff}
+POST /conflicts/{journey_id}/decision: {roles: staff}
+GET /datos: {roles: client}
+PUT /datos/{question_id}: {roles: client}
+GET /staff/journeys: {roles: staff}
+GET /staff/review-queue: {roles: staff}
+GET /staff/drafts/{doc_id}: {roles: [attorney, admin]}
+GET /staff/drafts/{doc_id}/docx: {roles: [attorney, admin]}
+POST /staff/drafts/{doc_id}/versions: {roles: [attorney, admin]}
+POST /staff/journeys/{jid}/review: {roles: [attorney, admin]}
+POST /staff/engagement-templates: {roles: [attorney, admin]}
+POST /staff/engagement-templates/{tid}/approve: {roles: [attorney]}
+PUT /staff/firm-profile: {roles: [attorney, admin]}
+POST /staff/journeys/{jid}/scope-approval: {roles: [attorney]}
+POST /staff/journeys/{jid}/engagement/countersign: {roles: [attorney]}
+GET /staff/journeys/{jid}/engagement/pdf: {roles: staff}
+GET /engagement: {roles: client}
+POST /engagement/sign: {roles: client}
+GET /engagement/pdf: {roles: client}
+PUT /staff/availability: {roles: staff}
+PUT /staff/holidays: {roles: staff}
+GET /booking/slots: {roles: client}
+POST /booking: {roles: client}
+GET /booking: {roles: client}
+DELETE /booking/{booking_id}: {roles: client, other: true}
+PATCH /booking/{booking_id}: {roles: client, other: true}
+GET /staff/bookings: {roles: staff}
+POST /staff/journeys/{jid}/executed: {roles: staff}
+GET /signed-documents: {roles: client}
+GET /signed-documents/{did}: {roles: client, other: true}
+GET /funding-checklist: {roles: client}
+POST /staff/journeys/{jid}/funding-done: {roles: staff}
+GET /review/documents: {roles: client}
+POST /review/documents/{doc_id}: {roles: client, other: true}
+GET /staff/content: {roles: staff}
+GET /staff/content/{entry_id:path}/preview: {roles: staff}
+GET /staff/content/{entry_id:path}: {roles: staff}
+PUT /staff/content/{entry_id:path}/draft: {roles: staff}
+POST /staff/content/{entry_id:path}/submit: {roles: staff}
+POST /staff/content/{entry_id:path}/approve: {roles: [attorney]}
+POST /staff/content/{entry_id:path}/publish: {roles: staff}
+
+# routes that tickets on their own branches add (docs/tickets/T7-0X.md)
+GET /staff/characters: {roles: staff, ticket: T7-03}
+GET /staff/journeys/{jid}: {roles: staff, ticket: T7-04}
+POST /staff/attorney-questions/{qid}/answer: {roles: [attorney], ticket: T7-04}
+GET /journey/questions: {roles: client, ticket: T7-04}
+GET /staff/firm-settings: {roles: staff, ticket: T7-05}
+PUT /staff/firm-settings: {roles: [attorney, admin], ticket: T7-05}
+GET /settings/public: {roles: public, ticket: T7-05}
+GET /staff/analytics: {roles: staff, ticket: T7-06}
