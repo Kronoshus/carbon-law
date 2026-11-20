@@ -294,5 +294,7 @@
   "preguntas.title": "Questions for the attorney",
   "preguntas.answer": "Attorney Raval's answer:",
   "preguntas.waiting": "Attorney Raval has not answered yet.",
-  "preguntas.none": "You have no questions for the attorney yet. If you ask a character something about your own case, the question appears here."
+  "preguntas.none": "You have no questions for the attorney yet. If you ask a character something about your own case, the question appears here.",
+  "datos.serverError": "There was a problem loading. Please try again.",
+  "datos.retry": "Try again"
 }

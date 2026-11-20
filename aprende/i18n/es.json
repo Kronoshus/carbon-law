@@ -294,5 +294,7 @@
   "preguntas.title": "Preguntas para el abogado",
   "preguntas.answer": "Respuesta del abogado Raval:",
   "preguntas.waiting": "El abogado Raval todavía no ha respondido.",
-  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí."
+  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí.",
+  "datos.serverError": "Hubo un problema al cargar. Intente de nuevo.",
+  "datos.retry": "Intentar de nuevo"
 }
