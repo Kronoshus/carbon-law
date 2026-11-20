@@ -61,15 +61,12 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
         }
       }
     };
-    // after the first paint, when the main thread is free (at most 1.5 s later): the lesson's text is usable first
-    const idle = typeof requestIdleCallback === 'function';
-    const rafId = requestAnimationFrame(() => {
-      idleId = idle ? requestIdleCallback(() => void run(), { timeout: 1500 }) : window.setTimeout(() => void run(), 0);
-    });
+    // right after the first paint (the still image is on screen): three.js is parsed before she starts tapping
+    const rafId = requestAnimationFrame(() => { idleId = window.setTimeout(() => void run(), 0); });
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
-      if (idleId !== null) { if (idle) cancelIdleCallback(idleId); else window.clearTimeout(idleId); }
+      if (idleId !== null) window.clearTimeout(idleId);
       if (io) io.disconnect();
       if (onVis) document.removeEventListener('visibilitychange', onVis);
       if (onInput) { document.removeEventListener('pointerdown', onInput, { capture: true }); document.removeEventListener('keydown', onInput, { capture: true }); }
