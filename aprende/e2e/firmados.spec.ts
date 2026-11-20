@@ -17,6 +17,10 @@ test('signed documents and the trust checklist download with the client\'s token
   await page.route('**/signed-documents', (r) => r.fulfill({ json: [{ id, name: 'Pour-over will', filename: 'will-signed.pdf', url: `/signed-documents/${id}` }] }));
   await page.route(`**/signed-documents/${id}`, (r) => r.fulfill({ body: '%PDF-1.4', contentType: 'application/pdf' }));
   await page.route('**/funding-checklist', (r) => r.fulfill({ body: '# Trust Funding Checklist', contentType: 'text/markdown' }));
+  await page.route('**/journey', async (r) => {                                  // after the signing the final lesson is open
+    const real = await (await r.fetch()).json();
+    await r.fulfill({ json: { ...real, gates: { ...real.gates, may_take_final_lesson: true } } });
+  });
   await page.goto('/#/firmados');
   await expect(page.getByRole('heading', { name: 'Sus documentos firmados' })).toBeVisible();
   const axe = await new AxeBuilder({ page }).exclude('canvas').analyze();

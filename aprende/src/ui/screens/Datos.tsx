@@ -22,7 +22,8 @@ export function Datos({ group }: { group: string }) {
   const [progress, setProgress] = useState<{ n: number; total: number } | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<'wait' | 'error' | null>(null);
+  const [problem, setProblem] = useState<'wait' | 'error' | 'server' | null>(null);
+  const [openQ, setOpenQ] = useState<string | null>(null);
   const [chatOff, setChatOff] = useState(false);
   const engine = useRef<CharacterEngine | null>(null);
   const l = lang.value;
@@ -31,8 +32,10 @@ export function Datos({ group }: { group: string }) {
   const count = async () => {
     const r = await apiFetch(`/datos?lang=${l}`);
     if (r.status === 409) { setProblem('wait'); return false; }
-    const qs = ((await r.json()).questions as { asked_after: string; status: string }[]).filter((q) => q.asked_after === group);
+    const qs = ((await r.json()).questions as { asked_after: string; status: string; text: string }[]).filter((q) => q.asked_after === group);
     const left = qs.filter((q) => q.status === 'open').length;
+    const firstOpen = qs.find((q) => q.status === 'open');
+    setOpenQ(firstOpen ? firstOpen.text : null);
     setProgress({ n: Math.min(qs.length - left + 1, qs.length), total: qs.length });
     return true;
   };
@@ -46,9 +49,14 @@ export function Datos({ group }: { group: string }) {
         const j = await r.json().catch(() => ({}));
         if (j && j.error === 'ai_chat_off') { setChatOff(true); setBusy(false); return; }
       }
+      if (r.status >= 500) { setProblem('server'); setBusy(false); return; }
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
-      const mine = d.text ? [...msgs, { role: 'assistant' as const, content: d.history, shown: d.text, reasoning_content: d.reasoning }] : msgs;
+      let mine: Msg[] = d.text ? [...msgs, { role: 'assistant' as const, content: d.history, shown: d.text, reasoning_content: d.reasoning }] : msgs;
+      const answered = [...msgs].reverse().find((m) => m.role === 'user')?.question_id;
+      if (d.next_question?.text && answered && d.next_question.id !== answered) {     // on to a new question: say it (attorney-approved text)
+        mine = [...mine, { role: 'assistant', content: d.next_question.text }];
+      }
       keep({ msgs: mine, next: d.next_question, done: !d.next_question });
       if (d.text) { engine.current?.cancel(); void engine.current?.speak(d.text, l); }
       await count();
@@ -88,6 +96,9 @@ export function Datos({ group }: { group: string }) {
           h('ol', { class: 'transcript', 'aria-live': 'polite' }, state.msgs.map((m, i) => h('li', { key: i, class: m.role === 'user' ? 'you' : 'them' },
             m.role === 'user' ? h('span', { class: 'who' }, t('datos.you')) : null, m.role === 'user' ? m.content : (m.shown ?? m.content)))),
           problem === 'error' ? h('p', { class: 'gate-error', role: 'alert' }, t('datos.error')) : null,
+          problem === 'server' ? h('p', { class: 'gate-error', role: 'alert' }, t('datos.serverError')) : null,
+          problem && openQ && state.msgs.length === 0 ? h('p', { class: 'bubble' }, openQ) : null,
+          problem ? h('button', { class: 'btn secondary', type: 'button', onClick: () => void ask(state.msgs) }, t('datos.retry')) : null,
           h('form', { class: 'composer', onSubmit: send },
             h('label', { for: 'datos-answer' }, t('datos.label')),
             h('textarea', { id: 'datos-answer', rows: 3, value: input, disabled: busy || !state.next,
