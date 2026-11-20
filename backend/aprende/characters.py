@@ -59,15 +59,20 @@ def update(char_id, fields):
         return None
     if char_id == "calavera" and fields.get("enabled") is False:
         raise ValueError("calavera cannot be disabled")
+    new_units = None
+    if "units" in fields and fields["units"] is not None:
+        new_units = list(fields["units"])
+        for u in new_units:
+            if u not in UNITS:
+                raise ValueError("unknown unit")
+    all_chars = list_all()
     with db.transaction() as conn:
         sets = []
         params = []
         if "enabled" in fields and fields["enabled"] is not None:
             sets.append("enabled = ?")
             params.append(1 if fields["enabled"] else 0)
-        new_units = None
-        if "units" in fields and fields["units"] is not None:
-            new_units = list(fields["units"])
+        if new_units is not None:
             sets.append("units_json = ?")
             params.append(json.dumps(new_units))
         if "voice_es" in fields:
@@ -80,7 +85,7 @@ def update(char_id, fields):
             p = list(params) + [char_id]
             conn.execute("UPDATE characters SET " + ", ".join(sets) + " WHERE id = ?", tuple(p))
         if new_units is not None:
-            for other in list_all():
+            for other in all_chars:
                 if other["id"] == char_id:
                     continue
                 other_units = [u for u in (other["units"] or []) if u not in new_units]

@@ -1,107 +1,134 @@
-const CHAR_API = "https://carbon-law.onrender.com";
-function token(){ return localStorage.getItem("carbon_token"); }
-async function api(path, method="GET", body=null) {
-  const opts = { method, headers: {"Content-Type":"application/json"} };
-  const t = token(); if (t) opts.headers.Authorization = "Bearer "+t;
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(CHAR_API+path, opts);
-  if (!res.ok) { const txt = await res.text(); const err = new Error(txt); err.status = res.status; err.body = txt; throw err; }
-  return res.json();
-}
+(() => {
+  const DISPLAY_NAME = { calavera: "La Calavera", oso: "El Oso", pinata: "Piñata" };
+  const UNITS = ["will", "trust", "ahcd", "poa", "final", "bonus", "games", "sensitive", "intake"];
+  const UNIT_LABELS = {
+    will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud",
+    poa: "El poder notarial", final: "Cuide sus documentos", bonus: "Lecciones extra",
+    games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos",
+  };
 
-const UNITS = ["will", "trust", "ahcd", "poa", "final", "bonus", "games", "sensitive", "intake"];
-const UNIT_LABELS = {
-  will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud",
-  poa: "El poder notarial", final: "Cuide sus documentos", bonus: "Lecciones extra",
-  games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos",
-};
-const NAMES = { calavera: "La Calavera", oso: "El Oso", pinata: "Piñata" };
-
-function labelWrap(label, el) {
-  const lab = document.createElement("label");
-  lab.textContent = label;
-  const wrap = document.createElement("div");
-  wrap.appendChild(lab);
-  wrap.appendChild(el);
-  return wrap;
-}
-
-async function loadCharacters() {
-  const data = await api("/staff/characters");
-  const box = document.getElementById("charactersList");
-  if (!box) return;
-  box.replaceChildren();
-  for (const c of data) {
-    const art = document.createElement("article");
-    const h = document.createElement("h2");
-    h.textContent = NAMES[c.id] || c.id;
-    art.appendChild(h);
-
-    const activeCb = document.createElement("input");
-    activeCb.type = "checkbox";
-    activeCb.setAttribute("aria-label", "Activo");
-    activeCb.checked = !!c.enabled;
-    if (c.id === "calavera") activeCb.disabled = true;
-    const activeLabel = document.createElement("label");
-    activeLabel.appendChild(activeCb);
-    activeLabel.append(" Activo");
-    art.appendChild(activeLabel);
-    if (c.id === "calavera") {
-      const note = document.createElement("span");
-      note.textContent = "La Calavera no se puede desactivar.";
-      art.appendChild(note);
-    }
-
-    for (const u of UNITS) {
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.setAttribute("aria-label", UNIT_LABELS[u]);
-      cb.checked = (c.units || []).indexOf(u) >= 0;
-      cb.dataset.unit = u;
-      const lbl = document.createElement("label");
-      lbl.appendChild(cb);
-      lbl.append(" " + UNIT_LABELS[u]);
-      art.appendChild(lbl);
-    }
-
-    const lineInput = document.createElement("input");
-    lineInput.setAttribute("aria-label", "Frase para escuchar");
-    lineInput.value = "Hola, soy " + (NAMES[c.id] || c.id) + ". Soy un programa de inteligencia artificial, no soy el abogado.";
-    art.appendChild(labelWrap("Frase para escuchar", lineInput));
-
-    const langSelect = document.createElement("select");
-    langSelect.setAttribute("aria-label", "Idioma");
-    const optEs = document.createElement("option"); optEs.value = "es"; optEs.textContent = "es"; langSelect.appendChild(optEs);
-    const optEn = document.createElement("option"); optEn.value = "en"; optEn.textContent = "en"; langSelect.appendChild(optEn);
-    art.appendChild(labelWrap("Idioma", langSelect));
-
-    const listenBtn = document.createElement("button");
-    listenBtn.type = "button";
-    listenBtn.className = "btn sm";
-    listenBtn.textContent = "Escuchar voz";
-    listenBtn.addEventListener("click", () => {
-      const lang = langSelect.value === "en" ? "en-US" : "es-MX";
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(lineInput.value);
-      utt.lang = lang;
-      window.speechSynthesis.speak(utt);
+  async function call(path, method, body) {
+    const res = await fetch(CARBON_API_BASE + path, {
+      method: method || "GET",
+      headers: { "Content-Type": "application/json", Authorization: authHeader() },
+      body: body ? JSON.stringify(body) : undefined,
     });
-    art.appendChild(listenBtn);
-
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "button";
-    saveBtn.className = "btn sm";
-    saveBtn.textContent = "Guardar";
-    saveBtn.addEventListener("click", async () => {
-      const enabled = activeCb.checked;
-      const units = [];
-      art.querySelectorAll('input[type="checkbox"][data-unit]').forEach((cb) => { if (cb.checked) units.push(cb.dataset.unit); });
-      await api("/characters/" + c.id, "PATCH", { enabled: enabled, units: units });
-    });
-    art.appendChild(saveBtn);
-
-    box.appendChild(art);
+    if (!res.ok) { const txt = await res.text(); const err = new Error(txt); err.status = res.status; throw err; }
+    return res.json();
   }
-}
 
-document.addEventListener("DOMContentLoaded", () => { loadCharacters().catch(e => console.error('characters err', e)); });
+  function status(msg) {
+    const el = document.getElementById("charactersStatus");
+    if (el) el.textContent = msg;
+  }
+
+  async function loadCharacters() {
+    const box = document.getElementById("charactersList");
+    if (!box) return;
+    box.replaceChildren();
+    let data;
+    try { data = await call("/staff/characters"); } catch (e) { status(String(e.message || e)); return; }
+    for (const c of data) {
+      const art = document.createElement("article");
+      const h = document.createElement("h2");
+      h.textContent = DISPLAY_NAME[c.id] || c.id;
+      art.appendChild(h);
+
+      const name = DISPLAY_NAME[c.id] || c.id;
+
+      const activeWrap = document.createElement("div");
+      const activeCb = document.createElement("input");
+      activeCb.type = "checkbox";
+      activeCb.setAttribute("aria-label", "Activo");
+      activeCb.checked = !!c.enabled;
+      if (c.id === "calavera") activeCb.disabled = true;
+      const activeLabel = document.createElement("label");
+      activeLabel.appendChild(activeCb);
+      activeLabel.append(" Activo");
+      activeWrap.appendChild(activeLabel);
+      art.appendChild(activeWrap);
+      if (c.id === "calavera") {
+        const note = document.createElement("span");
+        note.textContent = "La Calavera no se puede desactivar.";
+        art.appendChild(note);
+      }
+
+      for (const u of UNITS) {
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.setAttribute("aria-label", UNIT_LABELS[u]);
+        cb.checked = (c.units || []).indexOf(u) >= 0;
+        cb.dataset.unit = u;
+        const lab = document.createElement("label");
+        lab.appendChild(cb);
+        lab.append(" " + UNIT_LABELS[u]);
+        art.appendChild(lab);
+      }
+
+      const phraseWrap = document.createElement("div");
+      const phraseLabel = document.createElement("label");
+      phraseLabel.textContent = "Frase para escuchar";
+      const phraseInput = document.createElement("input");
+      phraseInput.type = "text";
+      phraseInput.setAttribute("aria-label", "Frase para escuchar");
+      phraseInput.value = `Hola, soy ${name}. Soy un programa de inteligencia artificial, no soy el abogado.`;
+      phraseWrap.appendChild(phraseLabel);
+      phraseWrap.appendChild(phraseInput);
+      art.appendChild(phraseWrap);
+
+      const langWrap = document.createElement("div");
+      const langLabel = document.createElement("label");
+      langLabel.textContent = "Idioma";
+      const langSelect = document.createElement("select");
+      langSelect.setAttribute("aria-label", "Idioma");
+      const optEs = document.createElement("option"); optEs.value = "es"; optEs.textContent = "es";
+      const optEn = document.createElement("option"); optEn.value = "en"; optEn.textContent = "en";
+      langSelect.appendChild(optEs);
+      langSelect.appendChild(optEn);
+      langWrap.appendChild(langLabel);
+      langWrap.appendChild(langSelect);
+      art.appendChild(langWrap);
+
+      const previewBtn = document.createElement("button");
+      previewBtn.type = "button";
+      previewBtn.className = "btn secondary sm";
+      previewBtn.textContent = "Escuchar voz";
+      previewBtn.addEventListener("click", () => {
+        const line = phraseInput.value;
+        const lang = langSelect.value === "en" ? "en-US" : "es-MX";
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(line);
+        utt.lang = lang;
+        window.speechSynthesis.speak(utt);
+      });
+      art.appendChild(previewBtn);
+
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "btn sm";
+      saveBtn.textContent = "Guardar";
+      saveBtn.addEventListener("click", async () => {
+        const enabled = activeCb.checked;
+        const units = [];
+        for (const cbx of art.querySelectorAll('input[type="checkbox"][data-unit]')) {
+          if (cbx.checked) units.push(cbx.dataset.unit);
+        }
+        try {
+          await call(`/characters/${c.id}`, "PATCH", { enabled, units });
+          status("Guardado.");
+        } catch (e) {
+          status(String(e.message || e));
+        }
+      });
+      art.appendChild(saveBtn);
+
+      const container = document.getElementById("charactersList");
+      container.appendChild(art);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const box = document.getElementById("charactersList");
+    if (box) loadCharacters();
+  });
+})();

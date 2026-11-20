@@ -60,14 +60,13 @@ def patch_character(char_id: str, body: CharacterPatch, authorization: str = Hea
     if existing is None:
         raise HTTPException(404, "unknown character")
     fields = body.model_dump(exclude_unset=True)
-    if "units" in fields and fields["units"] is not None:
-        for unit in fields["units"]:
-            if unit not in characters.UNITS:
-                raise HTTPException(422, "unknown unit")
     try:
         updated = characters.update(char_id, fields)
     except ValueError as e:
-        raise HTTPException(409, str(e))
+        msg = str(e)
+        if "unknown unit" in msg:
+            raise HTTPException(422, msg)
+        raise HTTPException(409, msg)
     backend_app.log_audit(u.get("email") or "staff", "character_update", "character", char_id, str(fields))
     return {
         "id": updated["id"],

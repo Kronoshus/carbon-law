@@ -1,7 +1,7 @@
 import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io, asyncio, urllib.request, urllib.error
 from fastapi import FastAPI, HTTPException, Header, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 
@@ -39,14 +39,21 @@ if os.environ.get("APRENDE_INPROCESS_WORKER") == "1":
     def _start_inprocess_worker():
         _worker_mod.start_in_background()
 
+from aprende import firm
+
 _cors_origins = ["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"]
 _aprende_ext_origin = os.environ.get("APRENDE_EXTENSION_ORIGIN")
 if _aprende_ext_origin:
     _cors_origins.append(_aprende_ext_origin)
-app.add_middleware(CORSMiddleware,
-                   allow_origins=_cors_origins,
-                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                   allow_headers=["Authorization", "Content-Type"])
+
+@app.middleware("http")
+async def _extension_origin_guard(request, call_next):
+    origin = request.headers.get("origin")
+    if origin and (origin.startswith("chrome-extension://") or origin == _aprende_ext_origin) and request.url.path != "/health":
+        if not firm.switch("extension"):
+            return JSONResponse(status_code=503, content={"error": "extension_off"})
+    return await call_next(request)
+
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
@@ -69,6 +76,28 @@ async def serialize_requests(request, call_next):
         return await call_next(request)
     finally:
         _request_lock.release()
+
+@app.middleware("http")
+async def staff_guard(request, call_next):
+    path = request.url.path
+    if path.startswith("/staff/") or path.startswith("/conflicts") or path == "/chat/attorney-questions":
+        auth = request.headers.get("authorization")
+        if not auth:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        token = auth.replace("Bearer ", "").strip()
+        u = get_user_from_token(token)
+        if not u:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        if u.get("role") == "client":
+            return JSONResponse(status_code=403, content={"detail": "insufficient role"})
+    return await call_next(request)
+
+# Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
+app.add_middleware(CORSMiddleware,
+                   allow_origins=_cors_origins,
+                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                   allow_headers=["Authorization", "Content-Type"])
+
 
 # ---------- in-memory stores (persisted to data.json) ----------
 matters: Dict[str, Dict[str, Any]] = {}
@@ -1559,6 +1588,10 @@ from aprende import client_review as _rcr
 app.include_router(_rcr.router)
 from aprende import routes_content as _rct
 app.include_router(_rct.router)
+
+# Aprende firm settings routes (T7-05)
+from aprende import routes_firm as _rf
+app.include_router(_rf.router)
 
 if __name__ == "__main__":
     import uvicorn

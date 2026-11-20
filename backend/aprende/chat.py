@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, content, datos, journey, learn
+from aprende import characters, content, datos, firm, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -32,6 +32,19 @@ def model_client():
     return BeamClient()
 
 
+# The persona forbids these (personas.yaml); the server also refuses a reply that does them anyway (brief s.6):
+# a question about immigration status, or an annuity pitch. Tags are removed first: they hold the client's own words.
+IMMIGRATION = re.compile(r"inmigra|migratori|ciudadan|indocumentad|green card|tarjeta verde|\bvisas?\b|immigra|citizen|"
+                         r"undocumented|residencia permanente|permanent resident", re.I)
+ANNUITY = re.compile(r"anualidad|annuit", re.I)
+UNAVAILABLE = "El servicio no está disponible en este momento. Intente de nuevo en unos minutos."
+
+
+def _breaks_rules(reply):
+    asks = [s for s in re.split(r"(?<=[.!?])\s+", reply) if "?" in s and IMMIGRATION.search(s)]
+    return bool(asks or ANNUITY.search(reply))
+
+
 def _fill(text, **values):
     for k, v in values.items():
         text = text.replace("{" + k + "}", str(v))
@@ -40,17 +53,15 @@ def _fill(text, **values):
 
 def _persona(character, lang, mode, **values):
     live = content.live_entries("persona")
-    shared_body = live.get("persona:shared", {"text": PERSONAS["shared"]})
-    shared_text = shared_body.get("text", PERSONAS["shared"]) if isinstance(shared_body, dict) else PERSONAS["shared"]
+    shared_body = live["persona:shared"]
+    shared_text = shared_body["text"]
     char_seed = PERSONAS["characters"][character]
-    char_body = live.get(f"persona:characters.{character}", {"name": char_seed["name"], "persona": char_seed["persona"]})
-    if not isinstance(char_body, dict):
-        char_body = {"name": char_seed["name"], "persona": char_seed["persona"]}
-    c_name = char_body.get("name", char_seed["name"])
-    c_persona = char_body.get("persona", char_seed["persona"])
+    char_body = live[f"persona:characters.{character}"]
+    c_name = char_body["name"]
+    c_persona = char_body["persona"]
     mode_seed = PERSONAS["modes"][mode]
-    mode_body = live.get(f"persona:modes.{mode}", {"text": mode_seed})
-    mode_text = mode_body.get("text", mode_seed) if isinstance(mode_body, dict) else mode_seed
+    mode_body = live[f"persona:modes.{mode}"]
+    mode_text = mode_body["text"]
     parts = (shared_text, c_persona, mode_text)
     return _fill("\n\n".join(parts), name=c_name[lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
 
@@ -116,6 +127,8 @@ def _messages(raw):
 async def post_chat(body: ChatBody, authorization: str = Header(None)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
+    if not firm.switch("ai_chat"):
+        return JSONResponse(status_code=503, content={"error": "ai_chat_off"})
     if body.mode not in ("learn", "intake"):
         raise HTTPException(422, "unsupported mode")
     _ch = characters.get(body.character)
@@ -137,9 +150,11 @@ async def post_chat(body: ChatBody, authorization: str = Header(None)):
         completion = await model_client().complete(system=system, messages=_messages(body.messages), max_tokens=400,
                                                    purpose=f"aprende_chat_{body.mode}", temperature=0.4)
     except ModelError:
-        raise HTTPException(503, "El servicio no está disponible en este momento. Intente de nuevo en unos minutos.")
+        raise HTTPException(503, UNAVAILABLE)
 
     raw = completion.text or ""
+    if _breaks_rules(DONE.sub(" ", TAG.sub(" ", raw))):
+        raise HTTPException(503, UNAVAILABLE)
     # Tags come off before the spoken() guard, which stops at the first "?" and could cut a tag in half.
     asked = TAG.findall(raw)
     question = asked[-1].strip() if asked else None

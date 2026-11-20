@@ -9,13 +9,14 @@ import './tokens.css';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';
-import { getToken } from '../core/api';
+import { getToken, extensionOff } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
 import { InicioIa, InicioConsentimiento, InicioNoAcepto, InicioNombres, InicioEspera } from './screens/Inicio';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
+import { NoDisponible } from './screens/NoDisponible';
 import { Plan } from './screens/Plan';
 import { Aprender } from './screens/Aprender';
 import { Leccion } from './screens/Leccion';
@@ -24,6 +25,7 @@ import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
 import { Firmados } from './screens/Firmados';
 import { Revisar } from './screens/Revisar';
+import { Preguntas } from './screens/Preguntas';
 import { Acuerdo } from './screens/Acuerdo';
 import { Cita } from './screens/Cita';
 import { Pago, PagoListo } from './screens/Pago';
@@ -79,6 +81,8 @@ function Screens() {
     return h(DevCharacter, null);
   }
 
+  if (extensionOff.value) return h(NoDisponible, null);
+
   if (!ready) return null;
 
   let screen;
@@ -97,6 +101,7 @@ function Screens() {
   else if (r === '/resumen') screen = h(Resumen, null);
   else if (r === '/firmados') screen = h(Firmados, null);
   else if (r === '/revisar') screen = h(Revisar, null);
+  else if (r === '/preguntas') screen = h(Preguntas, null);
   else if (r === '/acuerdo') screen = h(Acuerdo, null);
   else if (r === '/cita') screen = h(Cita, null);
   else if (r === '/pago') screen = h(Pago, null);

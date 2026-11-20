@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
+import db
 from aprende import journey, timeline
 
 router = APIRouter()
@@ -73,3 +74,13 @@ def post_event(body: JourneyEventBody, authorization: str = Header(None)):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": [required]})
     updated = journey.apply(j["id"], etype, payload, actor=u.get("email") or "client")
     return updated
+
+
+@router.get("/journey/questions")
+def list_questions(authorization: str = Header(None)):
+    u = _auth(authorization)
+    _adult_check(u)
+    j = journey.get_or_create_for_user(u["id"])
+    rows = db.query("SELECT id, question, created_at, answer, answered_at FROM attorney_questions WHERE journey_id = ? ORDER BY created_at DESC, id",
+                    (j["id"],))
+    return {"questions": [{"id": r[0], "question": r[1], "created_at": r[2], "answer": r[3], "answered_at": r[4]} for r in rows]}
