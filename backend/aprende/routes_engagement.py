@@ -12,6 +12,8 @@ router = APIRouter()
 def _gate(j):
     if not j["gates"]["may_sign_engagement"] and not engagement.signature(j["id"]):
         return JSONResponse(status_code=409, content={"error": "gate", "missing": ["may_sign_engagement"]})
+    if not j["documents"]["confirmed"]:                          # the letter lists the confirmed documents (spec 6.1 day 5)
+        return JSONResponse(status_code=409, content={"error": "gate", "missing": ["documents_confirmed"]})
     if engagement.missing():
         return JSONResponse(status_code=409, content={"error": "not_ready", "missing": engagement.missing()})
     return None
@@ -62,9 +64,11 @@ def approve_scope(jid: str, user: dict = Depends(auth.staff("attorney"))):
     j = journey.get_journey(jid)
     if j is None:
         raise HTTPException(404, "journey not found")
-    if not j["documents"]["confirmed"]:
-        raise HTTPException(409, "the client has not confirmed documents")
-    journey.apply(jid, "scope_approved", {}, actor=u["email"])
+    # Spec 6.1 day 2: the tentative choice starts the scope review; the day-4 confirmation keeps it if the documents match
+    codes = j["documents"]["confirmed"] or j["documents"]["tentative"]
+    if not codes:
+        raise HTTPException(409, "the client has not chosen documents")
+    journey.apply(jid, "scope_approved", {"codes": sorted(codes)}, actor=u["email"])
     return {"ok": True}
 
 

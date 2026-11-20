@@ -1,5 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+
+async function signUp(page: Page, email: string) {
+  await page.goto('/#/cuenta-nueva');
+  await page.getByLabel(/Nombre/i).fill('Ana Torres');
+  await page.getByLabel(/Correo/i).fill(email);
+  await page.getByLabel(/Contraseña/i).fill('long-secure-password');
+  await page.getByLabel(/mayor de 18/i).check();
+  await page.getByRole('button', { name: /Crear cuenta/i }).click();
+  await expect(page).toHaveURL(/#\/inicio\/ia/);
+}
 
 test('signup in Spanish lands on the day-1 gate without tabs; the app has tabs with aria-current', async ({ page }) => {
   await page.goto('/#/bienvenida');
@@ -27,10 +37,8 @@ test('rail replaces tabs above 64em', async ({ page }) => {
 });
 
 test('sign-out clears token and returns to entrar', async ({ page }) => {
-  // seed token
-  await page.goto('/#/bienvenida');
-  await page.evaluate(() => localStorage.setItem('aprende_token', 'tok'));
-  await page.goto('/#/entrar');
+  // a real sign-up: since T8-02 the app checks the token with the API, so a made-up one signs her out
+  await signUp(page, `ana-${Date.now()}-out@example.com`);
   await page.goto('/#/perfil');
   await page.getByRole('button', { name: /Cerrar sesión/i }).click();
   await expect(page).toHaveURL(/#\/entrar/);
@@ -46,15 +54,20 @@ test('auth guard redirects unauthed to bienvenida', async ({ page }) => {
 });
 
 test('signed-in user opening entrar goes to landing', async ({ page }) => {
-  await page.goto('/#/bienvenida');
-  await page.evaluate(() => localStorage.setItem('aprende_token', 'tok'));
+  await signUp(page, `ana-${Date.now()}-in@example.com`);
   await page.goto('/#/entrar');
   await expect(page).toHaveURL(/#\/(inicio\/ia|aprender)/);
 });
 
 test('sign-in existing client without ai_disclosed lands on inicio/ia', async ({ page }) => {
-  // backend seeded user not available; skip network-dependent by checking route logic via direct
-  await page.goto('/#/entrar');
+  const email = `ana-${Date.now()}-back@example.com`;
+  await signUp(page, email);
+  await page.getByRole('button', { name: /Cerrar sesión/i }).click();
+  await expect(page).toHaveURL(/#\/entrar/);
+  await page.getByLabel(/Correo/i).fill(email);
+  await page.getByLabel(/Contraseña/i).fill('long-secure-password');
+  await page.getByRole('button', { name: /Entrar/i }).click();
+  await expect(page).toHaveURL(/#\/inicio\/ia/);
 });
 
 test('English sign-up labels and html lang', async ({ page }) => {
