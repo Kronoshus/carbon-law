@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
-from aprende import auth, datos, journey, legacy, review, timeline
+from aprende import analytics, auth, datos, journey, legacy, review, timeline
 
 router = APIRouter()
 
@@ -84,3 +84,8 @@ def answer_question(qid: str, body: AnswerBody, user: dict = Depends(auth.staff(
                      (ans, u["email"], now, qid))
     backend_app.log_audit(u["email"], "answer", "attorney_question", qid, "")
     return {"id": qid, "answer": ans, "answered_by": u["email"], "answered_at": now}
+
+
+@router.get("/staff/analytics")
+def staff_analytics(since: str = None, until: str = None, user: dict = Depends(auth.staff())):
+    return analytics.dashboard(since, until)

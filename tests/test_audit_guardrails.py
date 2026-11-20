@@ -509,8 +509,9 @@ def test_no_client_content_reaches_logs_analytics_or_staff_alerts(monkeypatch, m
     assert len(alerts) == 3
     for text in [caplog.text, out, err] + [a["title"] + " " + a["body"] for a in alerts]:
         assert marker not in text and "Torres" not in text and "Sofía" not in text and "Mateo" not in text
-    for (props,) in db.query("SELECT props_json FROM events WHERE journey_id = ?", (jid,)):
-        assert marker not in props and set(json.loads(props)) <= {"item_id", "correct", "attempt"}
+    from aprende import analytics                                                 # T7-06: each event keeps only its own keys
+    for type_, props in db.query("SELECT type, props_json FROM events WHERE journey_id = ?", (jid,)):
+        assert marker not in props and set(json.loads(props)) <= analytics.EVENTS[type_] | {"day"}
 
 
 # --- 9. Tests can never call a paid model ----------------------------------------------------------------------------
