@@ -14,6 +14,8 @@ def _staff(authorization):
 
 def _map(e):
     msg = str(e)
+    if isinstance(e, content.InvalidError):
+        return 422, {"error": "invalid", "errors": e.errors}
     if isinstance(e, content.LanguageError):
         return 422, {"error": "languages", "missing": e.missing}
     if isinstance(e, content.NoDraftError) or isinstance(e, content.NoVersionError):
