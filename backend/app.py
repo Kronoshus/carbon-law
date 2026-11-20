@@ -48,6 +48,20 @@ app.add_middleware(CORSMiddleware,
                    allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type"])
 
+@app.middleware("http")
+async def _extension_origin_guard(request, call_next):
+    origin = request.headers.get("origin")
+    if origin and (origin.startswith("chrome-extension://") or origin == _aprende_ext_origin) and request.url.path != "/health":
+        from aprende import firm
+        if not firm.switch("extension"):
+            from fastapi.responses import JSONResponse
+            resp = JSONResponse(status_code=503, content={"error": "extension_off"})
+            resp.headers["access-control-allow-origin"] = origin
+            resp.headers["access-control-allow-methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            resp.headers["access-control-allow-headers"] = "Authorization, Content-Type"
+            return resp
+    return await call_next(request)
+
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
 # Aprende routes (see APRENDE_PREFIXES) are deliberately excluded so a slow Aprende request cannot block legacy ones;
@@ -1557,6 +1571,10 @@ app.include_router(_rsi.router)
 # Aprende client review routes (T6-06)
 from aprende import client_review as _rcr
 app.include_router(_rcr.router)
+
+# Aprende firm settings routes (T7-05)
+from aprende import routes_firm as _rf
+app.include_router(_rf.router)
 
 if __name__ == "__main__":
     import uvicorn

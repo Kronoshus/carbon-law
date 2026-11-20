@@ -1,3 +1,4 @@
+import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
@@ -58,10 +59,18 @@ export function Popup() {
   const [day, setDay] = useState<number>(1);
   const [step, setStep] = useState<Gate | 'complete'>('may_disclose');
   const [opening, setOpening] = useState(false);
+  const [off, setOff] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      try {
+        const sp = await fetch('/settings/public');
+        if (sp.status === 503) {
+          const j = await sp.json().catch(() => ({}));
+          if (j && j.error === 'extension_off') { setOff(true); return; }
+        }
+      } catch { /* ignore */ }
       try {
         const res = await apiFetch('/journey');
         if (!res.ok) return;
@@ -92,6 +101,10 @@ export function Popup() {
   const stepLabel = step === 'complete'
     ? t('popup.complete')
     : t(GATE_LABEL[step]);
+
+  if (off) {
+    return h('main', { class: 'popup' }, h('p', null, 'No disponible'));
+  }
 
   return (
     <main class="popup">

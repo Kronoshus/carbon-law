@@ -287,5 +287,8 @@
   "change.Title change": "Whose name something is in",
   "change.Contact or address change": "My address or contact details",
   "change.Appointment change": "My appointment",
-  "change.Document scope change": "Which documents to prepare"
+  "change.Document scope change": "Which documents to prepare",
+  "unavailable.title": "Not available",
+  "unavailable.body": "Aprende y Planea is not available in the extension right now. You can use it at carbon.bailment.tech/aprende/.",
+  "chat.off": "Chatting with the characters is not available right now. You can keep going with your lessons."
 }

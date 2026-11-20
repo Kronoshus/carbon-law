@@ -270,17 +270,19 @@ class PatchBody(BaseModel):
 
 @router.put("/staff/availability")
 def put_availability(body: AvailabilityBody, authorization: str = Header(None)):
-    _staff(authorization)
+    u = _staff(authorization)
     hours, slot_minutes = _validate_availability(body.hours, body.slot_minutes)
     _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes})   # existing bookings are kept
+    backend_app.log_audit(u["email"], "firm_settings", "settings", "availability", str({"hours": hours, "slot_minutes": slot_minutes}))
     return {"availability": {"hours": hours, "slot_minutes": slot_minutes}}
 
 
 @router.put("/staff/holidays")
 def put_holidays(body: HolidaysBody, authorization: str = Header(None)):
-    _staff(authorization)
+    u = _staff(authorization)
     dates = [str(d) for d in body.dates]
     _save_setting("holidays", dates)
+    backend_app.log_audit(u["email"], "firm_settings", "settings", "holidays", str(dates))
     return {"holidays": dates}
 
 

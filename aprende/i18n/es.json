@@ -287,5 +287,8 @@
   "change.Title change": "A nombre de quién está algo",
   "change.Contact or address change": "Mi dirección o mis datos",
   "change.Appointment change": "Mi cita",
-  "change.Document scope change": "Qué documentos preparar"
+  "change.Document scope change": "Qué documentos preparar",
+  "unavailable.title": "No disponible",
+  "unavailable.body": "Aprende y Planea no está disponible en la extensión por ahora. Puede usarla en carbon.bailment.tech/aprende/.",
+  "chat.off": "La charla con los personajes no está disponible por ahora. Puede seguir con sus lecciones."
 }
