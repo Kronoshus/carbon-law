@@ -92,7 +92,7 @@ export function Perfil() {
       }
       return;
     }
-    const ev = installPrompt.value;
+    const ev = installPrompt.value as any;
     if (ev) {
       installPrompt.value = null;
       setCaptured(false);

@@ -158,3 +158,25 @@ def test_a_client_cannot_decide_on_someone_elses_document(monkeypatch):
     other = client()
     doc = docs(h)[0]["id"]
     assert c.post(f"/review/documents/{doc}", json={"decision": "ok"}, headers=other).status_code in (404, 409)
+
+
+def queue_row(jid):
+    return next((r for r in c.get("/staff/review-queue", headers=att()).json() if r["journey_id"] == jid), None)
+
+
+def test_after_a_change_request_the_attorney_finds_the_journey_in_the_queue_and_revises_it(monkeypatch):
+    """Spec 6.1 day 10: "Requested changes go to the attorney (2 business days)". The review queue is where the attorney
+    works, so the asked-for document is listed there until a revised version is approved."""
+    h, jid = approved(monkeypatch)
+    assert queue_row(jid) is None                                                # approved: nothing waits
+    will = next(d for d in docs(h) if d["name"] == "Last will and testament")
+    c.post(f"/review/documents/{will['id']}", json={"decision": "change", "change_type": "Fiduciary change",
+                                                    "note": "Quiero que mi hermana Rosa sea la albacea."}, headers=h)
+    row = queue_row(jid)
+    assert row is not None and [d["id"] for d in row["documents"]] == [will["id"]]
+    old = c.get(f"/staff/drafts/{will['id']}", headers=att()).json()["content"]
+    new = c.post(f"/staff/drafts/{will['id']}/versions", json={"content": old + "\n\nExecutor: Rosa Pérez.\n"}, headers=att()).json()
+    assert [d["id"] for d in queue_row(jid)["documents"]] == [new["id"]]       # the revision now waits for approval
+    assert c.post(f"/staff/journeys/{jid}/review", json={"decision": "approve"}, headers=att()).status_code == 200
+    assert queue_row(jid) is None
+    assert next(d for d in docs(h) if d["name"] == "Last will and testament")["version"] == 2

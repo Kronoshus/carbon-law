@@ -46,6 +46,19 @@ def _current_drafts(jid):
     return out
 
 
+def _change_requested(jid):
+    """Approved documents whose client's latest decision is a change request: the attorney revises them."""
+    out = []
+    for d in backend_app.documents.values():
+        if d.get("journey_id") != jid or d.get("status") != "Attorney Approved":
+            continue
+        last = db.query("SELECT decision FROM client_reviews WHERE document_id = ? AND journey_id = ? ORDER BY at DESC, id DESC LIMIT 1",
+                        (d["id"], jid))
+        if last and last[0][0] == "change":
+            out.append(d)
+    return out
+
+
 @router.get("/staff/review-queue")
 def review_queue(authorization: str = Header(None)):
     _auth(authorization, {"paralegal", "attorney", "admin"})
@@ -56,11 +69,12 @@ def review_queue(authorization: str = Header(None)):
         if not j or not j.get("matter_id"):
             continue
         drafts = _current_drafts(jid)
-        if not drafts:
+        asked = [] if drafts else _change_requested(jid)          # spec 6.1 day 10: a client's change goes to the attorney
+        if not drafts and not asked:
             continue
         mid = j.get("matter_id")
         steps = timeline.for_journey(j, now)
-        ar = next((s for s in steps if s["step"] == "attorney_review"), None)
+        ar = next((s for s in steps if s["step"] == ("changes" if asked else "attorney_review")), None)
         due = (ar or {}).get("due") or (ar or {}).get("date")
         late = bool(ar and ar.get("status") == "late")
         matter = backend_app.matters.get(mid, {})
@@ -70,7 +84,7 @@ def review_queue(authorization: str = Header(None)):
             "due": due,
             "late": late,
             "note": matter.get("review_note"),
-            "documents": [{"id": d["id"], "name": d["name"], "version": d["version"]} for d in drafts],
+            "documents": [{"id": d["id"], "name": d["name"], "version": d["version"]} for d in drafts or asked],
         })
     return rows
 

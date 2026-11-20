@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
         .map((p) => [p, `http://127.0.0.1:${process.env.E2E_API_PORT || '8011'}`])),
     },
     plugins,
+    define: isExt ? { 'import.meta.env.VITE_API_ORIGIN': JSON.stringify(process.env.API_ORIGIN || 'https://carbon-law.onrender.com') } : undefined,
     esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
     resolve: { alias: { '@': resolve(__dirname, 'src') } },
     build: {
@@ -72,7 +73,6 @@ export default defineConfig(({ mode }) => {
               sidepanel: resolve(__dirname, 'src/targets/extension/sidepanel.html'),
               popup: resolve(__dirname, 'src/targets/extension/popup.html'),
               background: resolve(__dirname, 'src/targets/extension/background.ts'),
-              offscreen: resolve(__dirname, 'src/targets/extension/offscreen.html'),
             }
           : {
               index: resolve(__dirname, 'index.html'),

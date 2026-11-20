@@ -9,9 +9,10 @@ import './tokens.css';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';
-import { getToken, extensionOff } from '../core/api';
+import { getToken, extensionOff, apiFetch } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
+import { Privacidad } from './screens/Privacidad';
 import { InicioIa, InicioConsentimiento, InicioNoAcepto, InicioNombres, InicioEspera } from './screens/Inicio';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
@@ -33,6 +34,7 @@ import { Pago, PagoListo } from './screens/Pago';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
+const OPEN = new Set(['/privacidad']);
 
 function Screens() {
   const r = route.value;
@@ -50,11 +52,12 @@ function Screens() {
       setAuthed(!!tok);
       setReady(true);
       const isPublic = PUBLIC.has(r);
-      if (!tok && !isPublic) {
+      const isOpen = OPEN.has(r);
+      if (!tok && !isPublic && !isOpen) {
         navigate('/bienvenida');
       } else if (tok && isPublic) {
         try {
-          const res = await fetch('/journey', { headers: { Authorization: `Bearer ${tok}` } });
+          const res = await apiFetch('/journey');
           if (res.ok) {
             const j = await res.json();
             const facts = j.facts || {};
@@ -88,6 +91,7 @@ function Screens() {
 
   let screen;
   if (r === '/bienvenida') screen = h(Bienvenida, null);
+  else if (r === '/privacidad') screen = h(Privacidad, null);
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
   else if (r === '/plan') screen = h(Plan, null);
@@ -116,6 +120,7 @@ function Screens() {
     return screen;
   }
   if (r.startsWith('/inicio/') || datosMatch) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);   // one thing at a time
+  if (r === '/privacidad') return authed ? h(Shell, null, screen) : screen;
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);
