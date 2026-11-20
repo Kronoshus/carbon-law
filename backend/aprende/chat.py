@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, datos, firm, journey, learn
+from aprende import characters, content, datos, firm, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -30,6 +30,19 @@ PERSONAS = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "..", "..
 def model_client():
     from ai.beam import BeamClient
     return BeamClient()
+
+
+# The persona forbids these (personas.yaml); the server also refuses a reply that does them anyway (brief s.6):
+# a question about immigration status, or an annuity pitch. Tags are removed first: they hold the client's own words.
+IMMIGRATION = re.compile(r"inmigra|migratori|ciudadan|indocumentad|green card|tarjeta verde|\bvisas?\b|immigra|citizen|"
+                         r"undocumented|residencia permanente|permanent resident", re.I)
+ANNUITY = re.compile(r"anualidad|annuit", re.I)
+UNAVAILABLE = "El servicio no está disponible en este momento. Intente de nuevo en unos minutos."
+
+
+def _breaks_rules(reply):
+    asks = [s for s in re.split(r"(?<=[.!?])\s+", reply) if "?" in s and IMMIGRATION.search(s)]
+    return bool(asks or ANNUITY.search(reply))
 
 
 def _fill(text, **values):
@@ -127,9 +140,11 @@ async def post_chat(body: ChatBody, authorization: str = Header(None)):
         completion = await model_client().complete(system=system, messages=_messages(body.messages), max_tokens=400,
                                                    purpose=f"aprende_chat_{body.mode}", temperature=0.4)
     except ModelError:
-        raise HTTPException(503, "El servicio no está disponible en este momento. Intente de nuevo en unos minutos.")
+        raise HTTPException(503, UNAVAILABLE)
 
     raw = completion.text or ""
+    if _breaks_rules(DONE.sub(" ", TAG.sub(" ", raw))):
+        raise HTTPException(503, UNAVAILABLE)
     # Tags come off before the spoken() guard, which stops at the first "?" and could cut a tag in half.
     asked = TAG.findall(raw)
     question = asked[-1].strip() if asked else None
@@ -159,7 +174,12 @@ def _reply(j, body, lang, *, text, history, reasoning, question):
         out["covered"] = [q["id"] for q in d["questions"] if q["status"] != "open"]     # from the server only: it only grows
         out["open"] = d["open"]
         nxt = _current(j, body.group)
-        out["next_question"] = {"id": nxt["id"], "text": nxt[lang]} if nxt else None
+        if nxt:
+            live = content.live_entries("datos")
+            body = live.get("datos:" + nxt["id"], {"es": nxt["es"], "en": nxt["en"]})
+            out["next_question"] = {"id": nxt["id"], "text": body[lang]}
+        else:
+            out["next_question"] = None
     return out
 
 

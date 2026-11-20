@@ -209,6 +209,8 @@ def _gate_missing(j, kind):
         if not j["gates"].get("may_book_signing"):
             return ["may_book_signing"]
         return []
+    if j["conflict"] == "hold":                          # no meeting with a possibly adverse party (brief s.6)
+        return ["may_collect_details"]
     facts = j["facts"]
     needed = [f"lesson_completed:{d}" for d in ("will", "trust", "ahcd", "poa")]
     if all(f in facts for f in needed):
