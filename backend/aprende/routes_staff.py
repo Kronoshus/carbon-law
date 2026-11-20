@@ -1,12 +1,12 @@
 """Staff views of Aprende journeys (spec 11)."""
 import datetime
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
-from aprende import datos, journey, legacy, review, timeline
+from aprende import auth, datos, journey, legacy, review, timeline
 
 router = APIRouter()
 
@@ -39,10 +39,7 @@ def _row(j, now):
 
 
 @router.get("/staff/journeys")
-def list_journeys(authorization: str = Header(None)):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
+def list_journeys(user: dict = Depends(auth.staff())):
     now = datetime.datetime.now(datetime.timezone.utc)
     rows = []
     for (jid,) in db.query("SELECT id FROM journeys"):
@@ -54,10 +51,7 @@ def list_journeys(authorization: str = Header(None)):
 
 
 @router.get("/staff/journeys/{jid}")
-def get_journey_detail(jid: str, authorization: str = Header(None)):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
+def get_journey_detail(jid: str, user: dict = Depends(auth.staff())):
     j = journey.get_journey(jid)
     if not j:
         raise HTTPException(404, "journey not found")
@@ -76,10 +70,8 @@ class AnswerBody(BaseModel):
 
 
 @router.post("/staff/attorney-questions/{qid}/answer")
-def answer_question(qid: str, body: AnswerBody, authorization: str = Header(None)):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    u, _ = backend_app.require_auth(authorization, {"attorney"})
+def answer_question(qid: str, body: AnswerBody, user: dict = Depends(auth.staff("attorney"))):
+    u = user
     rows = db.query("SELECT id FROM attorney_questions WHERE id = ?", (qid,))
     if not rows:
         raise HTTPException(404, "question not found")

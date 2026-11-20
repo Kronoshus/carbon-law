@@ -81,6 +81,33 @@ async def staff_guard(request, call_next):
             return JSONResponse(status_code=403, content={"detail": "insufficient role"})
     return await call_next(request)
 
+@app.middleware("http")
+async def audit_aprende_writes(request, call_next):
+    path = request.url.path
+    is_aprende = any(path.startswith(p) for p in APRENDE_PREFIXES)
+    method = request.method.upper()
+    state_changing = method in ("POST", "PUT", "PATCH", "DELETE")
+    mark = len(audit) if is_aprende else 0
+    response = await call_next(request)
+    if (is_aprende and state_changing and 200 <= response.status_code < 300):
+        if len(audit) == mark:   # handler did not already write an audit row
+            # actor
+            auth = request.headers.get("authorization")
+            actor = "stripe" if path == "/payments/webhook" else None
+            if actor is None and auth:
+                token = auth.replace("Bearer ", "").strip()
+                u = get_user_from_token(token)
+                actor = (u or {}).get("email")
+            if not actor:
+                actor = "anonymous"
+            route = request.scope.get("route")
+            route_path = getattr(route, "path", path)
+            params = getattr(request, "path_params", {}) or {}
+            entity_id = ",".join(str(v) for v in params.values())
+            with _request_lock:
+                log_audit(actor, f"{method} {route_path}", "route", entity_id, "")
+    return response
+
 # Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
 app.add_middleware(CORSMiddleware,
                    allow_origins=_cors_origins,
