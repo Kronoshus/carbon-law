@@ -39,10 +39,21 @@ if os.environ.get("APRENDE_INPROCESS_WORKER") == "1":
     def _start_inprocess_worker():
         _worker_mod.start_in_background()
 
+from aprende import firm
+
 _cors_origins = ["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"]
 _aprende_ext_origin = os.environ.get("APRENDE_EXTENSION_ORIGIN")
 if _aprende_ext_origin:
     _cors_origins.append(_aprende_ext_origin)
+
+@app.middleware("http")
+async def _extension_origin_guard(request, call_next):
+    origin = request.headers.get("origin")
+    if origin and (origin.startswith("chrome-extension://") or origin == _aprende_ext_origin) and request.url.path != "/health":
+        if not firm.switch("extension"):
+            return JSONResponse(status_code=503, content={"error": "extension_off"})
+    return await call_next(request)
+
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
@@ -1583,6 +1594,10 @@ from aprende import client_review as _rcr
 app.include_router(_rcr.router)
 from aprende import routes_content as _rct
 app.include_router(_rct.router)
+
+# Aprende firm settings routes (T7-05)
+from aprende import routes_firm as _rf
+app.include_router(_rf.router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -141,6 +141,32 @@
       <div id="reviewDetail" hidden></div>
     </div>
   
+    <div class="section" id="firma">
+      <h2>Firma</h2>
+      <p id="firmaMessage" role="status"></p>
+      <div class="grid2">
+        <div class="card firm-settings">
+          <h3>Ajustes</h3>
+          <label><input type="checkbox" id="firmVoice"> Grabación de voz</label>
+          <label><input type="checkbox" id="firmAi"> Charla con IA</label>
+          <label><input type="checkbox" id="firmExt"> Extensión de Chrome</label>
+          <label>Lecciones por día <input type="number" id="firmLpd" min="1" max="4"></label>
+          <label>Borrar datos de quien no pagó después de (días) <input type="number" id="firmRetention" min="30"></label>
+          <p id="firmReadOnly" hidden></p>
+          <button class="btn sm" id="firmSave" type="button">Guardar ajustes</button>
+        </div>
+        <div class="card firm-settings">
+          <h3>Feriados</h3>
+          <label>Día feriado <input type="date" id="firmHolidayDate"></label>
+          <button class="btn sm secondary" id="firmAddHoliday" type="button">Agregar feriado</button>
+          <ul id="firmHolidayList"></ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Horario de oficina</h3>
+        <table><tbody id="firmHoursRows"></tbody></table>
+        <button class="btn sm secondary" id="firmSaveHours" type="button">Guardar horario</button>
+      </div>
     <div class="section" id="clientes">
       <h2>Clientes</h2>
       <p id="clientesMessage" role="status"></p>
@@ -180,6 +206,7 @@
 <script src="content.js"></script>
 <script src="analytics.js"></script>
 <script src="review.js"></script>
+<script src="firm.js"></script>
 <script src="clients.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}

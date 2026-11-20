@@ -61,6 +61,12 @@ body::before { display: none; }
 .content-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 #contentDetail textarea { width: 100%; min-height: 64px; }
 .content-preview { white-space: pre-wrap; }
+.firm-settings { display: grid; gap: 10px; align-content: start; }
+.firm-settings label { display: flex; align-items: center; gap: 8px; }
+.firm-settings input[type=checkbox] { width: auto; }
+.firm-settings input[type=number], .firm-settings input[type=date] { width: 9em; }
+#firmHoursRows label { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; }
+#firmHoursRows input[type=time] { width: 9em; }
 #contentEntries:empty { display: none; }
 #clientes td.late { color: #b42318; font-weight: 600; }
 .client-questions { list-style: none; padding: 0; }

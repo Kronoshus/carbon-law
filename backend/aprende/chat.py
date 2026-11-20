@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, content, datos, journey, learn
+from aprende import characters, content, datos, firm, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -118,6 +118,8 @@ def _messages(raw):
 async def post_chat(body: ChatBody, authorization: str = Header(None)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
+    if not firm.switch("ai_chat"):
+        return JSONResponse(status_code=503, content={"error": "ai_chat_off"})
     if body.mode not in ("learn", "intake"):
         raise HTTPException(422, "unsupported mode")
     if body.character not in PERSONAS["characters"] or characters.get(body.character) is None:
