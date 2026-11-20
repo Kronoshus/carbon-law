@@ -99,5 +99,11 @@ def funding_done(jid: str, user: dict = Depends(auth.staff())):
     j = journey.get_journey(jid)
     if j is None:
         raise HTTPException(404, "journey not found")
-    legacy.set_stage(journey.apply(jid, "funding_done", {}, actor=u["email"]), "10 Closed")
+    journey.apply(jid, "funding_done", {}, actor=u["email"])
+    legacy.set_stage(journey.get_journey(jid), "10 Closed")
+    try:
+        from aprende import reminders as _rem
+        _rem.schedule_annual_review(jid, journey.get_journey(jid)["facts"]["funding_done"])
+    except Exception:
+        pass
     return {"ok": True}

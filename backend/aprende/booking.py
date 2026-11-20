@@ -41,12 +41,19 @@ MONTHS = {"es": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
 KIND = {"signing": ("la firma de sus documentos", "your document signing"), "consultation": ("su consulta con el abogado Raval", "your consultation with attorney Raval")}
 
 
-def confirmation(kind, start_utc):
-    """The confirmation email, in Spanish then English, with the Los Angeles date and time."""
+def when(start_utc, lang):
+    """The Los Angeles date and time phrase for an appointment, in `lang`."""
     t = start_utc.astimezone(LA)
     hm = f"{t.hour % 12 or 12}:{t.minute:02d}"
-    es = f"Su cita para {KIND[kind][0]}: {WEEKDAYS['es'][t.weekday()]} {t.day} de {MONTHS['es'][t.month - 1]} de {t.year}, a las {hm} {'a. m.' if t.hour < 12 else 'p. m.'} (hora de California)."
-    en = f"Your appointment for {KIND[kind][1]}: {WEEKDAYS['en'][t.weekday()]}, {MONTHS['en'][t.month - 1]} {t.day}, {t.year}, at {hm} {'a.m.' if t.hour < 12 else 'p.m.'} (California time)."
+    if lang == "es":
+        return f"{WEEKDAYS['es'][t.weekday()]} {t.day} de {MONTHS['es'][t.month - 1]} de {t.year}, a las {hm} {'a. m.' if t.hour < 12 else 'p. m.'}"
+    return f"{WEEKDAYS['en'][t.weekday()]}, {MONTHS['en'][t.month - 1]} {t.day}, {t.year}, at {hm} {'a.m.' if t.hour < 12 else 'p.m.'}"
+
+
+def confirmation(kind, start_utc):
+    """The confirmation email, in Spanish then English, with the Los Angeles date and time."""
+    es = f"Su cita para {KIND[kind][0]}: {when(start_utc, 'es')} (hora de California)."
+    en = f"Your appointment for {KIND[kind][1]}: {when(start_utc, 'en')} (California time)."
     return es + "\nPuede cambiarla o cancelarla en la aplicación hasta 24 horas antes.\n\n" + en + "\nYou can change or cancel it in the app up to 24 hours before.\n\nCarbon Law Group"
 
 
@@ -299,6 +306,11 @@ def post_booking(body: BookingBody, user: dict = Depends(auth.client_user), j: d
     if email:
         send_confirmation(email, "Confirmación de su cita / Appointment confirmation", confirmation(body.kind, start_utc))
     notify_staff("New booking", "A {} booking was made. Journey: {}".format(body.kind, j["id"]))
+    try:
+        from aprende import reminders as _rem
+        _rem.schedule_appointment(booking_id, start_utc)
+    except Exception:
+        pass
     return {"id": booking_id, "kind": body.kind, "start": start_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "local": start_utc.astimezone(LA).strftime("%Y-%m-%dT%H:%M:%S")}
 
@@ -361,6 +373,11 @@ def patch_booking(booking_id: str, body: PatchBody, user: dict = Depends(auth.cl
         if "unique" in msg or "duplicate" in msg or "constraint" in msg:
             return JSONResponse(status_code=409, content={"error": "taken"})
         raise
+    try:
+        from aprende import reminders as _rem
+        _rem.schedule_appointment(booking_id, new_start)
+    except Exception:
+        pass
     return {"id": booking_id, "kind": kind, "start": new_start.strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 
