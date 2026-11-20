@@ -54,10 +54,6 @@ async def _extension_origin_guard(request, call_next):
             return JSONResponse(status_code=503, content={"error": "extension_off"})
     return await call_next(request)
 
-app.add_middleware(CORSMiddleware,
-                   allow_origins=_cors_origins,
-                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                   allow_headers=["Authorization", "Content-Type"])
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
@@ -80,6 +76,28 @@ async def serialize_requests(request, call_next):
         return await call_next(request)
     finally:
         _request_lock.release()
+
+@app.middleware("http")
+async def staff_guard(request, call_next):
+    path = request.url.path
+    if path.startswith("/staff/") or path.startswith("/conflicts") or path == "/chat/attorney-questions":
+        auth = request.headers.get("authorization")
+        if not auth:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        token = auth.replace("Bearer ", "").strip()
+        u = get_user_from_token(token)
+        if not u:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        if u.get("role") == "client":
+            return JSONResponse(status_code=403, content={"detail": "insufficient role"})
+    return await call_next(request)
+
+# Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
+app.add_middleware(CORSMiddleware,
+                   allow_origins=_cors_origins,
+                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                   allow_headers=["Authorization", "Content-Type"])
+
 
 # ---------- in-memory stores (persisted to data.json) ----------
 matters: Dict[str, Dict[str, Any]] = {}

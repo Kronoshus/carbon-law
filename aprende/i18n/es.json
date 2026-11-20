@@ -290,5 +290,9 @@
   "change.Document scope change": "Qué documentos preparar",
   "unavailable.title": "No disponible",
   "unavailable.body": "Aprende y Planea no está disponible en la extensión por ahora. Puede usarla en carbon.bailment.tech/aprende/.",
-  "chat.off": "La charla con los personajes no está disponible por ahora. Puede seguir con sus lecciones."
+  "chat.off": "La charla con los personajes no está disponible por ahora. Puede seguir con sus lecciones.",
+  "preguntas.title": "Preguntas para el abogado",
+  "preguntas.answer": "Respuesta del abogado Raval:",
+  "preguntas.waiting": "El abogado Raval todavía no ha respondido.",
+  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí."
 }

@@ -167,6 +167,16 @@
         <table><tbody id="firmHoursRows"></tbody></table>
         <button class="btn sm secondary" id="firmSaveHours" type="button">Guardar horario</button>
       </div>
+    <div class="section" id="clientes">
+      <h2>Clientes</h2>
+      <p id="clientesMessage" role="status"></p>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Día</th><th>Atrasos</th><th>Conflicto</th><th>Datos</th><th>Pago</th><th>Borradores</th><th>Citas</th><th>Preguntas</th></tr></thead>
+          <tbody id="clientesRows"></tbody>
+        </table>
+      </div>
+      <div id="clienteDetail" class="card" hidden></div>
     </div>
 
 
@@ -191,6 +201,7 @@
 <script src="content.js"></script>
 <script src="review.js"></script>
 <script src="firm.js"></script>
+<script src="clients.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
 function closeModal(id){document.getElementById(id).close();document.getElementById('matterForm').reset();}

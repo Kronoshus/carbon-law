@@ -64,6 +64,11 @@ body::before { display: none; }
 .firm-settings { display: grid; gap: 10px; align-content: start; }
 .firm-settings input[type=number] { width: 6em; margin-left: 6px; }
 #firmHoursRows label { margin-right: 12px; }
+#contentEntries:empty { display: none; }
+#clientes td.late { color: #b42318; font-weight: 600; }
+.client-questions { list-style: none; padding: 0; }
+.client-question { border-top: 1px solid #eee; padding: 10px 0; }
+.client-question textarea { width: 100%; min-height: 64px; }
 @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .sidebar { display: none; } .main-content { padding: 18px; } }
 
 /* Stats */
