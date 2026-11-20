@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, datos, journey, learn
+from aprende import characters, content, datos, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -157,7 +157,12 @@ def _reply(j, body, lang, *, text, history, reasoning, question):
         out["covered"] = [q["id"] for q in d["questions"] if q["status"] != "open"]     # from the server only: it only grows
         out["open"] = d["open"]
         nxt = _current(j, body.group)
-        out["next_question"] = {"id": nxt["id"], "text": nxt[lang]} if nxt else None
+        if nxt:
+            live = content.live_entries("datos")
+            body = live.get("datos:" + nxt["id"], {"es": nxt["es"], "en": nxt["en"]})
+            out["next_question"] = {"id": nxt["id"], "text": body[lang]}
+        else:
+            out["next_question"] = None
     return out
 
 

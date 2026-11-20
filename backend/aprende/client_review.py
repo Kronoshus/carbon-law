@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import app as backend_app
 import db
-from aprende import journey, legacy
+from aprende import journey, legacy, content
 from aprende.chat import _client_journey
 
 router = APIRouter()
@@ -78,14 +78,17 @@ def get_review_documents(lang: str = "es", authorization: str = Header(None)):
     if not open_:
         return _gate_fail()
     is_en = (lang == "en")
+    live = content.live_entries("summary")
     docs = []
     for d in _current_approved_docs(j):
         kind = NAME_TO_KIND.get(d.get("name"))
         summary = []
         if kind in _SUMMARIES:
             for art in _SUMMARIES[kind]:
-                summary.append({"article": art["article"],
-                                "text": (art["en"] if is_en else art["es"])})
+                eid = f"summary:{kind}.{art['article']}"
+                body = live.get(eid, {"es": art["es"], "en": art["en"]})
+                text = body["en" if is_en else "es"]
+                summary.append({"article": art["article"], "text": text})
         docs.append({
             "id": d["id"],
             "name": d["name"],

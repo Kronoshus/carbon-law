@@ -1557,6 +1557,8 @@ app.include_router(_rsi.router)
 # Aprende client review routes (T6-06)
 from aprende import client_review as _rcr
 app.include_router(_rcr.router)
+from aprende import routes_content as _rct
+app.include_router(_rct.router)
 
 if __name__ == "__main__":
     import uvicorn
