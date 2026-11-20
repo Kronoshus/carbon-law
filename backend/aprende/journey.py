@@ -4,7 +4,7 @@ import json
 import uuid
 
 import db
-from aprende import legacy
+from aprende import clock, legacy
 
 CLIENT_EVENTS = {"ai_disclosed", "consent", "names_submitted", "documents_tentative", "documents_confirmed"}
 SERVER_EVENTS = {
@@ -29,7 +29,7 @@ DOC_CODES = {"will", "trust", "poa", "ahcd"}
 
 
 def _now_iso():
-    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
+    return clock.now_iso()
 
 
 def conflict_status(facts):
@@ -110,7 +110,7 @@ def compute_day(started_at, tz="America/Los_Angeles"):
     start = datetime.datetime.fromisoformat(str(started_at).replace("Z", "+00:00"))
     if start.tzinfo is None:
         start = start.replace(tzinfo=datetime.timezone.utc)
-    now = datetime.datetime.now(zone)
+    now = clock.now().astimezone(zone)
     start_local = start.astimezone(zone)
     delta = (now.date() - start_local.date()).days
     if delta < 0:

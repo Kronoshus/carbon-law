@@ -10,6 +10,7 @@ import uuid
 import datetime
 
 import db
+from aprende import clock
 from carbon_intake.conflicts import conflict_hits
 from aprende.notify import notify_staff
 
@@ -17,7 +18,7 @@ __all__ = ["notify_staff", "conflict_hits"]
 
 
 def _now_iso():
-    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
+    return clock.now_iso()
 
 
 def get_list():

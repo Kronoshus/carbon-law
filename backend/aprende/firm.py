@@ -4,6 +4,7 @@ import json
 
 import app as backend_app
 import db
+from aprende import clock
 
 SWITCHES = ("voice_recording", "ai_chat", "extension")
 DEFAULTS = {
@@ -18,7 +19,7 @@ class FirmSettingsError(ValueError):
 
 
 def _now_iso():
-    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
+    return clock.now_iso()
 
 
 def _load(key, default):
