@@ -19,11 +19,13 @@ const BASE = import.meta.env.BASE_URL;
  *  The label "AI program, not the attorney" is always on the stage. */
 export function CharacterStage({ character, state = 'idle', costume = null, onEngine }: CharacterStageProps) {
   const [fallback, setFallback] = useState(false);
+  const [ready, setReady] = useState(false);          // the 3D character is drawing; until then the still image shows
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<CharacterEngine | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setReady(false);
     let idleId: number | null = null;
     let io: IntersectionObserver | null = null;
     let onVis: (() => void) | null = null;
@@ -38,6 +40,7 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
       if (cancelled) return;
       if (!ok) setFallback(true);
       else {
+        setReady(true);
         eng.setState(state); eng.setCostume(costume); onEngine?.(eng);
         const canvas = canvasRef.current;
         if (canvas) {
@@ -80,10 +83,10 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
 
   const name = t(`character.${character}.name` as I18nKey);
   return h('figure', { class: 'character-stage', 'aria-label': t('character.stageLabel', { name }) },
-    fallback
-      ? h('div', { class: 'character-still', style: { backgroundImage: `url(${BASE}characters/${character}-bg.jpg)` } },
-          h('img', { src: `${BASE}characters/${character}.png`, alt: '', width: 240, height: 240, loading: 'lazy' }))
-      : h('canvas', { ref: canvasRef, class: 'character-canvas' }),
+    ready ? null
+      : h('div', { class: 'character-still', style: { backgroundImage: `url(${BASE}characters/${character}-bg.jpg)` } },
+          h('img', { src: `${BASE}characters/${character}.png`, alt: '', width: 240, height: 240 })),
+    fallback ? null : h('canvas', { ref: canvasRef, class: 'character-canvas', hidden: !ready }),
     h('figcaption', { class: 'character-label' }, t('character.aiLabel')),
   );
 }

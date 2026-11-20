@@ -48,7 +48,7 @@ test('the course map loads no three.js and no character file', async ({ page }) 
 test('on the lesson, three.js and the GLB start only after the first contentful paint', async ({ page }) => {
   await signUp(page);
   await load(page, '#/leccion/will');
-  await expect(page.locator('canvas, .character-still')).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('canvas:not([hidden]), .character-still')).toBeVisible({ timeout: 30000 });
   await expect.poll(async () => (await timings(page)).heavy.some((r) => r.url.endsWith('.glb')), { timeout: 30000 }).toBe(true);
   const t = await timings(page);
   expect(t.fcp).not.toBeNull();
