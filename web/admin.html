@@ -140,12 +140,26 @@
       <div class="card table-wrap"><table><thead><tr><th>Cliente</th><th>Vence</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
       <div id="reviewDetail" hidden></div>
     </div>
+  
+    <div class="section" id="clientes">
+      <h2>Clientes</h2>
+      <p id="clientesMessage" role="status"></p>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Día</th><th>Atrasos</th><th>Conflicto</th><th>Datos</th><th>Pago</th><th>Borradores</th><th>Citas</th><th>Preguntas</th></tr></thead>
+          <tbody id="clientesRows"></tbody>
+        </table>
+      </div>
+      <div id="clienteDetail" hidden></div>
+    </div>
+
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script src="admin.js"></script>
 <script src="review.js"></script>
+<script src="clients.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
 function closeModal(id){document.getElementById(id).close();document.getElementById('matterForm').reset();}
