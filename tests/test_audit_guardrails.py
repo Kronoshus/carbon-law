@@ -331,7 +331,9 @@ def client_facing_text():
 def test_no_scripted_line_asks_about_immigration_status_sells_or_pairs_a_plan_with_insurance():
     texts = client_facing_text()
     assert len(texts) > 500
-    assert [t for t in texts if IMMIGRATION.search(t[1])] == []
+    # the privacy page's promise not to ask is the one sentence that may name the topic (T8-02, decision #52)
+    promise = re.compile(r"No le preguntamos sobre su situación migratoria\.|We do not ask about your immigration status\.")
+    assert [t for t in texts if IMMIGRATION.search(promise.sub("", t[1]))] == []
     assert [t for t in texts if SELLING.search(t[1]) or PRODUCT.search(t[1])] == []
     # life insurance appears only as an asset or a beneficiary form (what passes outside a will), never next to a trust
     assert [t for t in texts if INSURANCE.search(t[1]) and TRUST.search(t[1])] == []

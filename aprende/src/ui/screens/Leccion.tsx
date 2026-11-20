@@ -51,6 +51,7 @@ export function Leccion({ id }: { id: string }) {
   const item = state && !finished(state) ? byId.get(state.queue[0]) ?? null : null;
 
   useEffect(() => {
+    setLesson(null); setFailure(null); setState(null); setChoice(null); setFeedback(null); setResult(null); setMayCollect(false);
     let cancelled = false;
     (async () => {
       const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}?lang=${l}`);
