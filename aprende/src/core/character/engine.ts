@@ -36,6 +36,7 @@ export class CharacterEngine {
   mounted = false;
   rafId = 0;
   reduced = false;
+  paused = false;
 
   // overlay key targets
   overlayTargets: Record<string, number> = {};
@@ -116,6 +117,14 @@ export class CharacterEngine {
     this.mounted = false;
   }
 
+  pauseRendering(): void {
+    this.paused = true;
+    if (this.rafId) { cancelAnimationFrame(this.rafId); this.rafId = 0; }
+  }
+  resumeRendering(): void {
+    this.paused = false;
+    if (!this.rafId && this.mounted) this.startLoop();
+  }
   startLoop(): void {
     const loop = (t: number) => {
       this.frame(t);
