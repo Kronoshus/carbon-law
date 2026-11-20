@@ -1,19 +1,12 @@
 """Routes for the engagement letter (T6-01)."""
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 import app as backend_app
-from aprende import engagement, journey
-from aprende.chat import _client_journey
+from aprende import auth, engagement, journey
 
 router = APIRouter()
-
-
-def _staff(authorization, roles):
-    if not authorization:
-        raise HTTPException(401, "not authenticated")
-    return backend_app.require_auth(authorization, roles)[0]
 
 
 def _gate(j):
@@ -43,29 +36,29 @@ class Signature(BaseModel):
 
 
 @router.post("/staff/engagement-templates")
-def create_template(body: Template, authorization: str = Header(None)):
-    u = _staff(authorization, {"attorney", "admin"})
+def create_template(body: Template, user: dict = Depends(auth.staff("attorney", "admin"))):
+    u = user
     return engagement.create_template(body.es, body.en, u["email"])
 
 
 @router.post("/staff/engagement-templates/{tid}/approve")
-def approve_template(tid: str, authorization: str = Header(None)):
-    u = _staff(authorization, {"attorney"})
+def approve_template(tid: str, user: dict = Depends(auth.staff("attorney"))):
+    u = user
     if not engagement.approve_template(tid, u["email"]):
         raise HTTPException(404, "template not found")
     return {"ok": True}
 
 
 @router.put("/staff/firm-profile")
-def put_profile(body: Profile, authorization: str = Header(None)):
-    u = _staff(authorization, {"attorney", "admin"})
+def put_profile(body: Profile, user: dict = Depends(auth.staff("attorney", "admin"))):
+    u = user
     engagement.set_firm_profile(body.model_dump(), u["email"])
     return {"ok": True}
 
 
 @router.post("/staff/journeys/{jid}/scope-approval")
-def approve_scope(jid: str, authorization: str = Header(None)):
-    u = _staff(authorization, {"attorney"})
+def approve_scope(jid: str, user: dict = Depends(auth.staff("attorney"))):
+    u = user
     j = journey.get_journey(jid)
     if j is None:
         raise HTTPException(404, "journey not found")
@@ -76,8 +69,8 @@ def approve_scope(jid: str, authorization: str = Header(None)):
 
 
 @router.post("/staff/journeys/{jid}/engagement/countersign")
-def countersign(jid: str, authorization: str = Header(None)):
-    u = _staff(authorization, {"attorney"})
+def countersign(jid: str, user: dict = Depends(auth.staff("attorney"))):
+    u = user
     if not engagement.signature(jid):
         raise HTTPException(409, "the client has not signed")
     engagement.countersign(jid, u.get("name") or u["email"])
@@ -85,8 +78,7 @@ def countersign(jid: str, authorization: str = Header(None)):
 
 
 @router.get("/staff/journeys/{jid}/engagement/pdf")
-def staff_pdf(jid: str, authorization: str = Header(None)):
-    _staff(authorization, {"paralegal", "attorney", "admin"})
+def staff_pdf(jid: str, user: dict = Depends(auth.staff())):
     sig = engagement.signature(jid)
     if not sig:
         raise HTTPException(409, "not signed")
@@ -94,8 +86,7 @@ def staff_pdf(jid: str, authorization: str = Header(None)):
 
 
 @router.get("/engagement")
-def get_letter(lang: str = "es", authorization: str = Header(None)):
-    j, _ = _client_journey(authorization, "may_sign_engagement")
+def get_letter(lang: str = "es", user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     blocked = _gate(j)
     if blocked:
         return blocked
@@ -106,8 +97,8 @@ def get_letter(lang: str = "es", authorization: str = Header(None)):
 
 
 @router.post("/engagement/sign")
-def sign(body: Signature, request: Request, authorization: str = Header(None)):
-    j, _ = _client_journey(authorization, "may_sign_engagement")
+def sign(body: Signature, request: Request, user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
+
     if not body.accept or not body.name.strip():
         raise HTTPException(422, "type your name and accept")
     blocked = _gate(j)
@@ -121,8 +112,7 @@ def sign(body: Signature, request: Request, authorization: str = Header(None)):
 
 
 @router.get("/engagement/pdf")
-def client_pdf(authorization: str = Header(None)):
-    j, _ = _client_journey(authorization, "may_sign_engagement")
+def client_pdf(user: dict = Depends(auth.client_user), j: dict = Depends(auth.client_journey)):
     sig = engagement.signature(j["id"])
     if not sig:
         return JSONResponse(status_code=409, content={"error": "not_signed"})

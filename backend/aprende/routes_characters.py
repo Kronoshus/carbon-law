@@ -1,9 +1,9 @@
 """FastAPI routes for Aprende characters (T3-06)."""
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 import app as backend_app
-from aprende import characters
+from aprende import auth, characters
 
 router = APIRouter()
 
@@ -23,8 +23,7 @@ def _auth(authorization, roles=None):
 
 
 @router.get("/characters")
-def get_characters(authorization: str = Header(None)):
-    _auth(authorization)
+def get_characters(user: dict = Depends(auth.signed_in)):
     out = []
     for c in characters.list_enabled():
         out.append({
