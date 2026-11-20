@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXT_PATH = path.resolve(__dirname, '../../dist/extension');
 const EXECUTABLE = process.env.PW_CHROMIUM;
 // the API paths, as in vite.config.ts's proxy list ('/characters' also names the character files)
+const PROD = 'https://carbon-law.onrender.com';
 const API_PATH = /^\/(auth|journey|health|payments|learn|content|progress|datos|chat|engagement|staff|conflicts|booking|signed-documents|funding-checklist|review|settings|e2e|documents)(\/|\?|$)|^\/characters(\/[a-z_]+)?$/;
 
 test('a new client goes through the whole journey in the Chrome side panel, each step on its planned day', async () => {
@@ -18,13 +19,14 @@ test('a new client goes through the whole journey in the Chrome side panel, each
     locale: 'es-US',
     timezoneId: 'America/Los_Angeles',
     ...(EXECUTABLE ? { executablePath: EXECUTABLE } : {}),
-    args: ['--headless=new', `--disable-extensions-except=${EXT_PATH}`, `--load-extension=${EXT_PATH}`],
+    // without WebGL the characters are their still images (the app's own fallback): the journey, not the 3D, is tested here
+    args: ['--headless=new', '--disable-webgl', `--disable-extensions-except=${EXT_PATH}`, `--load-extension=${EXT_PATH}`],
   });
   const sw = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
   const extId = new URL(sw.url()).host;
-  // The extension build calls the API on its own origin: send those calls to the e2e backend, keeping the extension's
-  // Origin header so the firm's extension switch is still checked. Nothing is played back.
-  await context.route((url) => url.protocol === 'chrome-extension:' && API_PATH.test(url.pathname), async (route) => {
+  // The extension build calls the production API: send those calls to the e2e backend, keeping the extension's Origin
+  // header so the firm's extension switch is still checked. Nothing is played back.
+  await context.route((url) => (url.origin === PROD || url.protocol === 'chrome-extension:') && API_PATH.test(url.pathname), async (route) => {
     const u = new URL(route.request().url());
     const response = await route.fetch({ url: `${API}${u.pathname}${u.search}`, headers: { ...route.request().headers(), origin: `chrome-extension://${extId}` } });
     await route.fulfill({ response });

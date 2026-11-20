@@ -34,8 +34,10 @@ export default defineConfig({
       testMatch: RELEASE,
       dependencies: ['web', 'extension'],
       workers: 1,
-      timeout: 600000,
-      use: { trace: 'retain-on-failure', screenshot: 'only-on-failure', baseURL: `http://127.0.0.1:${web}`, browserName: 'chromium', launchOptions: executablePath ? { executablePath } : undefined },
+      timeout: 45 * 60_000,                                             // five lessons and two weeks of steps, one browser
+      // without WebGL the characters are their still images (the app's own fallback): the journey, not the 3D, is tested here
+      use: { trace: 'retain-on-failure', screenshot: 'only-on-failure', baseURL: `http://127.0.0.1:${web}`, browserName: 'chromium',
+        launchOptions: { args: ['--disable-webgl'], ...(executablePath ? { executablePath } : {}) } },
     },
   ],
   webServer: [

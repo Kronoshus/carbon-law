@@ -229,6 +229,19 @@ export async function openAdminReview(context: BrowserContext): Promise<Page> {
   return page;
 }
 
+/** In the review queue, the attorney opens the client's document, edits its text and uploads the revised version. */
+export async function attorneyRevises(context: BrowserContext, clientName: string, addition: string) {
+  const admin = await openAdminReview(context);
+  await admin.getByRole('button', { name: clientName, exact: true }).click();
+  const text = admin.getByLabel('Texto corregido');
+  await expect(text).toHaveCount(1);                                    // only the document she asked to change
+  await text.fill(`${await text.inputValue()}\n\n${addition}\n`);
+  const saved = admin.waitForResponse((r) => r.url().includes('/versions') && r.request().method() === 'POST');
+  await admin.getByRole('button', { name: 'Subir versión corregida' }).click();
+  expect((await saved).status()).toBe(200);
+  await admin.close();
+}
+
 export async function attorneyApproves(context: BrowserContext, clientName: string) {
   const admin = await openAdminReview(context);
   await admin.getByRole('button', { name: clientName, exact: true }).click();
@@ -401,7 +414,6 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await landsOnItsDay(c, 'attorney_review', plan);
   });
 
-  let willId = '';
   await test.step(`Day ${plan.client_review?.day ?? 9}: Ana reviews her documents: the trust is fine, and she asks one change to the will`, async () => {
     await moveTo(c, day(plan.client_review.day));
     await c.go('/revisar');
@@ -415,8 +427,6 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await will.getByLabel('Cuéntenos el cambio con sus palabras').fill('Quiero que mi hija Sofía sea la albacea suplente.');
     await will.getByRole('button', { name: 'Enviar el cambio al abogado' }).click();
     await expect(will.getByText('Pidió un cambio.', { exact: false })).toBeVisible();
-    const docs = (await asClient(c, 'GET', '/review/documents')).body.documents as { id: string; name: string }[];
-    willId = docs.find((d) => d.name === 'Pour-over will')!.id;
   });
 
   await test.step('The plan now has the change: the attorney has 2 business days, and the journey ends on day 16', async () => {
@@ -426,11 +436,9 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
   });
 
   const revised = byStep((await journey(c)).timeline).changes;
-  await test.step(`Day ${revised ? revised.day - 1 : 13}: the attorney uploads the revised will and approves it again, on the due date`, async () => {
+  await test.step(`Day ${revised ? revised.day - 1 : 13}: the attorney finds the change in his queue, uploads the revised will and approves it again, on the due date`, async () => {
     await moveTo(c, laTime(plan.changes.due!));
-    const old = (await asStaff('attorney', 'GET', `/staff/drafts/${willId}`)).body.content as string;
-    expect((await asStaff('attorney', 'POST', `/staff/drafts/${willId}/versions`,
-      { content: `${old}\n\nAlternate executor: Sofía Torres.\n` })).status).toBe(200);
+    await attorneyRevises(c.context, name, 'Alternate executor: Sofía Torres.');
     await attorneyApproves(c.context, name);
   });
 
