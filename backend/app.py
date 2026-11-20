@@ -63,19 +63,25 @@ import threading
 _request_lock = threading.Lock()
 
 from aprende import APRENDE_PREFIXES
+from aprende.analytics import TARGET as _analytics_target
 
 @app.middleware("http")
 async def serialize_requests(request, call_next):
-    if request.url.path == "/health":
-        return await call_next(request)
-    if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
-        return await call_next(request)
-    while not _request_lock.acquire(blocking=False):   # polled, not to_thread(acquire): a cancelled request must never
-        await asyncio.sleep(0.005)                      # leave a background thread holding the lock
+    origin = request.headers.get("origin") or ""
+    token = _analytics_target.set("extension" if origin.startswith("chrome-extension://") else "web")
     try:
-        return await call_next(request)
+        if request.url.path == "/health":
+            return await call_next(request)
+        if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
+            return await call_next(request)
+        while not _request_lock.acquire(blocking=False):   # polled, not to_thread(acquire): a cancelled request must never
+            await asyncio.sleep(0.005)                      # leave a background thread holding the lock
+        try:
+            return await call_next(request)
+        finally:
+            _request_lock.release()
     finally:
-        _request_lock.release()
+        _analytics_target.reset(token)
 
 @app.middleware("http")
 async def staff_guard(request, call_next):
