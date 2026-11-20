@@ -48,5 +48,7 @@ def save(j, qid, *, answer=None, actor="client"):
         conn.execute("INSERT INTO datos_answers (journey_id, question_id, status, answer, updated_at) VALUES (?, ?, ?, ?, ?) "
                      "ON CONFLICT (journey_id, question_id) DO UPDATE SET status = excluded.status, answer = excluded.answer, "
                      "updated_at = excluded.updated_at", (j["id"], qid, status, answer, journey._now_iso()))
+    from aprende import analytics as _analytics
+    _analytics.record(j["id"], "datos_question_answered", {"question_id": qid, "skipped": answer is None})
     if get_datos(j)["completed"]:
         journey.apply(j["id"], "intake_completed", {}, actor="system")

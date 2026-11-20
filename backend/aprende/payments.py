@@ -167,6 +167,8 @@ def checkout(authorization: str = Header(None)):
     )
     db.execute("INSERT INTO checkout_sessions (id, journey_id, amount_cents, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
                (session["id"], j["id"], amount, journey._now_iso()))
+    from aprende import analytics as _analytics
+    _analytics.record(j["id"], "checkout_started")
     return {"url": session["url"], "mode": mode()}
 
 

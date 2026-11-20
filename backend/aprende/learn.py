@@ -125,6 +125,11 @@ def get_lesson(journey, lesson_id, lang):
              db.query("SELECT id, title_es, title_en FROM content_steps WHERE lesson_id = ? ORDER BY position", (lesson_id,))}
     for item in _items(lesson_id):
         steps[item["step_id"]]["items"].append(_serve(item, lang, journey["id"]))
+    from aprende import analytics
+    existing = [r for r in db.query("SELECT props_json FROM events WHERE journey_id = ? AND type = 'lesson_started'",
+                                    (journey["id"],)) if __import__("json").loads(r[0]).get("lesson_id") == lesson_id]
+    if not existing:
+        analytics.record(journey["id"], "lesson_started", {"lesson_id": lesson_id})
     return {"id": lesson["id"], "title": lesson["title_es"] if lang == "es" else lesson["title_en"],
             "character": lesson["character"], "sensitive": bool(lesson["sensitive"]),
             "steps": [s for s in steps.values() if s["items"]]}
@@ -169,9 +174,9 @@ def submit_attempt(journey, item_id, answer, lang="es"):
         conn.execute("INSERT INTO item_attempts (id, journey_id, item_id, version, attempt, correct, created_at) "
                      "VALUES (?, ?, ?, ?, ?, ?, ?)", (str(uuid.uuid4()), journey["id"], item_id, item["version"], attempt,
                                                       1 if correct else 0, at))
-        conn.execute("INSERT INTO events (id, journey_id, type, props_json, created_at) VALUES (?, ?, ?, ?, ?)",
-                     (str(uuid.uuid4()), journey["id"], "item_answered",
-                      json.dumps({"item_id": item_id, "correct": correct, "attempt": attempt}), at))
+        from aprende import analytics as _analytics
+        _analytics.record(journey["id"], "item_answered",
+                          {"item_id": item_id, "correct": correct, "attempt": attempt}, conn=conn)
         if correct:
             from aprende import motivation       # motivation imports learn (for the clock)
             awarded = motivation.award_petal_tx(conn, journey["id"], "item_correct", item_id, motivation.PETAL_ITEM, at)
@@ -196,6 +201,8 @@ def complete_lesson(journey, lesson_id):
             conn.execute("INSERT INTO lesson_completions (journey_id, lesson_id, completed_at) VALUES (?, ?, ?) "
                          "ON CONFLICT (journey_id, lesson_id) DO NOTHING", (journey["id"], lesson_id, at))
             motivation.award_petal_tx(conn, journey["id"], "lesson_complete", lesson_id, motivation.PETAL_LESSON, at)
+        from aprende import analytics as _analytics
+        _analytics.record(journey["id"], "lesson_completed", {"lesson_id": lesson_id})
         if lesson["unit"] in DISCOUNT_UNITS:
             journeys.apply(journey["id"], f"lesson_completed:{lesson['unit']}", {}, actor="system")
         elif lesson["unit"] == "final":

@@ -247,6 +247,25 @@ def apply(journey_id, event_type, payload=None, actor="system"):
     inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())
     if not inserted:
         return get_journey(j["id"])
+    _ANALYTICS_MAP = {
+        "consent": ("consent", lambda p: {"answer": p.get("answer")} if "answer" in p else {}),
+        "conflict_auto": ("conflict_auto", lambda p: {"result": p.get("result")} if "result" in p else {}),
+        "documents_tentative": ("documents_tentative", lambda p: {"codes": p.get("codes")} if "codes" in p else {}),
+        "engagement_signed": ("engagement_signed", lambda p: {}),
+        "paid": ("paid", lambda p: {}),
+        "drafts_ready": ("drafts_ready", lambda p: {}),
+        "attorney_approved": ("attorney_approved", lambda p: {}),
+        "client_confirmed": ("client_confirmed", lambda p: {}),
+        "changes_requested": ("changes_requested", lambda p: {}),
+        "signing_booked": ("signing_booked", lambda p: {}),
+        "signed": ("signed", lambda p: {}),
+        "final_lesson_completed": ("final_lesson_completed", lambda p: {}),
+        "intake_completed": ("datos_completed", lambda p: {}),
+    }
+    if event_type in _ANALYTICS_MAP:
+        ev_type, prop_fn = _ANALYTICS_MAP[event_type]
+        from aprende import analytics as _analytics
+        _analytics.record(j["id"], ev_type, prop_fn(payload))
     if event_type == "documents_confirmed":
         new_codes = list(payload.get("codes") or [])
         if scope_was_approved and sorted(prev_confirmed) != sorted(new_codes):
