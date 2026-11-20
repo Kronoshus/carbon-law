@@ -196,19 +196,29 @@ def test_an_answer_is_audited_without_its_text():
 
 def test_no_conflict_match_names_on_the_clients_pages():
     before = conflicts.get_list()
-    conflicts.replace_list("name\nRosa Martínez Adversa\n")
+    conflicts.replace_list("name\nRemedios Xochiquetzal Adversaria\n")
     try:
         h = client("Ana Torres")
         send(h, "ai_disclosed")
         send(h, "consent", answer="yes")
-        jid = send(h, "names_submitted", names=["Ana Torres", "Rosa Martínez Adversa"]).json()["id"]
+        jid = send(h, "names_submitted", names=["Ana Torres", "Remedios Xochiquetzal Adversaria"]).json()["id"]
         assert journey.get_journey(jid)["conflict"] == "hold"
-        assert any("Rosa Martínez Adversa" in str(x["matches"]) for x in conflicts.queue() if x["journey_id"] == jid)
+        assert any("Remedios Xochiquetzal Adversaria" in str(x["matches"]) for x in conflicts.queue() if x["journey_id"] == jid)
         lst = c.get("/staff/journeys", headers=login(PARA))
         assert _row(jid)["conflict"] == "hold"
         det = c.get(f"/staff/journeys/{jid}", headers=login(PARA))
         assert det.status_code == 200
         for page in (lst.text, det.text, c.get("/journey", headers=h).text, c.get("/journey/questions", headers=h).text):
-            assert "Rosa" not in page and "Adversa" not in page and "matches" not in page and "possible" not in page
+            assert "Xochiquetzal" not in page and "Adversaria" not in page and "matches" not in page and "possible" not in page
     finally:
         conflicts.replace_list("name\n" + "\n".join(before)) if before else conflicts.delete_list()
+
+
+def test_the_staff_guard_keeps_cors_for_the_admin_page():
+    """The admin page is on another origin: preflights pass, and a refusal still carries the CORS header (lead, review)."""
+    origin = "https://carbon.bailment.tech"
+    pre = c.options("/staff/journeys", headers={"Origin": origin, "Access-Control-Request-Method": "GET",
+                                                "Access-Control-Request-Headers": "authorization"})
+    assert pre.status_code == 200 and pre.headers.get("access-control-allow-origin") == origin
+    refused = c.get("/staff/journeys", headers={**client(), "Origin": origin})
+    assert refused.status_code == 403 and refused.headers.get("access-control-allow-origin") == origin

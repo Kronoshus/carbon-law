@@ -43,10 +43,6 @@ _cors_origins = ["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http:
 _aprende_ext_origin = os.environ.get("APRENDE_EXTENSION_ORIGIN")
 if _aprende_ext_origin:
     _cors_origins.append(_aprende_ext_origin)
-app.add_middleware(CORSMiddleware,
-                   allow_origins=_cors_origins,
-                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                   allow_headers=["Authorization", "Content-Type"])
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
@@ -84,6 +80,12 @@ async def staff_guard(request, call_next):
         if u.get("role") == "client":
             return JSONResponse(status_code=403, content={"detail": "insufficient role"})
     return await call_next(request)
+
+# Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
+app.add_middleware(CORSMiddleware,
+                   allow_origins=_cors_origins,
+                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                   allow_headers=["Authorization", "Content-Type"])
 
 
 # ---------- in-memory stores (persisted to data.json) ----------
