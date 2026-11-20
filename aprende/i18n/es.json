@@ -313,5 +313,8 @@
   "privacy.ext.body": "La extensión guarda solo su sesión, en la memoria de Chrome, y la borra cuando usted cierra Chrome. Solo se comunica con el servidor del despacho.",
   "privacy.rights.title": "Sus derechos",
   "privacy.rights.body": "Puede pedir una copia de sus datos o que los borremos. Escríbanos a",
-  "privacy.version": "Versión borrador del 20 de noviembre de 2026."
+  "privacy.version": "Versión borrador del 20 de noviembre de 2026.",
+  "datos.serverError": "Hubo un problema al cargar. Intente de nuevo.",
+  "datos.retry": "Intentar de nuevo",
+  "popup.signedOut": "Inicie sesión en el panel para ver su día."
 }

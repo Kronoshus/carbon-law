@@ -22,12 +22,15 @@ async function downloadUrl(url: string, filename: string) {
 export function Firmados() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [hasChecklist, setHasChecklist] = useState(false);
+  const [mayTakeFinal, setMayTakeFinal] = useState(false);
   useEffect(() => {
     (async () => {
       const r = await apiFetch('/signed-documents');
       if (r.ok) setDocs(await r.json());
       const c = await apiFetch('/funding-checklist');
       setHasChecklist(c.ok);
+      const j = await apiFetch('/journey');
+      if (j.ok) { const data = await j.json(); setMayTakeFinal(!!data?.gates?.may_take_final_lesson); }
     })();
   }, []);
   return h('section', { class: 'screen datos-page' },
@@ -40,6 +43,6 @@ export function Firmados() {
       h('h2', null, t('firmados.funding.title')),
       h('p', null, t('firmados.funding.body')),
       h('button', { class: 'btn', type: 'button', onClick: () => void downloadUrl('/funding-checklist', 'funding-checklist.md') }, t('firmados.funding.download'))) : null,
-    h('p', null, h('a', { class: 'link-btn', href: '#/leccion/final' }, t('firmados.final'))));
+    mayTakeFinal ? h('p', null, h('a', { class: 'link-btn', href: '#/leccion/final' }, t('firmados.final'))) : null);
 }
 

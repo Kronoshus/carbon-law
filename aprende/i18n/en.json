@@ -313,5 +313,8 @@
   "privacy.ext.body": "The extension keeps only your session, in Chrome's memory, and clears it when you close Chrome. It talks only to the firm's server.",
   "privacy.rights.title": "Your rights",
   "privacy.rights.body": "You can ask for a copy of your data or ask us to delete it. Write to us at",
-  "privacy.version": "Draft version of November 20, 2026."
+  "privacy.version": "Draft version of November 20, 2026.",
+  "datos.serverError": "There was a problem loading. Please try again.",
+  "datos.retry": "Try again",
+  "popup.signedOut": "Sign in in the panel to see your day."
 }
