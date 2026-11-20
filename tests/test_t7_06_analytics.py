@@ -61,8 +61,8 @@ def client(name="Ana Torres", email=None):
 
 
 def since():
-    """A moment just before the next journey starts: the dashboard then counts only this test's journeys."""
-    return (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=1)).replace(tzinfo=None).isoformat()
+    """Now, in the format of journeys.started_at: the dashboard then counts only the journeys this test starts."""
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
 
 
 def dash(s):
