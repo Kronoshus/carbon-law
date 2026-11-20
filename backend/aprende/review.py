@@ -10,7 +10,7 @@ from pydantic import BaseModel
 import app as backend_app
 import db
 from aprende import journey, legacy, timeline
-from carbon_intake import docx as make_docx
+from carbon_intake import docx as make_docx, unverified_cites
 
 router = APIRouter()
 
@@ -143,6 +143,9 @@ def review_journey(jid: str, body: Decision, authorization: str = Header(None)):
     # an open item has text inside the brackets; the notice at the top of every draft names the bare "[ATTORNEY TO COMPLETE]"
     if any(TODO.search(d["content"]) for d in drafts):
         raise HTTPException(409, "a draft still contains [ATTORNEY TO COMPLETE …]")
+    unverified = sorted({s for d in drafts for s in unverified_cites(d["content"])})
+    if unverified:
+        raise HTTPException(409, "a draft cites sections not on the verified list: " + ", ".join(unverified))
     with backend_app._request_lock:
         for d in drafts:
             backend_app.documents[d["id"]]["status"] = "Attorney Approved"

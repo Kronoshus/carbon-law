@@ -188,6 +188,9 @@ async def webhook(request: Request):
     j = journey.get_journey(jid) if jid else None
     if obj.get("payment_status") != "paid" or j is None:
         return Response(status_code=200)
+    if not j["gates"]["may_pay"]:            # no payment before clearance, scope and both signatures (Bus. & Prof. Code 6148)
+        notify_staff("Pago antes de la contrafirma", f"Expediente {jid}: Stripe cobró sin carta firmada por ambos; revise y reembolse.")
+        return Response(status_code=200)
     # The amount must be what we asked Stripe for: the session's amount, or (for a session we don't know) today's quote.
     asked = db.query("SELECT amount_cents FROM checkout_sessions WHERE id = ? AND journey_id = ?", (obj.get("id"), jid))
     if obj.get("amount_total") not in ({asked[0][0]} if asked else set()) | {_total(j)}:
