@@ -14,6 +14,7 @@ from pydantic import BaseModel
 import app as backend_app
 import db
 from aprende import journey, jobs, legacy, pricing
+from aprende import analytics
 from aprende.notify import notify_staff
 
 router = APIRouter()
@@ -167,8 +168,7 @@ def checkout(authorization: str = Header(None)):
     )
     db.execute("INSERT INTO checkout_sessions (id, journey_id, amount_cents, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
                (session["id"], j["id"], amount, journey._now_iso()))
-    from aprende import analytics as _analytics
-    _analytics.record(j["id"], "checkout_started")
+    analytics.record(j["id"], "checkout_started")
     return {"url": session["url"], "mode": mode()}
 
 

@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 import db
 from aprende import jobs
+from aprende import analytics
 from aprende.notify import notify_staff
 
 LA = ZoneInfo("America/Los_Angeles")
@@ -148,8 +149,7 @@ def tick(now):
                              "ON CONFLICT (journey_id, step, due) DO NOTHING",
                              (str(uuid.uuid4()), jid, step, due, now.astimezone(UTC).replace(tzinfo=None).isoformat()))
             if new:
-                from aprende import analytics as _analytics
-                _analytics.record(jid, "step_late", {"step": step})
+                analytics.record(jid, "step_late", {"step": step})
                 notify_staff("Paso atrasado", f"{step} venció el {due}. Expediente: /dashboard#journey={jid}")
 
 

@@ -56,10 +56,10 @@ import threading
 _request_lock = threading.Lock()
 
 from aprende import APRENDE_PREFIXES
+from aprende.analytics import TARGET as _analytics_target
 
 @app.middleware("http")
 async def serialize_requests(request, call_next):
-    from aprende.analytics import TARGET as _analytics_target
     origin = request.headers.get("origin") or ""
     token = _analytics_target.set("extension" if origin.startswith("chrome-extension://") else "web")
     try:
