@@ -6,6 +6,7 @@ import uuid
 from zoneinfo import ZoneInfo
 
 import app as backend_app
+from aprende import firm
 import db
 from aprende import journey
 from fastapi import APIRouter, Header, HTTPException, Query
@@ -53,34 +54,13 @@ def _now_iso():
     return now().astimezone(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _load_availability():
-    rows = db.query("SELECT value_json FROM settings WHERE key = ?", ("availability",))
-    if not rows:
-        return None
-    try:
-        return json.loads(rows[0][0])
-    except Exception:
-        return None
+_load_availability = firm._load_availability
 
 
-def _save_setting(key, value):
-    existing = db.query("SELECT key FROM settings WHERE key = ?", (key,))
-    if existing:
-        db.execute("UPDATE settings SET value_json = ?, updated_at = ? WHERE key = ?",
-                   (json.dumps(value), _now_iso(), key))
-    else:
-        db.execute("INSERT INTO settings (key, value_json, updated_at) VALUES (?, ?, ?)",
-                   (key, json.dumps(value), _now_iso()))
+_save_setting = firm._save_setting
 
 
-def _load_holidays():
-    rows = db.query("SELECT value_json FROM settings WHERE key = ?", ("holidays",))
-    if not rows:
-        return set()
-    try:
-        return set(json.loads(rows[0][0]) or [])
-    except Exception:
-        return set()
+_load_holidays = lambda: set(firm._load_holidays())
 
 
 def _parse_dt(s):
@@ -272,17 +252,19 @@ class PatchBody(BaseModel):
 
 @router.put("/staff/availability")
 def put_availability(body: AvailabilityBody, authorization: str = Header(None)):
-    _staff(authorization)
+    u = _staff(authorization)
     hours, slot_minutes = _validate_availability(body.hours, body.slot_minutes)
-    _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes})   # existing bookings are kept
+    _save_setting("availability", {"hours": hours, "slot_minutes": slot_minutes}, u["email"])   # existing bookings are kept
+    backend_app.log_audit(u["email"], "firm_settings", "settings", "availability", json.dumps({"hours": hours, "slot_minutes": slot_minutes}))
     return {"availability": {"hours": hours, "slot_minutes": slot_minutes}}
 
 
 @router.put("/staff/holidays")
 def put_holidays(body: HolidaysBody, authorization: str = Header(None)):
-    _staff(authorization)
+    u = _staff(authorization)
     dates = [str(d) for d in body.dates]
-    _save_setting("holidays", dates)
+    _save_setting("holidays", dates, u["email"])
+    backend_app.log_audit(u["email"], "firm_settings", "settings", "holidays", json.dumps(dates))
     return {"holidays": dates}
 
 

@@ -23,6 +23,7 @@ export function Datos({ group }: { group: string }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<'wait' | 'error' | null>(null);
+  const [chatOff, setChatOff] = useState(false);
   const engine = useRef<CharacterEngine | null>(null);
   const l = lang.value;
 
@@ -41,6 +42,10 @@ export function Datos({ group }: { group: string }) {
       const r = await apiFetch('/chat', { method: 'POST', json: { mode: 'intake', character, group, lang: l,
         messages: msgs.map((m) => ({ role: m.role, content: m.content, question_id: m.question_id, reasoning_content: m.reasoning_content })) } });
       if (r.status === 409) { setProblem('wait'); return; }
+      if (r.status === 503) {
+        const j = await r.json().catch(() => ({}));
+        if (j && j.error === 'ai_chat_off') { setChatOff(true); setBusy(false); return; }
+      }
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
       const mine = d.text ? [...msgs, { role: 'assistant' as const, content: d.history, shown: d.text, reasoning_content: d.reasoning }] : msgs;
@@ -65,6 +70,13 @@ export function Datos({ group }: { group: string }) {
     if (!r?.ok) { setBusy(false); setProblem('error'); return; }
     await ask(state.msgs);
   };
+
+  if (chatOff) {
+    return h('div', { class: 'datos' },
+      h('section', { class: 'datos-body' },
+        h('p', null, t('chat.off')),
+        h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('datos.done.back'))));
+  }
 
   const body = problem === 'wait'
     ? [h('p', null, t('datos.wait')), h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('datos.done.back'))]
