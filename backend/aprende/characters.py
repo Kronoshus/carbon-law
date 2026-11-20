@@ -1,7 +1,9 @@
-"""Character registry for Aprende y Planea (T3-06)."""
+"""Character registry for Aprende y Planea (T3-06, T7-03)."""
 import json
 
 import db
+
+UNITS = ("will", "trust", "ahcd", "poa", "final", "bonus", "games", "sensitive", "intake")
 
 
 def _rows():
@@ -34,12 +36,21 @@ def get(char_id):
     return None
 
 
-def character_for(unit):
-    """Enabled character assigned to `unit`, falling back to calavera."""
+def lesson_character(unit, authored):
     for c in list_enabled():
         if unit in (c["units"] or []):
             return c["id"]
+    if authored is not None and any(c["id"] == authored and c["enabled"] for c in list_all()):
+        return authored
     return "calavera"
+
+
+def item_character(authored, host):
+    if authored is None:
+        return None
+    if any(c["id"] == authored and c["enabled"] for c in list_all()):
+        return authored
+    return host
 
 
 def update(char_id, fields):
@@ -48,22 +59,35 @@ def update(char_id, fields):
         return None
     if char_id == "calavera" and fields.get("enabled") is False:
         raise ValueError("calavera cannot be disabled")
-    sets = []
-    params = []
-    if "enabled" in fields and fields["enabled"] is not None:
-        sets.append("enabled = ?")
-        params.append(1 if fields["enabled"] else 0)
-    if "units" in fields and fields["units"] is not None:
-        sets.append("units_json = ?")
-        params.append(json.dumps(fields["units"]))
-    if "voice_es" in fields:
-        sets.append("voice_es = ?")
-        params.append(fields["voice_es"])
-    if "voice_en" in fields:
-        sets.append("voice_en = ?")
-        params.append(fields["voice_en"])
-    if not sets:
-        return get(char_id)
-    params.append(char_id)
-    db.execute("UPDATE characters SET " + ", ".join(sets) + " WHERE id = ?", tuple(params))
+    with db.transaction() as conn:
+        sets = []
+        params = []
+        if "enabled" in fields and fields["enabled"] is not None:
+            sets.append("enabled = ?")
+            params.append(1 if fields["enabled"] else 0)
+        new_units = None
+        if "units" in fields and fields["units"] is not None:
+            new_units = list(fields["units"])
+            sets.append("units_json = ?")
+            params.append(json.dumps(new_units))
+        if "voice_es" in fields:
+            sets.append("voice_es = ?")
+            params.append(fields["voice_es"])
+        if "voice_en" in fields:
+            sets.append("voice_en = ?")
+            params.append(fields["voice_en"])
+        if sets:
+            p = list(params) + [char_id]
+            conn.execute("UPDATE characters SET " + ", ".join(sets) + " WHERE id = ?", tuple(p))
+        if new_units is not None:
+            for other in list_all():
+                if other["id"] == char_id:
+                    continue
+                other_units = [u for u in (other["units"] or []) if u not in new_units]
+                if other_units != (other["units"] or []):
+                    conn.execute("UPDATE characters SET units_json = ? WHERE id = ?", (json.dumps(other_units), other["id"]))
     return get(char_id)
+
+
+def character_for(unit):
+    return lesson_character(unit, None)

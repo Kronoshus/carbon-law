@@ -492,8 +492,17 @@ if __name__ == "__main__":
 SEED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "aprende", "content")
 DATOS_SEED_PATH = os.path.join(SEED_DIR, "datos.yaml")
 SUMMARIES_SEED_PATH = os.path.join(SEED_DIR, "summaries.yaml")
+PERSONAS_SEED_PATH = os.path.join(SEED_DIR, "personas.yaml")
+
+def _seed_personas():
+    with open(PERSONAS_SEED_PATH, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 class LanguageError(Exception):
+    def __init__(self, missing):
+        self.missing = missing
+
+class PlaceholderError(Exception):
     def __init__(self, missing):
         self.missing = missing
 
@@ -519,10 +528,12 @@ def _kind_of(entry_id):
         return "datos"
     if entry_id.startswith("summary:"):
         return "summary"
+    if entry_id.startswith("persona:"):
+        return "persona"
     return "item"
 
 def _is_legal(kind, entry_id):
-    if kind in ("datos", "summary"):
+    if kind in ("datos", "summary", "persona"):
         return True
     rows = db.query("SELECT legal FROM content_items WHERE id = ?", (entry_id,))
     return bool(rows and rows[0][0])
@@ -578,12 +589,62 @@ def missing_languages(body):
                 missing.append(lang)
     return [l for l in ("es", "en") if l in missing]
 
+
+def _persona_missing_languages(entry_id, body):
+    missing = []
+    if entry_id in ("persona:shared", "persona:modes.learn", "persona:modes.intake"):
+        text = body.get("text") if isinstance(body, dict) else None
+        if not (isinstance(text, str) and text.strip() != ""):
+            missing.append("en")
+    else:
+        name = body.get("name") if isinstance(body, dict) else None
+        if isinstance(name, dict):
+            for lang in missing_languages(name):
+                if lang not in missing:
+                    missing.append(lang)
+        else:
+            for lang in ("es", "en"):
+                if lang not in missing:
+                    missing.append(lang)
+        persona = body.get("persona") if isinstance(body, dict) else None
+        if not (isinstance(persona, str) and persona.strip() != ""):
+            if "en" not in missing:
+                missing.append("en")
+    return missing
+
+
+def _persona_missing_placeholders(entry_id, body):
+    required = PLACEHOLDERS.get(entry_id)
+    if not required:
+        return []
+    text = body.get("text") if isinstance(body, dict) else ""
+    text = text if isinstance(text, str) else ""
+    missing = []
+    for ph in required:
+        if ph not in text:
+            missing.append(ph)
+    return missing
+
 ITEM_ALLOWED = {"es", "en", "answer", "source"}
 
-def _validate_shape(kind, body):
+PLACEHOLDERS = {
+    "persona:shared": ["{name}", "{language}"],
+    "persona:modes.learn": ["{explanations}"],
+    "persona:modes.intake": ["{question}", "{question_id}"],
+}
+
+def _validate_shape(kind, entry_id=None, body=None):
     if not isinstance(body, dict):
         raise ShapeError("body must be object")
-    allowed = ITEM_ALLOWED if kind == "item" else {"es", "en"}
+    if kind == "item":
+        allowed = ITEM_ALLOWED
+    elif kind == "persona":
+        if entry_id in ("persona:shared", "persona:modes.learn", "persona:modes.intake"):
+            allowed = {"text"}
+        else:
+            allowed = {"name", "persona"}
+    else:
+        allowed = {"es", "en"}
     for k in body:
         if k not in allowed:
             raise ShapeError("extra key")
@@ -642,6 +703,19 @@ def _seed_body(entry_id):
         for a in _seed_summaries().get(doc, []):
             if a["article"] == int(art):
                 return {"es": a["es"], "en": a["en"]}
+    elif kind == "persona":
+        data = _seed_personas()
+        if entry_id == "persona:shared":
+            return {"text": data.get("shared")}
+        if entry_id == "persona:modes.learn":
+            return {"text": (data.get("modes") or {}).get("learn")}
+        if entry_id == "persona:modes.intake":
+            return {"text": (data.get("modes") or {}).get("intake")}
+        if entry_id.startswith("persona:characters."):
+            cid = entry_id.split(".", 1)[1]
+            ch = (data.get("characters") or {}).get(cid)
+            if ch is not None:
+                return {"name": ch.get("name"), "persona": ch.get("persona")}
     return None
 
 def _published(entry_id):
@@ -651,7 +725,7 @@ def _published(entry_id):
     return None
 
 def entries(kind):
-    if kind not in ("item", "datos", "summary"):
+    if kind not in ("item", "datos", "summary", "persona"):
         raise ShapeError("bad_kind")
     out = []
     if kind == "item":
@@ -675,6 +749,21 @@ def entries(kind):
         for q in _seed_datos():
             eid = "datos:" + q["id"]
             out.append({"entry_id": eid, "kind": "datos", "legal": True, "live_version": live_versions.get(eid, 0),
+                        "pending": pending_versions.get(eid)})
+    elif kind == "persona":
+        live_versions = {}
+        for eid, ver in db.query("SELECT entry_id, MAX(version) FROM content_versions WHERE kind='persona' AND state='published' GROUP BY entry_id"):
+            live_versions[eid] = ver
+        pending_versions = {}
+        for eid, ver, st in db.query("SELECT entry_id, version, state FROM content_versions WHERE kind='persona' AND state IN ('draft','review') ORDER BY version DESC"):
+            if eid not in pending_versions:
+                pending_versions[eid] = {"version": ver, "state": st}
+        data = _seed_personas()
+        eids = ["persona:shared", "persona:modes.learn", "persona:modes.intake"]
+        for cid in (data.get("characters") or {}):
+            eids.append(f"persona:characters.{cid}")
+        for eid in eids:
+            out.append({"entry_id": eid, "kind": "persona", "legal": True, "live_version": live_versions.get(eid, 0),
                         "pending": pending_versions.get(eid)})
     else:
         live_versions = {}
@@ -709,6 +798,9 @@ def entry(entry_id):
         qid = entry_id.split(":", 1)[1]
         if qid not in {q["id"] for q in _seed_datos()}:
             raise KeyError(entry_id)
+    elif kind == "persona":
+        if _seed_body(entry_id) is None:
+            raise KeyError(entry_id)
     else:
         part = entry_id.split(":", 1)[1]
         doc, art = part.rsplit(".", 1)
@@ -728,7 +820,7 @@ def entry(entry_id):
 
 def save_draft(entry_id, body, actor):
     kind = _kind_of(entry_id)
-    _validate_shape(kind, body)
+    _validate_shape(kind, entry_id, body)
     if kind == "item":
         if not db.query("SELECT 1 FROM content_items WHERE id = ?", (entry_id,)):
             raise KeyError(entry_id)
@@ -764,9 +856,17 @@ def submit(entry_id, actor):
     if newest is None or newest["state"] != "draft":
         raise NoDraftError()
     body = json.loads(newest["body_json"])
-    missing = missing_languages(body)
-    if missing:
-        raise LanguageError(missing)
+    if kind == "persona":
+        missing = _persona_missing_languages(entry_id, body)
+        if missing:
+            raise LanguageError(missing)
+        ph_missing = _persona_missing_placeholders(entry_id, body)
+        if ph_missing:
+            raise PlaceholderError(ph_missing)
+    else:
+        missing = missing_languages(body)
+        if missing:
+            raise LanguageError(missing)
     with db.transaction():
         db.execute("UPDATE content_versions SET state='review', submitted_by=?, submitted_at=? WHERE entry_id=? AND version=?",
                    (actor, _now(), entry_id, newest["version"]))
@@ -781,9 +881,17 @@ def _publish_transition(entry_id, version, actor):
     if state not in ("draft", "review"):
         raise NoVersionError()
     body = json.loads(body_json)
-    missing = missing_languages(body)
-    if missing:
-        raise LanguageError(missing)
+    if entry_id.startswith("persona:"):
+        missing = _persona_missing_languages(entry_id, body)
+        if missing:
+            raise LanguageError(missing)
+        ph_missing = _persona_missing_placeholders(entry_id, body)
+        if ph_missing:
+            raise PlaceholderError(ph_missing)
+    else:
+        missing = missing_languages(body)
+        if missing:
+            raise LanguageError(missing)
     pending = _pending_version(entry_id)
     if pending is None or pending["version"] != version:
         raise NoVersionError()
@@ -845,6 +953,18 @@ def live_entries(kind):
             for a in arts:
                 eid = f"summary:{doc}.{a['article']}"
                 out[eid] = json.loads(published[eid]) if eid in published else {"es": a["es"], "en": a["en"]}
+        return out
+    if kind == "persona":
+        published = {r[0]: r[1] for r in db.query("SELECT entry_id, body_json FROM content_versions WHERE kind='persona' AND state='published'")}
+        data = _seed_personas()
+        seed_map = {}
+        seed_map["persona:shared"] = {"text": data.get("shared")}
+        seed_map["persona:modes.learn"] = {"text": (data.get("modes") or {}).get("learn")}
+        seed_map["persona:modes.intake"] = {"text": (data.get("modes") or {}).get("intake")}
+        for cid, ch in (data.get("characters") or {}).items():
+            seed_map[f"persona:characters.{cid}"] = {"name": ch.get("name"), "persona": ch.get("persona")}
+        for eid, seed in seed_map.items():
+            out[eid] = json.loads(published[eid]) if eid in published else seed
         return out
     return out
 

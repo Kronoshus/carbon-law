@@ -39,9 +39,20 @@ def _fill(text, **values):
 
 
 def _persona(character, lang, mode, **values):
-    c = PERSONAS["characters"][character]
-    parts = (PERSONAS["shared"], c["persona"], PERSONAS["modes"][mode])
-    return _fill("\n\n".join(parts), name=c["name"][lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
+    live = content.live_entries("persona")
+    shared_body = live.get("persona:shared", {"text": PERSONAS["shared"]})
+    shared_text = shared_body.get("text", PERSONAS["shared"]) if isinstance(shared_body, dict) else PERSONAS["shared"]
+    char_seed = PERSONAS["characters"][character]
+    char_body = live.get(f"persona:characters.{character}", {"name": char_seed["name"], "persona": char_seed["persona"]})
+    if not isinstance(char_body, dict):
+        char_body = {"name": char_seed["name"], "persona": char_seed["persona"]}
+    c_name = char_body.get("name", char_seed["name"])
+    c_persona = char_body.get("persona", char_seed["persona"])
+    mode_seed = PERSONAS["modes"][mode]
+    mode_body = live.get(f"persona:modes.{mode}", {"text": mode_seed})
+    mode_text = mode_body.get("text", mode_seed) if isinstance(mode_body, dict) else mode_seed
+    parts = (shared_text, c_persona, mode_text)
+    return _fill("\n\n".join(parts), name=c_name[lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
 
 
 def system_prompt(character, lesson_id, lang):
@@ -107,7 +118,8 @@ async def post_chat(body: ChatBody, authorization: str = Header(None)):
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
     if body.mode not in ("learn", "intake"):
         raise HTTPException(422, "unsupported mode")
-    if body.character not in PERSONAS["characters"] or characters.get(body.character) is None:
+    _ch = characters.get(body.character)
+    if body.character not in PERSONAS["characters"] or _ch is None or not _ch["enabled"]:
         raise HTTPException(422, "unknown character")
     if body.mode == "learn" and not db.query("SELECT id FROM content_lessons WHERE id = ?", (body.lesson_id or "",)):
         raise HTTPException(404, "lesson not found")

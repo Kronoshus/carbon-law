@@ -1,4 +1,4 @@
-"""FastAPI routes for Aprende characters (T3-06)."""
+"""FastAPI routes for Aprende characters (T3-06, T7-03)."""
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
@@ -20,6 +20,22 @@ def _auth(authorization, roles=None):
         raise HTTPException(401, "not authenticated")
     u, _ = backend_app.require_auth(authorization, roles)
     return u
+
+
+@router.get("/staff/characters")
+def staff_characters(authorization: str = Header(None)):
+    _auth(authorization, {"paralegal", "attorney", "admin"})
+    out = []
+    for c in characters.list_all():
+        out.append({
+            "id": c["id"],
+            "name_key": f"character.{c['id']}.name",
+            "enabled": c["enabled"],
+            "units": c["units"],
+            "voice_es": c["voice_es"],
+            "voice_en": c["voice_en"],
+        })
+    return out
 
 
 @router.get("/characters")
@@ -44,6 +60,10 @@ def patch_character(char_id: str, body: CharacterPatch, authorization: str = Hea
     if existing is None:
         raise HTTPException(404, "unknown character")
     fields = body.model_dump(exclude_unset=True)
+    if "units" in fields and fields["units"] is not None:
+        for unit in fields["units"]:
+            if unit not in characters.UNITS:
+                raise HTTPException(422, "unknown unit")
     try:
         updated = characters.update(char_id, fields)
     except ValueError as e:

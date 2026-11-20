@@ -141,6 +141,11 @@
       <div id="reviewDetail" hidden></div>
     </div>
 
+    <div class="section" id="personajes">
+      <h2>Personajes</h2>
+      <div id="charactersList"></div>
+    </div>
+
     <div class="section" id="contenido">
       <h2 id="contenidoHeading">Contenido</h2>
       <p id="contentStatus" role="status" aria-live="polite"></p>
@@ -149,6 +154,7 @@
         <option value="item">Lecciones</option>
         <option value="datos">Tus datos</option>
         <option value="summary">Resúmenes</option>
+        <option value="persona">Personajes (instrucciones)</option>
       </select>
       <div id="contentEntries" class="card content-entries"></div>
       <div id="contentDetail" class="card" hidden></div>
@@ -160,6 +166,7 @@
 <script src="api.js"></script>
 <script src="admin.js"></script>
 <script src="content.js"></script>
+<script src="characters.js"></script>
 <script src="review.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
