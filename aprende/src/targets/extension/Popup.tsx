@@ -65,7 +65,7 @@ export function Popup() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      await apiFetch('/settings/public');
+      await apiFetch('/settings/public').catch(() => null);
       if (extensionOff.value) { setOff(true); return; }
       try {
         const res = await apiFetch('/journey');

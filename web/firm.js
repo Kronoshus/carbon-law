@@ -1,108 +1,111 @@
+(() => {
+  const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  const DAY_LABELS = { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" };
+  const $ = (id) => document.getElementById(id);
+  let saved = null;
+  let holidays = [];
 
-const DAYS = ["mon","tue","wed","thu","fri","sat","sun"];
-const DAY_LABELS = {mon:"Lunes",tue:"Martes",wed:"Miércoles",thu:"Jueves",fri:"Viernes",sat:"Sábado",sun:"Domingo"};
+  function say(text) { $("firmaMessage").textContent = text; }
 
-function authHeader() { const t = (typeof getToken === "function") ? getToken() : localStorage.getItem("carbon_token"); return t ? "Bearer " + t : null; }
-
-let initial = null;
-let holidays = [];
-let hours = {};
-let slotMinutes = { signing: 60, consultation: 30 };
-
-async function load() {
-  const res = await fetch("/staff/firm-settings", { headers: { "Content-Type": "application/json", Authorization: authHeader() } });
-  const data = await res.json();
-  initial = data;
-  holidays = (data.holidays || []).slice();
-  hours = (data.availability && data.availability.hours) ? data.availability.hours : {};
-  slotMinutes = (data.availability && data.availability.slot_minutes) ? data.availability.slot_minutes : slotMinutes;
-
-  document.getElementById("firmVoice").checked = !!data.switches.voice_recording;
-  document.getElementById("firmAi").checked = !!data.switches.ai_chat;
-  document.getElementById("firmExt").checked = !!data.switches.extension;
-  document.getElementById("firmLpd").value = data.lessons_per_day;
-  document.getElementById("firmRetention").value = data.retention.unpaid_personal_data_days;
-
-  const user = (typeof getUser === "function") ? getUser() : JSON.parse(localStorage.getItem("carbon_user") || "null");
-  const canEdit = user && (user.role === "attorney" || user.role === "admin");
-  if (!canEdit) {
-    ["firmVoice","firmAi","firmExt","firmLpd","firmRetention"].forEach((id) => { const el = document.getElementById(id); if (el) el.disabled = true; });
-    const save = document.getElementById("firmSave"); if (save) save.remove();
-    const msg = document.getElementById("firmReadOnly");
-    if (msg) { msg.removeAttribute("hidden"); msg.style.display = "block"; msg.textContent = "Solo el abogado o un administrador puede cambiar estos ajustes."; }
+  async function call(path, method, body) {
+    const res = await fetch(CARBON_API_BASE + path, {
+      method: method || "GET",
+      headers: { "Content-Type": "application/json", Authorization: authHeader() },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    return res.json();
   }
 
-  renderHolidays();
-  renderHours();
-}
+  function renderHolidays() {
+    $("firmHolidayList").replaceChildren(...holidays.map((d) => Object.assign(document.createElement("li"), { textContent: d })));
+  }
 
-function renderHolidays() {
-  const ul = document.getElementById("firmHolidayList");
-  ul.textContent = "";
-  holidays.forEach((d) => {
-    const li = document.createElement("li");
-    li.textContent = d;
-    ul.appendChild(li);
+  function renderHours(hours) {
+    $("firmHoursRows").replaceChildren(...DAYS.map((day) => {
+      const span = (hours[day] || [])[0] || ["", ""];
+      const time = (kind, value) => {
+        const input = Object.assign(document.createElement("input"), { type: "time", value });
+        input.dataset.day = day; input.dataset.kind = kind;
+        const label = document.createElement("label");
+        label.append(kind === "from" ? "Desde " : "Hasta ", input);
+        return label;
+      };
+      const tr = document.createElement("tr");
+      const name = Object.assign(document.createElement("td"), { textContent: DAY_LABELS[day] });
+      const cell = document.createElement("td");
+      cell.append(time("from", span[0]), " ", time("to", span[1]));
+      tr.append(name, cell);
+      return tr;
+    }));
+  }
+
+  function show(settings) {
+    saved = settings;
+    $("firmVoice").checked = settings.switches.voice_recording;
+    $("firmAi").checked = settings.switches.ai_chat;
+    $("firmExt").checked = settings.switches.extension;
+    $("firmLpd").value = settings.lessons_per_day;
+    $("firmRetention").value = settings.retention.unpaid_personal_data_days;
+  }
+
+  async function load() {
+    let settings;
+    try { settings = await call("/staff/firm-settings"); } catch (_) { say("No se pudieron cargar los ajustes."); return; }
+    show(settings);
+    holidays = (settings.holidays || []).slice().sort();
+    renderHolidays();
+    renderHours((settings.availability && settings.availability.hours) || {});
+    const role = (getUser() || {}).role;
+    if (role !== "attorney" && role !== "admin") {
+      ["firmVoice", "firmAi", "firmExt", "firmLpd", "firmRetention"].forEach((id) => { $(id).disabled = true; });
+      $("firmSave").remove();
+      $("firmReadOnly").textContent = "Solo el abogado o un administrador puede cambiar estos ajustes.";
+      $("firmReadOnly").hidden = false;
+    }
+  }
+
+  async function saveSettings() {
+    const changes = {};
+    const switches = {};
+    for (const [id, name] of [["firmVoice", "voice_recording"], ["firmAi", "ai_chat"], ["firmExt", "extension"]]) {
+      if ($(id).checked !== saved.switches[name]) switches[name] = $(id).checked;
+    }
+    if (Object.keys(switches).length) changes.switches = switches;
+    const lessons = Number($("firmLpd").value);
+    if (lessons !== saved.lessons_per_day) changes.lessons_per_day = lessons;
+    const days = Number($("firmRetention").value);
+    if (days !== saved.retention.unpaid_personal_data_days) changes.retention = { unpaid_personal_data_days: days };
+    if (!Object.keys(changes).length) { say("No hay cambios."); return; }
+    try { show(await call("/staff/firm-settings", "PUT", changes)); say("Ajustes guardados."); }
+    catch (_) { say("No se guardaron los ajustes. Revise los valores: lecciones por día de 1 a 4, y 30 días o más."); }
+  }
+
+  async function addHoliday() {
+    const day = $("firmHolidayDate").value;
+    if (!day) return;
+    const next = [...new Set([...holidays, day])].sort();
+    try { await call("/staff/holidays", "PUT", { dates: next }); holidays = next; renderHolidays(); say("Feriado agregado."); }
+    catch (_) { say("No se pudo agregar el feriado."); }
+  }
+
+  async function saveHours() {
+    const hours = {};
+    for (const day of DAYS) {
+      const from = document.querySelector(`#firmHoursRows input[data-day="${day}"][data-kind="from"]`).value;
+      const to = document.querySelector(`#firmHoursRows input[data-day="${day}"][data-kind="to"]`).value;
+      hours[day] = from && to ? [[from, to]] : [];
+    }
+    const slots = (saved && saved.availability && saved.availability.slot_minutes) || { signing: 60, consultation: 30 };
+    try { await call("/staff/availability", "PUT", { hours, slot_minutes: slots }); say("Horario guardado."); }
+    catch (_) { say("No se pudo guardar el horario."); }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!$("firma")) return;
+    load();
+    $("firmSave").addEventListener("click", saveSettings);
+    $("firmAddHoliday").addEventListener("click", addHoliday);
+    $("firmSaveHours").addEventListener("click", saveHours);
   });
-}
-
-function renderHours() {
-  const tbody = document.getElementById("firmHoursRows");
-  tbody.textContent = "";
-  DAYS.forEach((day) => {
-    const tr = document.createElement("tr");
-    const td0 = document.createElement("td"); td0.textContent = DAY_LABELS[day]; tr.appendChild(td0);
-    const td1 = document.createElement("td");
-    const from = document.createElement("input"); from.type = "time"; from.dataset.day = day; from.dataset.kind = "from";
-    const to = document.createElement("input"); to.type = "time"; to.dataset.day = day; to.dataset.kind = "to";
-    const row = hours[day] && hours[day][0];
-    if (row) { from.value = row[0]; to.value = row[1]; }
-    const lblFrom = document.createElement("label"); lblFrom.textContent = "Desde "; lblFrom.appendChild(from);
-    const lblTo = document.createElement("label"); lblTo.textContent = "Hasta "; lblTo.appendChild(to);
-    td1.appendChild(lblFrom); td1.appendChild(lblTo);
-    tr.appendChild(td1);
-    tbody.appendChild(tr);
-  });
-}
-
-async function saveSettings() {
-  const changes = {};
-  const switches = {};
-  if (document.getElementById("firmVoice").checked !== !!initial.switches.voice_recording) switches.voice_recording = document.getElementById("firmVoice").checked;
-  if (document.getElementById("firmAi").checked !== !!initial.switches.ai_chat) switches.ai_chat = document.getElementById("firmAi").checked;
-  if (document.getElementById("firmExt").checked !== !!initial.switches.extension) switches.extension = document.getElementById("firmExt").checked;
-  if (Object.keys(switches).length) changes.switches = switches;
-  const lpd = Number(document.getElementById("firmLpd").value);
-  if (lpd !== initial.lessons_per_day) changes.lessons_per_day = lpd;
-  const ret = Number(document.getElementById("firmRetention").value);
-  if (ret !== initial.retention.unpaid_personal_data_days) changes.retention = { unpaid_personal_data_days: ret };
-  await fetch("/staff/firm-settings", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: authHeader() }, body: JSON.stringify(changes) });
-}
-
-async function addHoliday() {
-  const d = document.getElementById("firmHolidayDate").value;
-  if (!d) return;
-  if (!holidays.includes(d)) holidays.push(d);
-  holidays.sort();
-  await fetch("/staff/holidays", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: authHeader() }, body: JSON.stringify({ dates: holidays }) });
-  renderHolidays();
-}
-
-async function saveHours() {
-  const h = {};
-  DAYS.forEach((day) => {
-    const from = document.querySelector(`input[data-day="${day}"][data-kind="from"]`).value;
-    const to = document.querySelector(`input[data-day="${day}"][data-kind="to"]`).value;
-    if (from && to) h[day] = [[from, to]];
-    else h[day] = [];
-  });
-  await fetch("/staff/availability", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: authHeader() }, body: JSON.stringify({ hours: h, slot_minutes: slotMinutes }) });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const m = document.getElementById("adminMain"); if (m) m.hidden = false;
-  load();
-  const save = document.getElementById("firmSave"); if (save) save.addEventListener("click", saveSettings);
-  const add = document.getElementById("firmAddHoliday"); if (add) add.addEventListener("click", addHoliday);
-  const sh = document.getElementById("firmSaveHours"); if (sh) sh.addEventListener("click", saveHours);
-});
+})();

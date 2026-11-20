@@ -5,7 +5,5 @@ import { App } from '../../ui/App';
 import { apiFetch } from '../../core/api';
 
 setPlatform(extensionPlatform);
-void (async () => {
-  await apiFetch('/settings/public');
-})();
+void apiFetch('/settings/public').catch(() => null);
 render(h(App, null), document.getElementById('app')!);
