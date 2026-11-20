@@ -105,7 +105,6 @@ def _messages(raw):
 async def post_chat(body: ChatBody, authorization: str = Header(None)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
-    from fastapi.responses import JSONResponse
     if not firm.switch("ai_chat"):
         return JSONResponse(status_code=503, content={"error": "ai_chat_off"})
     if body.mode not in ("learn", "intake"):

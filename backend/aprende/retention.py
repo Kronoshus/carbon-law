@@ -1,16 +1,14 @@
 """Retention sweep for unpaid journeys' personal data (T7-05)."""
 import datetime
 import json
+from zoneinfo import ZoneInfo
 
+import app as backend_app
 import db
 from aprende import jobs
 from aprende import firm
 
-try:
-    from app import log_audit
-except Exception:
-    def log_audit(*a, **k):
-        pass
+LA = ZoneInfo("America/Los_Angeles")
 
 
 def _threshold_days():
@@ -26,14 +24,23 @@ def _is_paid(jid):
 
 
 def _last_activity(jid):
-    rows = db.query("SELECT MAX(created_at) FROM journey_events WHERE journey_id = ?", (jid,))
-    if rows and rows[0] and rows[0][0]:
-        return rows[0][0]
+    row = db.query(
+        "SELECT MAX(v) FROM ("
+        "  SELECT started_at AS v FROM journeys WHERE id = ? "
+        "  UNION ALL "
+        "  SELECT created_at AS v FROM journey_events WHERE journey_id = ? "
+        "  UNION ALL "
+        "  SELECT updated_at AS v FROM datos_answers WHERE journey_id = ? "
+        "  UNION ALL "
+        "  SELECT created_at AS v FROM item_attempts WHERE journey_id = ? "
+        ")", (jid, jid, jid, jid))
+    if row and row[0] and row[0][0]:
+        return row[0][0]
     rows = db.query("SELECT started_at FROM journeys WHERE id = ?", (jid,))
     return rows[0][0] if rows else None
 
 
-def _to_naive(dt, value):
+def _to_naive(value):
     if value is None:
         return None
     if isinstance(value, datetime.datetime):
@@ -45,10 +52,10 @@ def _to_naive(dt, value):
     return v
 
 
-def sweep(now=None):
-    if now is None:
-        now = datetime.datetime.now(datetime.timezone.utc)
-    now = _to_naive(now, now)
+def sweep(now):
+    if not isinstance(now, datetime.datetime):
+        now = datetime.datetime.fromisoformat(str(now))
+    now = _to_naive(now)
     days = _threshold_days()
     cutoff = now - datetime.timedelta(days=days)
     jids = [r[0] for r in db.query("SELECT id FROM journeys")]
@@ -57,39 +64,37 @@ def sweep(now=None):
         if _is_paid(jid):
             continue
         la = _last_activity(jid)
-        dt = _to_naive(None, la) if False else None
-        try:
-            dt = datetime.datetime.fromisoformat(str(la)) if la is not None else None
-            if dt is not None and dt.tzinfo is not None:
-                dt = dt.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-        except (ValueError, TypeError):
-            dt = None
+        dt = _to_naive(la)
         if dt is None or dt > cutoff:
             continue
-        existing = db.query("SELECT COUNT(*) FROM datos_answers WHERE journey_id = ?", (jid,))[0][0]
-        existing += db.query("SELECT COUNT(*) FROM datos_audit WHERE journey_id = ?", (jid,))[0][0]
-        existing += db.query("SELECT COUNT(*) FROM attorney_questions WHERE journey_id = ?", (jid,))[0][0]
-        if existing == 0:
+        counts = {
+            "datos_answers": db.query("SELECT COUNT(*) FROM datos_answers WHERE journey_id = ?", (jid,))[0][0],
+            "datos_audit": db.query("SELECT COUNT(*) FROM datos_audit WHERE journey_id = ?", (jid,))[0][0],
+            "attorney_questions": db.query("SELECT COUNT(*) FROM attorney_questions WHERE journey_id = ?", (jid,))[0][0],
+        }
+        if sum(counts.values()) == 0:
             continue
-        with db.transaction() as conn:
-            conn.execute("DELETE FROM datos_answers WHERE journey_id = ?", (jid,))
-            conn.execute("DELETE FROM datos_audit WHERE journey_id = ?", (jid,))
-            conn.execute("DELETE FROM attorney_questions WHERE journey_id = ?", (jid,))
-        try:
-            log_audit("retention", "retention_sweep", "journey", jid, "")
-        except Exception:
-            pass
+        with db.transaction():
+            db.execute("DELETE FROM datos_answers WHERE journey_id = ?", (jid,))
+            db.execute("DELETE FROM datos_audit WHERE journey_id = ?", (jid,))
+            db.execute("DELETE FROM attorney_questions WHERE journey_id = ?", (jid,))
+        backend_app.log_audit("retention", "retention_sweep", "journey", jid, json.dumps(counts))
         swept += 1
-    jobs.enqueue("retention_sweep", "retention_sweep", run_after=now + datetime.timedelta(days=1))
     return {"journeys": swept}
 
 
 def schedule(at):
-    jobs.enqueue("retention_sweep", "retention_sweep", run_after=at)
+    jobs.enqueue("retention_sweep", f"retention_sweep:{at:%Y-%m-%d}", run_after=at)
 
 
-def _handler(job):
-    sweep()
+def _job(job):
+    sweep(datetime.datetime.now(datetime.timezone.utc))
+    tomorrow = (datetime.datetime.now(LA) + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
+    # ensure future
+    now_la = datetime.datetime.now(LA)
+    if tomorrow <= now_la:
+        tomorrow = tomorrow + datetime.timedelta(days=1)
+    schedule(tomorrow.astimezone(datetime.timezone.utc))
 
 
-jobs.register("retention_sweep", _handler)
+jobs.register("retention_sweep", _job)

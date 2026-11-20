@@ -140,12 +140,40 @@
       <div class="card table-wrap"><table><thead><tr><th>Cliente</th><th>Vence</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
       <div id="reviewDetail" hidden></div>
     </div>
+  
+    <section id="firma">
+      <h2>Firma</h2>
+      <div id="firmaMessage" role="status"></div>
+      <div class="card">
+        <h3>Ajustes</h3>
+        <label><input type="checkbox" id="firmVoice"> Grabación de voz</label><br>
+        <label><input type="checkbox" id="firmAi"> Charla con IA</label><br>
+        <label><input type="checkbox" id="firmExt"> Extensión de Chrome</label><br>
+        <label>Lecciones por día <input type="number" id="firmLpd" min="1" max="4"></label><br>
+        <label>Borrar datos de quien no pagó después de (días) <input type="number" id="firmRetention" min="30"></label><br>
+        <button class="btn" id="firmSave" type="button">Guardar ajustes</button>
+        <p id="firmReadOnly" hidden></p>
+      </div>
+      <div class="card">
+        <h3>Feriados</h3>
+        <label>Día feriado <input type="date" id="firmHolidayDate"></label>
+        <button class="btn sm" id="firmAddHoliday" type="button">Agregar feriado</button>
+        <ul id="firmHolidayList"></ul>
+      </div>
+      <div class="card">
+        <h3>Horario de oficina</h3>
+        <table><tbody id="firmHoursRows"></tbody></table>
+        <button class="btn secondary" id="firmSaveHours" type="button">Guardar horario</button>
+      </div>
+    </section>
+
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script src="admin.js"></script>
 <script src="review.js"></script>
+<script src="firm.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
 function closeModal(id){document.getElementById(id).close();document.getElementById('matterForm').reset();}

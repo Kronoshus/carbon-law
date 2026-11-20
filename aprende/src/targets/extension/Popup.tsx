@@ -2,7 +2,8 @@ import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
-import { apiFetch } from '../../core/api';
+import { apiFetch, extensionOff } from '../../core/api';
+import { NoDisponible } from '../../ui/screens/NoDisponible';
 
 type Journey = {
   day: number;
@@ -64,13 +65,8 @@ export function Popup() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const sp = await fetch('/settings/public');
-        if (sp.status === 503) {
-          const j = await sp.json().catch(() => ({}));
-          if (j && j.error === 'extension_off') { setOff(true); return; }
-        }
-      } catch { /* ignore */ }
+      await apiFetch('/settings/public');
+      if (extensionOff.value) { setOff(true); return; }
       try {
         const res = await apiFetch('/journey');
         if (!res.ok) return;
@@ -102,9 +98,7 @@ export function Popup() {
     ? t('popup.complete')
     : t(GATE_LABEL[step]);
 
-  if (off) {
-    return h('main', { class: 'popup' }, h('p', null, 'No disponible'));
-  }
+  if (off) return h(NoDisponible, null);
 
   return (
     <main class="popup">
