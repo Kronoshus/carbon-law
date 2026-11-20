@@ -90,8 +90,7 @@ async def audit_aprende_writes(request, call_next):
     mark = len(audit) if is_aprende else 0
     response = await call_next(request)
     if (is_aprende and state_changing and 200 <= response.status_code < 300):
-        if len(audit) == mark:   # handler did not already write an audit row
-            # actor
+        if len(audit) == mark:   # the handler wrote no audit row of its own
             auth = request.headers.get("authorization")
             actor = "stripe" if path == "/payments/webhook" else None
             if actor is None and auth:
@@ -104,8 +103,12 @@ async def audit_aprende_writes(request, call_next):
             route_path = getattr(route, "path", path)
             params = getattr(request, "path_params", {}) or {}
             entity_id = ",".join(str(v) for v in params.values())
-            with _request_lock:
+            while not _request_lock.acquire(blocking=False):     # polled like serialize_requests: never block the event loop
+                await asyncio.sleep(0.005)
+            try:
                 log_audit(actor, f"{method} {route_path}", "route", entity_id, "")
+            finally:
+                _request_lock.release()
     return response
 
 # Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
