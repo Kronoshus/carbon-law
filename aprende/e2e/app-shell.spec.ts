@@ -21,16 +21,20 @@ test('signup in Spanish lands on the day-1 gate without tabs; the app has tabs w
 test('rail replaces tabs above 64em', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aprende_token', 'tok'));   // before any page: no public-page redirect
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto('/#/perfil');                                                  // a page that makes no API call
+  await page.goto('/#/sin-pagina');                                              // a page that makes no API call (T8-03: Perfil reads /progress)
   await expect(page.locator('nav.rail')).toBeVisible();
   await expect(page.locator('nav.tabs')).toBeHidden();
 });
 
 test('sign-out clears token and returns to entrar', async ({ page }) => {
-  // seed token
-  await page.goto('/#/bienvenida');
-  await page.evaluate(() => localStorage.setItem('aprende_token', 'tok'));
-  await page.goto('/#/entrar');
+  // T8-03: Perfil reads /progress, so a made-up token would be signed out by the server first; sign up for real
+  await page.goto('/#/cuenta-nueva');
+  await page.getByLabel(/Nombre/i).fill('Ana Torres');
+  await page.getByLabel(/Correo/i).fill(`ana-${Date.now()}@example.com`);
+  await page.getByLabel(/Contraseña/i).fill('long-secure-password');
+  await page.getByLabel(/mayor de 18/i).check();
+  await page.getByRole('button', { name: /Crear cuenta/i }).click();
+  await expect(page).toHaveURL(/#\/inicio\/ia/);
   await page.goto('/#/perfil');
   await page.getByRole('button', { name: /Cerrar sesión/i }).click();
   await expect(page).toHaveURL(/#\/entrar/);

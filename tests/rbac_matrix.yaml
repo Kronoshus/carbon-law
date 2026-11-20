@@ -84,3 +84,6 @@ GET /staff/firm-settings: {roles: staff, ticket: T7-05}
 PUT /staff/firm-settings: {roles: [attorney, admin], ticket: T7-05}
 GET /settings/public: {roles: public, ticket: T7-05}
 GET /staff/analytics: {roles: staff, ticket: T7-06}
+GET /progress/push-key: {roles: client, ticket: T8-03}
+PUT /progress/push: {roles: client, ticket: T8-03}
+DELETE /progress/push: {roles: client, ticket: T8-03}
