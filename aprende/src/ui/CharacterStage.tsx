@@ -25,7 +25,6 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
   useEffect(() => {
     let cancelled = false;
     let idleId: number | null = null;
-    let rafId: number | null = null;
     let io: IntersectionObserver | null = null;
     let onVis: (() => void) | null = null;
     const run = async () => {
@@ -49,13 +48,15 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
         }
       }
     };
-    const schedule = () => { if (cancelled) return; run(); };
-    const tid = window.setTimeout(schedule, 4000);
-    (window as unknown as { __csTimer?: number }).__csTimer = tid;
+    // after the first paint, when the main thread is free (at most 1.5 s later): the lesson's text is usable first
+    const idle = typeof requestIdleCallback === 'function';
+    const rafId = requestAnimationFrame(() => {
+      idleId = idle ? requestIdleCallback(() => void run(), { timeout: 1500 }) : window.setTimeout(() => void run(), 0);
+    });
     return () => {
       cancelled = true;
-      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafId);
+      if (idleId !== null) { if (idle) cancelIdleCallback(idleId); else window.clearTimeout(idleId); }
       if (io) io.disconnect();
       if (onVis) document.removeEventListener('visibilitychange', onVis);
       engineRef.current?.unmount(); engineRef.current = null;

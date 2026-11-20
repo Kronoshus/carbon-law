@@ -123,7 +123,6 @@ jobs:
         run: |
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:4173/ >/dev/null && curl -sf http://127.0.0.1:8011/health >/dev/null && exit 0; sleep 2; done; exit 1
       - name: run lighthouse
-        env:
         run: cd aprende && PW_CHROMIUM=$(find ~ -name chrome -path '*chrome-linux64*' | head -1) node scripts/lighthouse.mjs --url http://127.0.0.1:4173/
       - name: upload reports
         if: always()
