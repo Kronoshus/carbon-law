@@ -294,5 +294,14 @@
   "preguntas.title": "Preguntas para el abogado",
   "preguntas.answer": "Respuesta del abogado Raval:",
   "preguntas.waiting": "El abogado Raval todavía no ha respondido.",
-  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí."
+  "preguntas.none": "Todavía no tiene preguntas para el abogado. Si le pregunta algo sobre su caso a un personaje, la pregunta aparece aquí.",
+  "perfil.title": "Perfil",
+  "perfil.language": "Idioma",
+  "perfil.reminder": "Recordatorio diario",
+  "perfil.reminderTime": "Hora del recordatorio",
+  "perfil.reminderNote": "Le avisamos una vez al día, a la hora que elija.",
+  "perfil.reminderDenied": "Su navegador no permite avisos. Puede activarlos en los ajustes del navegador.",
+  "perfil.install": "Instalar la aplicación",
+  "perfil.installed": "La aplicación quedó instalada.",
+  "perfil.installCancelled": "No se instaló. Puede intentarlo otra vez."
 }

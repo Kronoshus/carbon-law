@@ -294,5 +294,14 @@
   "preguntas.title": "Questions for the attorney",
   "preguntas.answer": "Attorney Raval's answer:",
   "preguntas.waiting": "Attorney Raval has not answered yet.",
-  "preguntas.none": "You have no questions for the attorney yet. If you ask a character something about your own case, the question appears here."
+  "preguntas.none": "You have no questions for the attorney yet. If you ask a character something about your own case, the question appears here.",
+  "perfil.title": "Profile",
+  "perfil.language": "Language",
+  "perfil.reminder": "Daily reminder",
+  "perfil.reminderTime": "Reminder time",
+  "perfil.reminderNote": "We remind you once a day, at the time you choose.",
+  "perfil.reminderDenied": "Your browser does not allow notifications. You can turn them on in the browser settings.",
+  "perfil.install": "Install the app",
+  "perfil.installed": "The app is installed.",
+  "perfil.installCancelled": "The app was not installed. You can try again."
 }

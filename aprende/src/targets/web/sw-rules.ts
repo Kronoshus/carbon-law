@@ -13,8 +13,8 @@ export function cacheKind(req: {url: string; method?: string; mode?: string; des
 
   // lesson check: path /learn/lessons/<id> on api or scope origin
   const allowedOrigins = new Set<string>();
-  try { allowedOrigins.add(new URL(apiOrigin || scope, scope).origin); } catch {}
-  try { allowedOrigins.add(new URL(scope).origin); } catch {}
+  try { allowedOrigins.add(new URL(apiOrigin || scope, scope).origin); } catch { /* ignore */ }
+  try { allowedOrigins.add(new URL(scope).origin); } catch { /* ignore */ }
   if (allowedOrigins.has(origin)) {
     const segs = path.split('/').filter(Boolean);
     // find learn/lessons/<id> as a suffix-ish: path must be exactly /learn/lessons/<id>
