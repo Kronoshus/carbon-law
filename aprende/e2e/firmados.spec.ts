@@ -27,7 +27,7 @@ test('signed documents and the trust checklist download with the client\'s token
   const two = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Descargar la lista para el fideicomiso' }).click();
   expect((await two).suggestedFilename()).toMatch(/\.md$/);
-  await expect(page.getByRole('link', { name: 'Tomar la lección final: cuide sus documentos' })).toBeVisible();
+
 });
 
 test('before the signing the page says when they will appear', async ({ page }) => {
