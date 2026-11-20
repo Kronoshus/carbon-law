@@ -66,7 +66,8 @@ def since():
 
 
 def dash(s):
-    r = c.get("/staff/analytics", params={"since": s}, headers=staff())
+    until = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()   # other tests' clocks may run ahead
+    r = c.get("/staff/analytics", params={"since": s, "until": until}, headers=staff())
     assert r.status_code == 200, r.text
     return r.json()
 

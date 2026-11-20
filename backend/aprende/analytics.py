@@ -97,21 +97,19 @@ def record_once(journey_id, type_, props=None, *, conn=None):
     return record(journey_id, type_, props, conn=conn)
 
 
-def dashboard(since=None):
-    if since:
-        jids = [r[0] for r in db.query("SELECT id FROM journeys WHERE started_at >= ?", (since,))]
-    else:
-        jids = [r[0] for r in db.query("SELECT id FROM journeys")]
+def dashboard(since=None, until=None):
+    """Counts for the journeys that started in [since, until] (ISO times, either may be open)."""
+    conds = [c for c, v in (("started_at >= ?", since), ("started_at <= ?", until)) if v]
+    where = ("WHERE " + " AND ".join(conds)) if conds else ""
+    params = tuple(v for v in (since, until) if v)
+    jids = [r[0] for r in db.query(f"SELECT id FROM journeys {where}", params)]
     jset = set(jids)
 
     events_by_j = {jid: [] for jid in jids}
     if jids:
-        if since:
-            sql = "SELECT journey_id, type, props_json, created_at, id FROM events WHERE journey_id IN (SELECT id FROM journeys WHERE started_at >= ?) ORDER BY created_at, id"
-            param = (since,)
-        else:
-            sql = "SELECT journey_id, type, props_json, created_at, id FROM events WHERE journey_id IN (SELECT id FROM journeys) ORDER BY created_at, id"
-            param = ()
+        sql = (f"SELECT journey_id, type, props_json, created_at, id FROM events "
+               f"WHERE journey_id IN (SELECT id FROM journeys {where}) ORDER BY created_at, id")
+        param = params
         for jid_, t, pj, ca, eid in db.query(sql, param):
             props = json.loads(pj) if pj else {}
             if jid_ in events_by_j:

@@ -95,8 +95,8 @@ def answer_question(qid: str, body: AnswerBody, authorization: str = Header(None
 
 
 @router.get("/staff/analytics")
-def staff_analytics(since: str = None, authorization: str = Header(None)):
+def staff_analytics(since: str = None, until: str = None, authorization: str = Header(None)):
     if not authorization:
         raise HTTPException(401, "not authenticated")
     backend_app.require_auth(authorization, {"paralegal", "attorney", "admin"})
-    return analytics.dashboard(since)
+    return analytics.dashboard(since, until)
