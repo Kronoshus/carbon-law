@@ -287,6 +287,7 @@ export async function giveNames(c: ClientApp, names: string[]) {
     await page.getByLabel(`Nombre completo ${i + 1}`).fill(names[i]);
   }
   await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page).not.toHaveURL(/#\/inicio\/nombres/);          // the names are saved before the next step (API calls follow)
 }
 
 /** The whole release journey. `start` is day 1 (a date in Los Angeles). Returns the journey id. */
