@@ -72,7 +72,7 @@ export function Aprender() {
     const label = h('span', { class: 'node-label' }, h('b', null, title(ls)), h('span', null, reason(ls)));
     if (ls === current) {
       return h('li', { class: 'node current', key: ls.id },
-        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${ls.character}-face.png`, alt: '' })),
+        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${ls.character}-face.png`, alt: '', width: 48, height: 48 })),
         h('div', { class: 'card' }, h('span', { class: 'node-label' }, h('b', null, title(ls)),
           h('span', null, t('map.withCharacter', { day: ls.day ?? '', name: t(CHARACTER_NAME[ls.character]) }))),
           h('a', { class: 'btn', href: `#/leccion/${ls.id}` }, t(ls.status === 'done' ? 'map.review' : 'map.start'))));
@@ -92,7 +92,7 @@ export function Aprender() {
       h('span', { class: 'chip', title: t('map.petals') }, h(Icon, { name: 'petalo' }), String(progress?.petals ?? 0),
         h('span', { class: 'visually-hidden' }, t('map.petalsSr')))),
     host ? h('section', { class: 'host', 'aria-label': t('character.calavera.name') },
-      h('img', { src: `${BASE}img/calavera-face.png`, alt: '' }),
+      h('img', { src: `${BASE}img/calavera-face.png`, alt: '', width: 96, height: 96 }),
       h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: t(CHARACTER_NAME[current.character]), title: title(current) }) : t('map.hostDone'))) : null,
     h(PriceCard, { codes: ['will'] }),
     (tentative !== null && (tentative.length === 0) && core.some((ls) => ls.unit === 'trust' && ls.status === 'done'))
