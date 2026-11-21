@@ -1,5 +1,5 @@
 /* Lesson player (design doc §7.2, docs/aprende/screens/leccion.html) */
-.lesson-player { min-block-size: 100dvh; background: var(--paper); padding-block-end: 14rem; }
+.lesson-player { min-block-size: 100dvh; background: var(--paper); padding-block-end: 14rem; overflow-wrap: break-word; }
 .lessonbar { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); }
 .lessonbar .chip .icon { inline-size: 1.2rem; block-size: 1.2rem; }
 .icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); flex: none; border: 0; background: none;

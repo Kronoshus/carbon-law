@@ -1,10 +1,10 @@
 import { h, Fragment } from 'preact';
 import { IconSprite } from './Icons';
-import '@fontsource/work-sans/400.css';
-import '@fontsource/work-sans/600.css';
-import '@fontsource/work-sans/700.css';
-import '@fontsource/league-spartan/700.css';
-import '@fontsource/league-spartan/800.css';
+import '@fontsource/work-sans/latin-400.css';
+import '@fontsource/work-sans/latin-600.css';
+import '@fontsource/work-sans/latin-700.css';
+import '@fontsource/league-spartan/latin-700.css';
+import '@fontsource/league-spartan/latin-800.css';
 import './tokens.css';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
