@@ -29,6 +29,11 @@ if att_email not in app.users:
     uid = str(uuid.uuid4())
     app.users[att_email] = {"id": uid, "name": "Pankaj Raval", "email": att_email, "role": "attorney",
                            "password_hash": app.hash_pw(att_password), "created_at": datetime.datetime.utcnow().isoformat()}
+# Seed a paralegal for the release test's staff steps (T8-06).
+par_email, par_password = "paralegal-e2e@example.com", "paralegal-e2e-password"
+if par_email not in app.users:
+    app.users[par_email] = {"id": str(uuid.uuid4()), "name": "Lucía Paralegal", "email": par_email, "role": "paralegal",
+                            "password_hash": app.hash_pw(par_password), "created_at": datetime.datetime.utcnow().isoformat()}
 # Approved engagement template.
 es = open(os.path.join(ROOT, "aprende", "content", "engagement", "es.md"), encoding="utf-8").read()
 en = open(os.path.join(ROOT, "aprende", "content", "engagement", "en.md"), encoding="utf-8").read()

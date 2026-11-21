@@ -12,7 +12,7 @@ from fpdf import FPDF
 
 import app as backend_app
 import db
-from aprende import journey, legacy, pricing
+from aprende import clock, journey, legacy, pricing
 
 DOC_NAMES = {"will": {"es": "Testamento", "en": "Will"}, "trust": {"es": "Fideicomiso en vida", "en": "Living trust"},
              "poa": {"es": "Poder legal para finanzas (poder notarial)", "en": "Financial power of attorney"},
@@ -25,7 +25,7 @@ FONT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 
 
 def _today(lang):
-    d = datetime.datetime.now(ZoneInfo("America/Los_Angeles")).date()
+    d = clock.now().astimezone(ZoneInfo("America/Los_Angeles")).date()
     return f"{d.day} de {MONTHS['es'][d.month - 1]} de {d.year}" if lang == "es" else f"{MONTHS['en'][d.month - 1]} {d.day}, {d.year}"
 
 

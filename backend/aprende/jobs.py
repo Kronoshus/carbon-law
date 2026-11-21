@@ -9,6 +9,7 @@ if BACKEND not in sys.path:
     sys.path.insert(0, BACKEND)
 
 import db
+from aprende import clock
 
 BACKOFF_SECONDS = (60, 300, 1800)
 MAX_ATTEMPTS = 3
@@ -22,7 +23,7 @@ def register(kind, handler):
 
 
 def _now():
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return clock.now().replace(tzinfo=None)
 
 
 def _iso(dt):

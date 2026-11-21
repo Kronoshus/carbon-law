@@ -1629,6 +1629,12 @@ app.include_router(_rct.router)
 from aprende import routes_firm as _rf
 app.include_router(_rf.router)
 
+# The movable test clock (T8-06): the route exists only in the Playwright backend
+from aprende import clock as _clock
+if _clock.ENABLED:
+    from aprende import routes_e2e as _re2e
+    app.include_router(_re2e.router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
