@@ -95,6 +95,12 @@ jobs:
       # INP alone on one worker: parallel tests would share the CPU it measures
       - name: INP on a quiet runner
         run: cd aprende && npx playwright test --project=web --workers=1 e2e/performance.spec.ts -g 'INP on the lesson player'
+      - name: upload what the failed tests saw
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: aprende/test-results/
 
 
   lighthouse:
