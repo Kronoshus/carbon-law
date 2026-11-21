@@ -59,7 +59,7 @@ test('a late attorney review raises the staff alert once, and the client only re
     await moveTo(c, laTime(addDays(due, 1), 9));
     await expect.poll(async () => (await asStaff('paralegal', 'GET', `/staff/journeys/${jid}`)).body.late, { timeout: 30_000 })
       .toEqual(['attorney_review']);
-    expect(dbCounts(jid).timeline_alerts).toBe(1);
+    await expect.poll(() => dbCounts(jid).timeline_alerts, { timeout: 30_000 }).toBe(1);   // the worker's hourly check wrote it
     const admin = await openAdminReview(context);
     await expect(admin.locator('#reviewQueueRows tr').filter({ has: admin.getByRole('button', { name: 'Mateo Torres', exact: true }) })).toContainText('⚠');
     await admin.close();

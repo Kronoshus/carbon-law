@@ -260,7 +260,8 @@ export async function signUp(c: ClientApp, name: string) {
   const { page } = c;
   await c.go('/cuenta-nueva');
   await page.getByLabel(/Nombre/i).fill(name);
-  await page.getByLabel(/Correo/i).fill(`${name.split(' ')[0].toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`);
+  const user = name.split(' ')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();    // Sofía → sofia
+  await page.getByLabel(/Correo/i).fill(`${user}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`);
   await page.getByLabel(/Contraseña/i).fill('long-secure-password');
   await page.getByLabel(/mayor de 18/i).check();
   await page.getByRole('button', { name: /Crear cuenta/i }).click();
@@ -399,7 +400,7 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     expect(row.documents.map((d) => d.name).sort()).toEqual(['Pour-over will', 'Revocable living trust']);
     expect(row.due).toBe(plan.attorney_review.due);
     expect(row.late).toBe(false);
-    for (const d of [6, 7].filter((n) => n < plan.attorney_review.day)) {
+    for (let d = plan.pay.day + 1; d < plan.attorney_review.day; d++) {        // the days between payment and the review
       await moveTo(c, day(d));
       await c.go('/revisar');
       await expect(page.getByText('Sus documentos aparecerán aquí cuando el abogado Raval los apruebe.')).toBeVisible();
