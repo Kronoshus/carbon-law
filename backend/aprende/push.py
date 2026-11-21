@@ -3,7 +3,7 @@ import json
 import os
 
 import db
-from aprende import motivation
+from aprende import clock, motivation
 
 
 def public_key():
@@ -11,8 +11,7 @@ def public_key():
 
 
 def _now_iso():
-    import datetime
-    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return clock.now_iso()
 
 
 def subscribe(journey_id, endpoint, p256dh, auth, lang):

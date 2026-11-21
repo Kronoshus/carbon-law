@@ -28,10 +28,9 @@ def run_one(worker_id):
 
 def run_forever(stop_event):
     migrate.run()
-    from datetime import datetime, timezone
     import app  # noqa: F401  (the job handlers use the app's stores; loaded first, as in the web process, it avoids a circular import)
-    from aprende import drafts, reminders, retention, signing, timeline  # noqa: F401  (each registers its jobs; the ticks re-queue themselves)
-    now = datetime.now(timezone.utc)
+    from aprende import clock, drafts, reminders, retention, signing, timeline  # noqa: F401  (each registers its jobs; the ticks re-queue themselves)
+    now = clock.now()
     timeline.schedule(now)
     retention.schedule(now)
     reminders.schedule_daily(now)

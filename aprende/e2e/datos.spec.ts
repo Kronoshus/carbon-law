@@ -97,6 +97,24 @@ test('the summary: answers by document, a correction, the gaps, and confirming',
 });
 
 
+test('on a slow phone, confirming waits for her document choice (it never confirms no documents)', async ({ page }) => {
+  await cleared(page);
+  await api(page, '/journey/events', { method: 'POST', body: JSON.stringify({ type: 'documents_tentative', payload: { codes: ['will', 'trust'] } }) });
+  let release = () => {};
+  const held = new Promise<void>((r) => { release = r; });
+  await page.route('**/journey', async (route) => { await held; await route.continue(); });   // the journey answers late
+  await page.goto('/#/resumen');
+  const confirm = page.getByRole('button', { name: 'Confirmar mis documentos' });
+  await expect(confirm).toBeDisabled();
+  release();
+  await expect(confirm).toBeEnabled();
+  await page.unroute('**/journey');
+  await confirm.click();
+  await expect(page.getByText('Documentos confirmados', { exact: false })).toBeVisible();
+  expect([...(await api(page, '/journey')).documents.confirmed].sort()).toEqual(['trust', 'will']);
+});
+
+
 test('after the character thanks her for an answer, the next question is on screen', async ({ page }) => {
   await cleared(page);
   let turn = 0;

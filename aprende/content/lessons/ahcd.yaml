@@ -225,7 +225,7 @@ steps:
       prompt: Ordene los pasos
       steps:
       - Elegir a su agente
-      - Hablar con él de sus deseos
+      - Hablar con esa persona de sus deseos
       - Firmar con testigos o ante notario
       - Dar copias a su médico y a su agente
       explain: Muy bien. Lo más importante es la conversación con su agente.

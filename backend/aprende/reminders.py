@@ -4,7 +4,7 @@ import json
 
 import app as backend_app
 import db
-from aprende import booking, jobs, journey, motivation, notify, push
+from aprende import booking, clock, jobs, journey, motivation, notify, push
 
 # Wording needs attorney approval (#50).
 TEXT = {
@@ -24,7 +24,7 @@ TEXT = {
 
 
 def now():
-    return datetime.datetime.now(datetime.timezone.utc)
+    return clock.now()
 
 
 def _aware(t):

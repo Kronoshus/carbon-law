@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import app as backend_app
 from aprende import firm
 import db
-from aprende import auth, journey
+from aprende import auth, clock, journey
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ router = APIRouter()
 
 
 def now():
-    return datetime.datetime.now(UTC)
+    return clock.now()
 
 
 def notify_staff(title, message):
