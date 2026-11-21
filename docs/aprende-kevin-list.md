@@ -17,8 +17,8 @@ Plain list, most important first. Each item says what it is, what I recommend, a
 
 ## B. Paid runs (each costs model tokens; merging the PR is the approval)
 
-8. **#49, the 40 test conversations against the real model** (about 145,000 tokens). *Recommend:* yes, it checks La Calavera stays within the rules in Spanish before any client sees her.
-9. **#65, the legal review drafts for 5 fictional clients** (about 0.3–0.5 million tokens). *Recommend:* yes, after #50, so the attorney can review a sample before a real client pays.
+8. **#49, the 40 test conversations against the real model** (about 145,000 tokens, under $0.30 at Beam's price). *Recommend:* yes, it checks La Calavera stays within the rules in Spanish before any client sees her.
+9. **#65, the legal review drafts for 5 fictional clients** (about 0.3–0.5 million tokens, under $1 at Beam's price). *Recommend:* yes, after #50, so the attorney can review a sample before a real client pays.
 
 ## C. Things only a person can do
 
