@@ -129,7 +129,7 @@ test('signed out, the popup asks her to sign in from the panel and shows no made
   await playBack(context);
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extId}/popup.html`);
-  await expect(page.getByText('Inicie sesión en el panel para ver su día.')).toBeVisible();
+  await expect(page.getByText('Inicie sesión en el panel lateral para ver su día.')).toBeVisible();
   await expect(page.getByText(/Día \d+ de 14/)).toHaveCount(0);
   await expect(page.getByText(/Racha/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Abrir' })).toBeVisible();      // "Abrir" opens the panel to sign in
