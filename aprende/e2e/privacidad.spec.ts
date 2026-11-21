@@ -25,7 +25,7 @@ test('the privacy policy opens from the welcome page without signing in, in Span
 test('the privacy policy in English', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aprende_lang', 'en'));
   await page.goto('/#/privacidad');
-  await expect(page.getByRole('heading', { level: 1, name: 'Privacy policy' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy notice' })).toBeVisible();
   await expect(page.getByText('Draft: the attorney must approve this text before it is published.')).toBeVisible();
   await expect(page.getByText('We do not ask about your immigration status.', { exact: false })).toBeVisible();
   await axeClean(page);
