@@ -1,6 +1,6 @@
 # Aprende y Planea — audit of Phases 1–6
 
-Date: 2026-11-21. Base: `main` at `e00656d` (after #100 and #99).
+Date: 2026-11-21. Base: `main` at `d0bc520` (after #96, the last Phase 8 PR).
 Audience: Kevin and the reviewing attorney.
 
 This report sums up the Part A audit. Every claim names a file, a test or a PR.
@@ -27,11 +27,10 @@ Where the lead's notes disagree with an agent's report, this report follows the 
   Two open items are the paid model runs that wait for approval (#49, #65).
 - **Guardrails.** Each guardrail has a test. The guardrail audit found 5 bugs. All 5 are fixed (#72–#76).
 - **Gamed tests.** None found. One assertion became looser; a stronger guardrail test now covers the same point.
-- **Phone walkthrough.** 7 findings (W1–W7). 5 are fixed (#88, #99). W2 is half fixed (#78; the rest waits for #96). W6 waits for the Spanish review (#53).
+- **Phone walkthrough.** 7 findings (W1–W7). 5 are fixed (#88, #99). W2 is fixed (#78, #96). W6 waits for the Spanish review (#53).
 - **After the audit.** The release test found F1–F6. 5 are fixed (#85, #90, #91, #89, #94); F3 is open.
   CI then found 2 slow-phone races (#100). We also fixed the failing Render deploys (#84) and an admin script clash (#79).
 - **In total, 19 bugs were fixed and merged:** 5 guardrail, 5 walkthrough, 5 release-test, 2 race, 1 deploy, 1 admin.
-  The release test itself (#98) and the PWA/Perfil work (#96) are **not merged yet** (open PRs on 2026-11-21).
 
 ## 2. Coverage
 
@@ -261,7 +260,7 @@ The table lists the rules from the brief for this report first, then the other a
 | Drafts are staff-only until approval; only verified citations | `tests/test_audit_guardrails.py::test_no_client_route_returns_a_draft_before_the_attorney_approves_it`, `::test_every_drafter_may_cite_only_the_verified_list`; `tests/test_fix_draft_citations.py::test_a_draft_citing_an_unverified_section_is_flagged_and_cannot_be_approved` | A draft flagged "NOT VERIFIED" could be approved and released. Fixed in #74. | — |
 | Client and staff text is shown as text, never run as code | `tests/test_audit_guardrails.py::test_the_app_never_renders_raw_html`, `::test_the_aprende_staff_review_builds_its_page_from_text_nodes_only`; `aprende/e2e/audit-staff-text.spec.ts`; `aprende/e2e/admin-review.spec.ts::the attorney reads a draft with its marks, and no script in a draft runs` | None. | `web/admin.js` still builds HTML with `innerHTML` plus `esc()`. It is safe and tested, but it breaks the "text nodes only" rule. A rewrite is a separate task. |
 
-The release test (#98, not merged) repeats the payment, refusal, conflict and draft rules end to end on a fake clock (`T8-06.md`).
+The release test (#98) repeats the payment, refusal, conflict and draft rules end to end on a fake clock (`T8-06.md`).
 
 ## 4. Gamed tests
 
@@ -290,7 +289,7 @@ The release test (T8-06) covers the full path.
 | # | Finding | Severity | What happened |
 |---|---|---|---|
 | W1 | A lesson screen kept the previous lesson's title ("El testamento" on the trust, directive and POA lessons). | major | Fixed in #88. Test: `aprende/e2e/client-screens.spec.ts::W1: leccion title resets when id changes`. |
-| W2 | The Preguntas and Perfil tabs showed "Próximamente". | major | Preguntas: built in #78 (T7-04). Tests: `aprende/e2e/preguntas.spec.ts` (2 tests). Perfil: built in #96 (T8-03), **not merged**. On `main` Perfil still shows the placeholder (`aprende/src/ui/App.tsx:114`). |
+| W2 | The Preguntas and Perfil tabs showed "Próximamente". | major | Preguntas: built in #78 (T7-04). Tests: `aprende/e2e/preguntas.spec.ts` (2 tests). Perfil: built in #96 (T8-03), merged; tests in `aprende/e2e/pwa.spec.ts`. |
 | W3 | "Tus datos" showed only "No se pudo enviar. Revise su conexión" when the model call failed. The question was hidden and the message blamed the connection. | major | Fixed in #88: the open question shows, with a neutral retry. Test: `aprende/e2e/client-screens.spec.ts::W3: datos shows open question when chat fails`. The new Spanish text (`datos.serverError`) needs the Spanish review (#53). |
 | W4 | "Firmados" offered "Tomar la lección final" before any signing. | minor | Fixed in #88. Tests: `aprende/e2e/client-screens.spec.ts::W4: firmados final-lesson link only when gate open`; `aprende/e2e/firmados.spec.ts`. |
 | W5 | The POA checkbox shrank when its label wrapped. | minor | Fixed in #88. Test: `aprende/e2e/client-screens.spec.ts::W5: documentos checkbox keeps size when label wraps`. |
@@ -339,8 +338,6 @@ Only items that are not fixed. "Decision PR" means: merging it accepts the recom
 | Spanish review: W6 (repeated heading), the new W3 text `datos.serverError`, the characters' names. | Firm (Spanish reviewer) | #53 |
 | Aprende accounts can also use the legacy portal, which has its own conflict step. | Firm | #54 |
 | F3: from the side panel, Stripe returns the client to the web app. | Kevin | none |
-| W2 (Perfil): built in #96, not merged. | Kevin (merge) | #96 is the build PR, not a decision PR |
-| The release test itself is not merged. | Kevin (merge) | #98 is the build PR, not a decision PR |
 | `/journey` shows `conflict: "hold"` instead of `"pending"` (no names). | Lead | none |
 | The chat output guard (#75) answers with the general "service not available" message. A gentler retry may be better. | Lead | none |
 | `web/admin.js` uses `innerHTML` with `esc()`; a rewrite to text nodes. | Lead (team task) | none |
