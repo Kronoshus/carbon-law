@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 // (web-vitals, the library the `interaction-paint-timing` guide names). Lighthouse runs in its own CI job
 // (`aprende/scripts/lighthouse.mjs`), not here.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WEB_VITALS = path.resolve(__dirname, '../node_modules/web-vitals/dist/web-vitals.iife.js');   // devDependency `web-vitals`
+const WEB_VITALS = path.resolve(__dirname, '../node_modules/web-vitals/dist/web-vitals.attribution.iife.js');   // devDependency `web-vitals`
 
 async function signUp(page: Page) {
   await page.goto('/#/bienvenida');
@@ -61,7 +61,11 @@ test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({
   // one init script: the library's `var webVitals` is only visible to code in the same script
   await page.addInitScript({ content: `${fs.readFileSync(WEB_VITALS, 'utf8')}
     window.__inp = [];
-    webVitals.onINP((m) => { window.__inp.push(m.value); }, { reportAllChanges: true, durationThreshold: 16 });` });
+    webVitals.onINP((m) => { const a = m.attribution;
+      window.__inp.push({ value: m.value, target: a.interactionTarget, input: Math.round(a.inputDelay), processing: Math.round(a.processingDuration),
+        presentation: Math.round(a.presentationDelay),
+        scripts: (a.longAnimationFrameEntries || []).flatMap((f) => f.scripts.map((s) => [s.invoker, s.sourceURL.split('/').pop(), Math.round(s.duration)])).slice(0, 6) }); },
+      { reportAllChanges: true, durationThreshold: 16 });` });
   await load(page, '#/leccion/will');
   const cont = page.getByRole('button', { name: 'Continuar' });
   await expect(cont).toBeVisible({ timeout: 30000 });
@@ -78,7 +82,8 @@ test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  const inp = await page.evaluate(() => (window as unknown as { __inp: number[] }).__inp);
+  const inp = await page.evaluate(() => (window as unknown as { __inp: { value: number }[] }).__inp);
   expect(inp.length, 'web-vitals measured at least one interaction').toBeGreaterThan(0);
-  expect(Math.max(...inp)).toBeLessThan(200);
+  const worst = inp.reduce((a, b) => (b.value > a.value ? b : a));
+  expect(worst.value, JSON.stringify(worst)).toBeLessThan(200);                 // the message names what was slow
 });
