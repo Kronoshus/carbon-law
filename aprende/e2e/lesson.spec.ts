@@ -35,9 +35,11 @@ test('the will lesson: explain, a wrong answer that comes back, sources, resume'
   await expect(sheet).toContainText('Información general, no asesoría legal.');
   await expect(sheet).toContainText('+10');
   await cont(page).click();
+  await expect(sheet).toBeHidden();                                         // two different "Continuar" buttons: one at a time
   await cont(page).click();                                                 // will.1.6 explanation
 
   await expect(page.getByRole('heading', { name: /Cuántos testigos/ })).toBeVisible();     // the wrong one came back
+  await page.waitForLoadState('networkidle');                              // her place is saved
   await page.reload();                                                     // resume where she was
   await expect(page.getByRole('heading', { name: /Cuántos testigos/ })).toBeVisible();
   await page.getByRole('radio', { name: 'Dos, presentes al mismo tiempo' }).check();
