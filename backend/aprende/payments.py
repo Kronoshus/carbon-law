@@ -53,7 +53,7 @@ class StripeClient:
         for k, v in (metadata or {}).items():
             data[f"metadata[{k}]"] = v
         r = httpx.post(
-            "https://api.stripe.com/v1/checkout/sessions",
+            os.environ.get("STRIPE_API_BASE", "https://api.stripe.com") + "/v1/checkout/sessions",
             data=data,
             headers={"Authorization": f"Bearer {self.secret_key}", "Idempotency-Key": idempotency_key},
             timeout=30,

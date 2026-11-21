@@ -9,8 +9,7 @@ import uuid
 from zoneinfo import ZoneInfo
 
 import db
-from aprende import journey as journeys
-from aprende import analytics, characters
+from aprende import analytics, characters, clock, journey as journeys
 
 PASS = 0.8
 DISCOUNT_UNITS = ("will", "trust", "ahcd", "poa")      # completing these emits lesson_completed:<unit> (a $100 discount)
@@ -18,7 +17,7 @@ GRADED = ("choice", "scenario", "listen", "truefalse", "match", "order")
 
 
 def now():
-    return datetime.datetime.now(datetime.timezone.utc)
+    return clock.now()
 
 
 def _lessons():
