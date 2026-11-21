@@ -450,7 +450,8 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await expect(will.getByText('Alternate executor: Sofía Torres.', { exact: false })).toBeVisible();
     await will.getByRole('button', { name: 'Está bien' }).click();
     await expect(page.getByText('¡Listo! Ya puede reservar su cita de firma.')).toBeVisible();
-    await landsOnItsDay(c, 'client_review', plan);
+    await landsOnItsDay(c, 'changes', plan);                            // with a change, the timeline's confirmation step
+    expect(byStep((await journey(c)).timeline).client_review.date, 'her first review stays on its day').toBe(plan.client_review.date);
   });
 
   await test.step(`Day ${plan.changes?.day ?? 14}: staff set office hours (fixture) and Ana books her signing for day ${plan.signing?.day ?? 15}`, async () => {
