@@ -271,6 +271,10 @@ def test_every_state_changing_route_writes_an_audit_row(monkeypatch):
         send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
         call("POST /conflicts/{journey_id}/decision", "POST", f"/conflicts/{jid}/decision", para, json={"result": "cleared"})
         call("PUT /progress/reminders", "PUT", "/progress/reminders", h, json={"enabled": True, "local_time": "18:00"})
+        if "PUT /progress/push" in ROUTES:                                             # T8-03
+            call("PUT /progress/push", "PUT", "/progress/push", h, json={"endpoint": "https://fcm.googleapis.com/fcm/send/t707",
+                 "keys": {"p256dh": "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA", "auth": "tBHItJI5svbpez7KI4CCXg"}, "lang": "es"})
+            call("DELETE /progress/push", "DELETE", "/progress/push", h)
         c.get("/learn/lessons/lw?lang=es", headers=h)
         call("POST /learn/attempts", "POST", "/learn/attempts", h, json={"item_id": "lw.1.2", "answer": 2})
         for iid, a in (("lw.1.3", False), ("lw.1.4", {"0": "0", "1": "1", "2": "2"}), ("lw.1.5", ["0", "1", "2"])):

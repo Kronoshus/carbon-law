@@ -1,11 +1,14 @@
 """The worker process can run every job the app queues. Found by the T8-06 release test: after a payment, the
 draft_documents job failed three times with "no handler registered", so no draft was ever written. (Opus)"""
+import glob
 import os
+import re
 import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-QUEUED = {"draft_documents", "funding_checkin", "timeline_tick", "retention_sweep"}   # every kind the app enqueues
+QUEUED = {k for p in glob.glob(os.path.join(ROOT, "backend", "**", "*.py"), recursive=True)          # every kind the app enqueues
+          for k in re.findall(r'jobs\.enqueue\(\s*"([a-z_]+)"', open(p, encoding="utf-8").read())}
 
 
 def test_the_worker_process_registers_a_handler_for_every_job_the_app_queues(tmp_path):
