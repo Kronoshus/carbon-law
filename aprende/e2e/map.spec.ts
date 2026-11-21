@@ -17,7 +17,7 @@ test('the course map: today\'s lesson, the price, locked days and their reason',
   await expect(page.getByText('Día 1 de 14')).toBeVisible();
   await expect(page.locator('.bubble')).toContainText('El testamento');
   await expect(page.locator('.card.price')).toContainText('$3,000');
-  await expect(page.locator('.card.price')).toContainText('Cada lección completada le quita $100.');
+  await expect(page.locator('.card.price')).toContainText('Cada lección completada baja el precio $100.');
   const start = page.getByRole('link', { name: 'Empezar' });
   await expect(start).toHaveAttribute('href', '#/leccion/will');
   await expect(page.locator('.node.locked').filter({ hasText: 'El fideicomiso en vida' })).toContainText('Se abre después de la lección anterior');
