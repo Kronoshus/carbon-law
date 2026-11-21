@@ -316,5 +316,14 @@
   "privacy.version": "Draft version of November 20, 2026.",
   "datos.serverError": "There was a problem loading. Please try again.",
   "datos.retry": "Try again",
-  "popup.signedOut": "Sign in in the panel to see your day."
+  "popup.signedOut": "Sign in in the panel to see your day.",
+  "perfil.title": "Profile",
+  "perfil.language": "Language",
+  "perfil.reminder": "Daily reminder",
+  "perfil.reminderTime": "Reminder time",
+  "perfil.reminderNote": "We remind you once a day, at the time you choose.",
+  "perfil.reminderDenied": "Your browser does not allow notifications. You can turn them on in the browser settings.",
+  "perfil.install": "Install the app",
+  "perfil.installed": "The app is installed.",
+  "perfil.installCancelled": "The app was not installed. You can try again."
 }

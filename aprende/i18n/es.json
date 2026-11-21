@@ -316,5 +316,14 @@
   "privacy.version": "Versión borrador del 20 de noviembre de 2026.",
   "datos.serverError": "Hubo un problema al cargar. Intente de nuevo.",
   "datos.retry": "Intentar de nuevo",
-  "popup.signedOut": "Inicie sesión en el panel para ver su día."
+  "popup.signedOut": "Inicie sesión en el panel para ver su día.",
+  "perfil.title": "Perfil",
+  "perfil.language": "Idioma",
+  "perfil.reminder": "Recordatorio diario",
+  "perfil.reminderTime": "Hora del recordatorio",
+  "perfil.reminderNote": "Le avisamos una vez al día, a la hora que elija.",
+  "perfil.reminderDenied": "Su navegador no permite avisos. Puede activarlos en los ajustes del navegador.",
+  "perfil.install": "Instalar la aplicación",
+  "perfil.installed": "La aplicación quedó instalada.",
+  "perfil.installCancelled": "No se instaló. Puede intentarlo otra vez."
 }
