@@ -12,7 +12,7 @@ const GROUPS = ['will', 'trust', 'ahcd', 'poa', 'resumen'];
 /** Day 4: everything the client has told us, by document, each answer correctable; then the documents are confirmed. */
 export function Resumen() {
   const [qs, setQs] = useState<Q[]>([]);
-  const [docs, setDocs] = useState<string[]>([]);
+  const [docs, setDocs] = useState<string[] | null>(null);          // null until the journey loads: nothing to confirm yet
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -30,6 +30,7 @@ export function Resumen() {
     setEditing(null); setFailed(false); await load();
   };
   const confirm = async () => {
+    if (!docs) return;
     const r = await apiFetch('/journey/events', { method: 'POST', json: { type: 'documents_confirmed', payload: { codes: docs } } }).catch(() => null);
     if (r?.ok) setConfirmed(true); else setFailed(true);
   };
@@ -58,5 +59,5 @@ export function Resumen() {
     confirmed ? h('p', { class: 'confirmed', role: 'status' }, t('resumen.confirmed')) : null,
     h('div', { class: 'resumen-actions' },
       gaps ? h('button', { class: 'btn secondary', type: 'button', onClick: () => navigate('/datos/resumen') }, t('resumen.complete')) : null,
-      confirmed ? null : h('button', { class: 'btn', type: 'button', onClick: () => void confirm() }, t('resumen.confirm'))));
+      confirmed ? null : h('button', { class: 'btn', type: 'button', disabled: !docs, onClick: () => void confirm() }, t('resumen.confirm'))));
 }

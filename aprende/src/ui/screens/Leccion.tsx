@@ -1,5 +1,5 @@
 import { h, type ComponentChildren } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { t, lang } from '../../core/i18n';
 import { apiFetch } from '../../core/api';
 import { platform } from '../../platform';
@@ -69,7 +69,7 @@ export function Leccion({ id }: { id: string }) {
     return () => { cancelled = true; };
   }, [id, l]);
 
-  useEffect(() => {                               // remember where the client is
+  useLayoutEffect(() => {                         // remember where the client is, before the screen paints (a reload right after keeps it)
     if (state && item) void platform.storage.set(posKey(id), JSON.stringify({ step: state.step, item: item.id }));
   }, [item?.id]);
 
