@@ -1,7 +1,7 @@
 /* Mi plan: one row per step; the next step stands out; a late firm step looks like any other row */
-.plan { display: grid; gap: var(--s3); padding: var(--s4); max-inline-size: 40rem; margin-inline: auto; }
+.plan { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); padding: var(--s4); max-inline-size: min(40rem, 100%); margin-inline: auto; overflow-wrap: break-word; }
 .plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
-.plan-step { display: grid; grid-template-columns: 2rem 1fr auto; gap: var(--s3); align-items: start; padding: var(--s3);
+.plan-step { display: grid; grid-template-columns: minmax(0, 2rem) minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s3);
              background: var(--card); border: var(--stroke) solid var(--outline); border-radius: var(--radius); }
 .plan-step.next, .plan-step.today { box-shadow: var(--ledge); background: color-mix(in oklab, var(--gold) 22%, var(--card)); }
 .plan-mark { inline-size: 1.6rem; block-size: 1.6rem; border-radius: 50%; border: var(--stroke) solid var(--outline); display: grid; place-items: center; }

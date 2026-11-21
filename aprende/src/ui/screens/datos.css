@@ -1,6 +1,6 @@
 /* Tus datos, document choice and the summary */
 .datos { min-block-size: 100dvh; background: var(--paper); padding-block: var(--s2) var(--s6); }
-.datos-body, .datos-page { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; max-inline-size: 36rem; margin-inline: auto; }
+.datos-body, .datos-page { padding: var(--s3) var(--s4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); align-content: start; max-inline-size: min(36rem, 100%); margin-inline: auto; }
 .datos-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
 .transcript { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .transcript li { padding: var(--s2) var(--s3); border-radius: var(--radius); border: var(--stroke) solid var(--outline); max-inline-size: 88%; }
@@ -18,12 +18,12 @@
 .choices .option { display: flex; align-items: center; gap: var(--s3); }
 .choices .option input { position: static; opacity: 1; inline-size: 1.4rem; block-size: 1.4rem; flex-shrink: 0; accent-color: var(--plum); }
 .answer-group h2 { font-size: var(--step-1); margin-block-end: var(--s2); }
-.answer-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+.answer-group ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
 .answer-row .question { color: var(--text-soft); font-size: var(--step--1); }
-.answer { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); }
+.answer { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s2); }
 .answer p { font-weight: 600; }
 .status.open { color: var(--danger, #9b1c31); }
 .status.skipped { color: var(--text-soft); font-style: italic; }
 .gaps, .confirmed { font-weight: 700; }
-.resumen-actions { display: grid; gap: var(--s2); }
+.resumen-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
 .gate-error { color: var(--danger, #9b1c31); font-weight: 600; }
