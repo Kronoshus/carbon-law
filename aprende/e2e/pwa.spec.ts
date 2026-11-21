@@ -1,6 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+// the full Chromium build: the headless shell CI uses by default has no Notification API for service workers
+test.use({ channel: 'chromium' });
+
 // T8-03 acceptance (Opus, p8-tests): installable web app, the service worker's cache, and the Perfil tab
 // (language, daily reminder with push only after she turns it on, install, sign out). Real backend; the push service
 // and the browser's install prompt are stubbed.
