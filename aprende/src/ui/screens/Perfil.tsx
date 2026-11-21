@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../../core/router';
 import { t, lang, setLang } from '../../core/i18n';
-import { apiFetch } from '../../core/api';
-import { clearToken } from '../../core/api';
+import { apiFetch, clearToken } from '../../core/api';
 import { installPrompt } from '../../core/pwa';
 
 type Reminders = { enabled: boolean; local_time: string | null };
@@ -122,12 +121,12 @@ export function Perfil() {
           <option value="en">{'English'}</option>
         </select>
       </section>
-      <section>
-        <label>
+      <section class="field">
+        <label class="option">
           <input type="checkbox" role="switch" checked={reminders.enabled} onChange={(e) => toggleReminder((e.target as HTMLInputElement).checked)} />
           {t('perfil.reminder')}
         </label>
-        <label>
+        <label class="field">
           {t('perfil.reminderTime')}
           <input type="time" value={time} onInput={(e) => onTimeChange((e.target as HTMLInputElement).value)} />
         </label>
@@ -135,11 +134,11 @@ export function Perfil() {
         {denied ? <p role="status">{t('perfil.reminderDenied')}</p> : null}
       </section>
       {showInstall ? (
-        <button type="button" onClick={() => void onInstall()}>{t('perfil.install')}</button>
+        <button class="btn secondary" type="button" onClick={() => void onInstall()}>{t('perfil.install')}</button>
       ) : null}
       {installed === 'installed' ? <p role="status">{t('perfil.installed')}</p> : null}
       {installed === 'cancelled' ? <p role="status">{t('perfil.installCancelled')}</p> : null}
-      <button type="button" onClick={() => void onSignOut()}>{t('top.signout')}</button>
+      <button class="btn secondary" type="button" onClick={() => void onSignOut()}>{t('top.signout')}</button>
     </div>
   );
 }
