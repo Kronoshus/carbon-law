@@ -1,4 +1,4 @@
-import { test, chromium } from '@playwright/test';
+import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { API, nextWeekday, releaseJourney, type ClientApp } from '../../e2e/journey-steps';
@@ -37,6 +37,10 @@ test('a new client goes through the whole journey in the Chrome side panel, each
     go: async (hash) => {                                                 // the same address again: open it fresh
       const url = `chrome-extension://${extId}/sidepanel.html#${hash}`;
       if (page.url() === url) await page.reload(); else await page.goto(url);
+    },
+    backFromStripe: async (url) => {                                       // F3: Stripe returned her to the web address
+      expect(url.startsWith(`http://127.0.0.1:${process.env.E2E_WEB_PORT || '5173'}/`)).toBe(true);
+      await page.goto(`chrome-extension://${extId}/sidepanel.html#${new URL(url).hash.slice(1)}`);
     },
     token: async () => (await page.evaluate(async () => (await chrome.storage.session.get('aprende_token')).aprende_token as string)),
   };

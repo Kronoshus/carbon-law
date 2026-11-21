@@ -24,6 +24,9 @@ export interface ClientApp {
   context: BrowserContext;
   go(hash: string): Promise<void>;
   token(): Promise<string>;
+  /** After Stripe: the web app lands back in the app. The side panel cannot (F3: Stripe returns to the web address), so
+   *  there the client reopens the panel herself. */
+  backFromStripe?(sessionUrl: string): Promise<void>;
 }
 
 // --- the API, from the test (not the browser) ---
@@ -384,6 +387,8 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await page.getByRole('button', { name: 'Pagar con Stripe' }).click();
     await expect(page.getByRole('heading', { name: 'Stripe: pago de prueba' })).toBeVisible();
     await page.getByRole('button', { name: 'Pagar (prueba)' }).click();
+    await page.waitForURL(/#\/pago\/listo\?session_id=/);
+    if (c.backFromStripe) await c.backFromStripe(page.url());
     await expect(page.getByText('¡Pago recibido!', { exact: false })).toBeVisible();
     expect(dbCounts(jid).payments).toBe(1);
     await landsOnItsDay(c, 'pay', plan);
