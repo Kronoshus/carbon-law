@@ -37,6 +37,8 @@ export class CharacterEngine {
   rafId = 0;
   reduced = false;
   paused = false;
+  // a phone without fast graphics draws in software: when a frame is slow, draw fewer pixels and fewer frames
+  renderMs = 0; minGap = 0; lastDraw = 0;
 
   // overlay key targets
   overlayTargets: Record<string, number> = {};
@@ -236,9 +238,24 @@ export class CharacterEngine {
       }
     }
 
-    if (this.renderer && this.scene && this.camera) {
+    if (this.renderer && this.scene && this.camera && t - this.lastDraw >= this.minGap) {
+      const start = performance.now();
       this.renderer.render(this.scene, this.camera);
+      this.lastDraw = t;
+      this.renderMs = this.renderMs * 0.8 + (performance.now() - start) * 0.2;
+      if (this.renderMs > 24) this.lighten();
     }
+  }
+
+  /** One step down: pixel ratio to 1, then to 0.5, then at most 15 frames a second. */
+  private lighten(): void {
+    const r = this.renderer!;
+    const ratio = r.getPixelRatio();
+    if (ratio > 1) r.setPixelRatio(1);
+    else if (ratio > 0.5) r.setPixelRatio(0.5);
+    else if (this.minGap < 66) this.minGap = 66;
+    else return;
+    this.renderMs = 0;
   }
 
   async speak(text: string, lang: 'es' | 'en' = 'es'): Promise<void> {
