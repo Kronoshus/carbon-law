@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
-from aprende import analytics, auth, datos, journey, legacy, review, timeline
+from aprende import analytics, auth, clock, datos, journey, legacy, review, timeline
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ def _row(j, now):
 
 @router.get("/staff/journeys")
 def list_journeys(user: dict = Depends(auth.staff())):
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = clock.now()
     rows = []
     for (jid,) in db.query("SELECT id FROM journeys"):
         j = journey.get_journey(jid)
@@ -55,7 +55,7 @@ def get_journey_detail(jid: str, user: dict = Depends(auth.staff())):
     j = journey.get_journey(jid)
     if not j:
         raise HTTPException(404, "journey not found")
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = clock.now()
     row = _row(j, now)
     steps = timeline.for_journey(j, now)
     qrows = db.query("SELECT id, question, lesson_id, character, created_at, answer, answered_by, answered_at "

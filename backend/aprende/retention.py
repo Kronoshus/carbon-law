@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import app as backend_app
 import db
-from aprende import jobs
+from aprende import clock, jobs
 from aprende import firm
 
 LA = ZoneInfo("America/Los_Angeles")
@@ -88,10 +88,10 @@ def schedule(at):
 
 
 def _job(job):
-    sweep(datetime.datetime.now(datetime.timezone.utc))
-    tomorrow = (datetime.datetime.now(LA) + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
+    sweep(clock.now())
+    tomorrow = (clock.now().astimezone(LA) + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
     # ensure future
-    now_la = datetime.datetime.now(LA)
+    now_la = clock.now().astimezone(LA)
     if tomorrow <= now_la:
         tomorrow = tomorrow + datetime.timedelta(days=1)
     schedule(tomorrow.astimezone(datetime.timezone.utc))

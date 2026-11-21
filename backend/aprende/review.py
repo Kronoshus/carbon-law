@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import app as backend_app
 import db
-from aprende import auth, journey, legacy, timeline
+from aprende import auth, clock, journey, legacy, timeline
 from carbon_intake import docx as make_docx, unverified_cites
 
 router = APIRouter()
@@ -62,7 +62,7 @@ def _change_requested(jid):
 @router.get("/staff/review-queue")
 def review_queue(authorization: str = Header(None)):
     _auth(authorization, {"paralegal", "attorney", "admin"})
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = clock.now()
     rows = []
     for (jid,) in db.query("SELECT id FROM journeys"):
         j = journey.get_journey(jid)

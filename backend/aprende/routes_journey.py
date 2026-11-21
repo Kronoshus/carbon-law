@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
-from aprende import auth, journey, timeline
+from aprende import auth, clock, journey, timeline
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ class JourneyEventBody(BaseModel):
 @router.get("/journey")
 def get_journey(user: dict = Depends(auth.client_user)):
     j = journey.get_or_create_for_user(user["id"])
-    j["timeline"] = timeline.for_journey(j, datetime.datetime.now(datetime.timezone.utc))
+    j["timeline"] = timeline.for_journey(j, clock.now())
     return j
 
 
