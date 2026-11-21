@@ -9,7 +9,9 @@ import {
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'es-US', timezoneId: 'America/Los_Angeles' });
 
 async function phone(page: Page, context: BrowserContext): Promise<ClientApp> {
-  return { page, context, go: async (hash) => { await page.goto(`/#${hash}`); },
+  return { page, context, go: async (hash) => {                          // the same address again: open it fresh, as a client would
+    if (page.url().endsWith(`#${hash}`)) await page.reload(); else await page.goto(`/#${hash}`);
+  },
     token: async () => (await page.evaluate(() => localStorage.getItem('aprende_token')))! };
 }
 

@@ -34,7 +34,10 @@ test('a new client goes through the whole journey in the Chrome side panel, each
   const page = await context.newPage();
   const c: ClientApp = {
     page, context,
-    go: async (hash) => { await page.goto(`chrome-extension://${extId}/sidepanel.html#${hash}`); },
+    go: async (hash) => {                                                 // the same address again: open it fresh
+      const url = `chrome-extension://${extId}/sidepanel.html#${hash}`;
+      if (page.url() === url) await page.reload(); else await page.goto(url);
+    },
     token: async () => (await page.evaluate(async () => (await chrome.storage.session.get('aprende_token')).aprende_token as string)),
   };
   await releaseJourney(c, await nextWeekday(3), 'Sofía Torres');
