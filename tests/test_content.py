@@ -66,6 +66,7 @@ def test_fixture_is_valid():
     (lambda b: item(b, "demo.1.1").update(source="nope"), "nope"),                                   # unknown source
     (lambda b: b["sources"][0].update(cite="9999"), "9999"),                                        # not on VERIFIED
     (lambda b: b["sources"][1].update(url="https://example.com/wills"), "selfhelp.courts.ca.gov"),  # not the courts site
+    (lambda b: b["sources"][1].update(kind="state_agency", url="https://example.com/prop19"), "www.boe.ca.gov"),  # not BOE/DHCS
     (lambda b: item(b, "demo.1.2").pop("en"), "demo.1.2"),                                           # missing English
     (lambda b: item(b, "demo.1.2")["en"].pop("explain"), "demo.1.2"),                                # fields differ
     (lambda b: item(b, "demo.1.2").update(answer=3), "demo.1.2"),                                    # answer out of range

@@ -3,6 +3,7 @@ CLI, from backend/:  python -m aprende.content import|export|validate <dir>"""
 
 import json, os, sys
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import yaml
 
@@ -12,8 +13,9 @@ from carbon_intake import VERIFIED, questions
 
 UNITS = {"will", "trust", "ahcd", "poa", "final", "bonus"}
 KINDS = {"explain", "choice", "scenario", "listen", "truefalse", "match", "order"}
-SOURCE_KINDS = {"probate_code", "courts_selfhelp"}
+SOURCE_KINDS = {"probate_code", "courts_selfhelp", "state_agency"}
 LIST_FIELDS = {"options", "pairs", "steps"}
+STATE_AGENCY_HOSTS = {"www.boe.ca.gov", "www.dhcs.ca.gov"}   # Prop 19 (BOE), Medi-Cal estate recovery (DHCS)
 
 
 def _qids():
@@ -160,6 +162,9 @@ def validate(bundle):
         elif kind == "courts_selfhelp":
             if "selfhelp.courts.ca.gov" not in str(url):
                 errors.append(f"{sid}: url must be on selfhelp.courts.ca.gov")
+        elif kind == "state_agency":
+            if urlparse(str(url)).hostname not in STATE_AGENCY_HOSTS:
+                errors.append(f"{sid}: url must be on " + " or ".join(sorted(STATE_AGENCY_HOSTS)))
     return errors
 
 

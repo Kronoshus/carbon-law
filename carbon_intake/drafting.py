@@ -171,6 +171,18 @@ VERIFIED = {
     "331": "a person with the key to a safe deposit box held in the decedent's sole name may, before letters issue, get access only for limited purposes (including removing a will) by giving the institution proof of death and proof of identity",
     "1500": "a parent may nominate a guardian of the person or estate of a minor child where the other parent nominates or consents to the same guardian, or where the other parent is dead, lacks capacity to consent, or would not need to consent to an adoption",
     "1501": "a parent or any other person may nominate a guardian for property a minor receives from or by designation of the nominator, such as by gift, deed, trust, will, insurance or benefits",
+    "1502": "a guardian nomination may be made in the petition, at the hearing, or in a writing signed before or after the petition; "
+            "the court gives due weight to a nomination of a guardian of the person (Family Code 3043); a writing may make it effective "
+            "only on a condition such as the nominator's later absence, incapacity or death, and it stays effective despite them",
+    "1514": "the court may appoint a guardian of the person, the estate, or both; for the person it follows the Family Code custody rules; "
+            "it appoints a section 1500 nominee as guardian of the estate, and a section 1501 nominee for the covered property, unless unsuitable",
+    "2105": "the court may appoint joint guardians; a custodial parent with a terminal condition, or one temporarily unavailable for "
+            "reasons specified in the nomination (such as a serious medical condition or military service), may be appointed joint "
+            "guardian of the person with the parent's nominee, and those records are confidential",
+    "3920": "a California Uniform Transfers to Minors Act custodian transfers the custodial property to the minor at 18, unless the time "
+            "is delayed under section 3920.5, or at the minor's death",
+    "5614": "a revocable transfer on death deed makes a donative transfer of real property to a named beneficiary, operates on the "
+            "transferor's death, and remains revocable until then",
     "4406": "a third person who refuses within a reasonable time to honor an agent's authority under a properly executed statutory form power of attorney may be compelled to honor it in court, with attorney's fees if the refusal was unreasonable",
     "4678": "unless the advance health care directive says otherwise, a person then authorized to make health care decisions for a patient has the same rights as the patient to request, receive, examine, copy and consent to disclosure of the patient's health care information",
     "5000": "a provision for a nonprobate transfer on death in an insurance policy, account agreement, pension or retirement plan, trust, transfer on death deed or similar written instrument is not invalid because it does not meet the requirements for executing a will",
