@@ -1,36 +1,21 @@
+import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { t } from '../../core/i18n';
+import { t, lang } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
-import { apiFetch } from '../../core/api';
+import { apiFetch, extensionOff, getToken } from '../../core/api';
+import { NoDisponible } from '../../ui/screens/NoDisponible';
 
-type Journey = {
-  day: number;
-  gates: Record<string, boolean>;
-};
+type Journey = { day: number; gates: Record<string, boolean>; };
+type Lesson = { id: string; day: number | null; unit: string; title: { es: string; en: string }; status: string };
+type MapUnit = { id: string; lessons: Lesson[] };
 
 type Gate =
-  | 'may_disclose'
-  | 'may_consent'
-  | 'may_name'
-  | 'may_collect_details'
-  | 'may_chat'
-  | 'may_sign_engagement'
-  | 'may_pay'
-  | 'may_see_documents'
-  | 'may_book_signing'
-  | 'may_take_final_lesson';
+  | 'may_disclose' | 'may_consent' | 'may_name' | 'may_collect_details' | 'may_chat'
+  | 'may_sign_engagement' | 'may_pay' | 'may_see_documents' | 'may_book_signing' | 'may_take_final_lesson';
 
 const GATE_ORDER: Gate[] = [
-  'may_disclose',
-  'may_consent',
-  'may_name',
-  'may_collect_details',
-  'may_chat',
-  'may_sign_engagement',
-  'may_pay',
-  'may_see_documents',
-  'may_book_signing',
-  'may_take_final_lesson',
+  'may_disclose', 'may_consent', 'may_name', 'may_collect_details', 'may_chat',
+  'may_sign_engagement', 'may_pay', 'may_see_documents', 'may_book_signing', 'may_take_final_lesson',
 ];
 
 const GATE_LABEL: Record<Gate, I18nKey> = {
@@ -48,29 +33,67 @@ const GATE_LABEL: Record<Gate, I18nKey> = {
 
 function firstOpenGate(gates: Record<string, boolean> | undefined): Gate | 'complete' {
   if (!gates) return 'may_disclose';
-  for (const g of GATE_ORDER) {
-    if (gates[g] === false) return g;
-  }
+  for (const g of GATE_ORDER) if (gates[g] === false) return g;
   return 'complete';
 }
 
+function availableLesson(units: MapUnit[] | undefined): Lesson | undefined {
+  if (!units) return undefined;
+  const wanted = new Set(['will', 'trust', 'ahcd', 'poa', 'final']);
+  const candidates = units.flatMap((u) => u.lessons ?? []).filter((l) => l.status === 'available' && wanted.has(l.unit));
+  if (!candidates.length) return undefined;
+  candidates.sort((a, b) => (a.day ?? 999) - (b.day ?? 999));
+  return candidates[0];
+}
+
 export function Popup() {
+  const [signedOut, setSignedOut] = useState(false);
+  const [off, setOff] = useState(false);
   const [day, setDay] = useState<number>(1);
-  const [step, setStep] = useState<Gate | 'complete'>('may_disclose');
+  const [streak, setStreak] = useState<number>(0);
+  const [lessonTitle, setLessonTitle] = useState<string | null>(null);
+  const [gate, setGate] = useState<Gate | 'complete'>('may_disclose');
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await apiFetch('/settings/public').catch(() => null);
+      if (extensionOff.value) { if (!cancelled) setOff(true); return; }
+      const token = await getToken();
+      if (!token) { if (!cancelled) setSignedOut(true); return; }
+      let journey: Journey | null = null;
       try {
         const res = await apiFetch('/journey');
-        if (!res.ok) return;
-        const j = (await res.json()) as Journey;
+        if (res.ok) journey = (await res.json()) as Journey;
+      } catch { /* ignore */ }
+      if (cancelled) return;
+      if (journey) {
+        setDay(journey.day ?? 1);
+        const gates = journey.gates;
+        const allThree = gates?.may_disclose === true && gates?.may_consent === true && gates?.may_name === true;
+        let title: string | null = null;
+        if (allThree) {
+          try {
+            const res = await apiFetch('/learn/map');
+            if (res.ok) {
+              const m = (await res.json()) as { units?: MapUnit[] };
+              const l = availableLesson(m.units);
+              if (l) title = l.title[lang.value] ?? l.title.es;
+            }
+          } catch { /* ignore */ }
+        }
         if (cancelled) return;
-        setDay(j.day ?? 1);
-        setStep(firstOpenGate(j.gates));
+        if (title) setLessonTitle(title); else { setLessonTitle(null); setGate(firstOpenGate(gates)); }
+      }
+      try {
+        const res = await apiFetch('/progress');
+        if (res.ok) {
+          const p = (await res.json()) as { streak?: { count?: number } };
+          if (!cancelled) setStreak(p?.streak?.count ?? 0);
+        }
       } catch {
-        // offline / no token: keep defaults
+        if (!cancelled) setStreak(0);
       }
     })();
     return () => { cancelled = true; };
@@ -89,17 +112,33 @@ export function Popup() {
     }
   }
 
-  const stepLabel = step === 'complete'
-    ? t('popup.complete')
-    : t(GATE_LABEL[step]);
+  if (off) return h(NoDisponible, null);
+
+  if (signedOut) {
+    return (
+      <main class="popup">
+        <div class="popup-head">
+          <img src="img/calavera-face.png" alt="" width="56" height="56" />
+        </div>
+        <h1 class="visually-hidden">{t('top.title')}</h1>
+        <p class="popup-signedout">{t('popup.signedOut')}</p>
+        <button class="btn" onClick={openSidePanel} disabled={opening} type="button">
+          {t('popup.open')}
+        </button>
+      </main>
+    );
+  }
+
+  const stepLabel = lessonTitle ?? (gate === 'complete' ? t('popup.complete') : t(GATE_LABEL[gate]));
 
   return (
     <main class="popup">
+      <h1 class="visually-hidden">{t('top.title')}</h1>
       <div class="popup-head">
         <img src="img/calavera-face.png" alt="" width="56" height="56" />
         <span class="chip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" /></svg>
-          {t('popup.streak', { count: 0 })}
+          {t('popup.streak', { count: streak })}
         </span>
       </div>
       <p class="popup-day">{t('popup.today', { day })}</p>

@@ -133,11 +133,89 @@
       <h2 id="practiceLibrary">Practice library</h2><p>Read-only prompt and template reference for staff.</p><div class="grid2"><div class="card"><h3>Prompts</h3><p id="promptMessage" role="status"></p><select id="promptSelect"><option value="">Select a prompt</option></select><pre id="promptContent"></pre></div><div class="card"><h3>Templates</h3><p id="templateMessage" role="status"></p><select id="templateSelect"><option value="">Select a template</option></select><pre id="templateContent"></pre></div></div>
     </div>
 
+
+    <div class="section" id="reviewSection">
+      <h2 id="review">Revisión de borradores</h2>
+      <p id="reviewMessage" role="status"></p>
+      <div class="card table-wrap"><table><thead><tr><th>Cliente</th><th>Vence</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
+      <div id="reviewDetail" hidden></div>
+    </div>
+  
+    <div class="section" id="firma">
+      <h2>Firma</h2>
+      <p id="firmaMessage" role="status"></p>
+      <div class="grid2">
+        <div class="card firm-settings">
+          <h3>Ajustes</h3>
+          <label><input type="checkbox" id="firmVoice"> Grabación de voz</label>
+          <label><input type="checkbox" id="firmAi"> Charla con IA</label>
+          <label><input type="checkbox" id="firmExt"> Extensión de Chrome</label>
+          <label>Lecciones por día <input type="number" id="firmLpd" min="1" max="4"></label>
+          <label>Borrar datos de quien no pagó después de (días) <input type="number" id="firmRetention" min="30"></label>
+          <p id="firmReadOnly" hidden></p>
+          <button class="btn sm" id="firmSave" type="button">Guardar ajustes</button>
+        </div>
+        <div class="card firm-settings">
+          <h3>Feriados</h3>
+          <label>Día feriado <input type="date" id="firmHolidayDate"></label>
+          <button class="btn sm secondary" id="firmAddHoliday" type="button">Agregar feriado</button>
+          <ul id="firmHolidayList"></ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Horario de oficina</h3>
+        <table><tbody id="firmHoursRows"></tbody></table>
+        <button class="btn sm secondary" id="firmSaveHours" type="button">Guardar horario</button>
+      </div>
+    <div class="section" id="clientes">
+      <h2>Clientes</h2>
+      <p id="clientesMessage" role="status"></p>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Día</th><th>Atrasos</th><th>Conflicto</th><th>Datos</th><th>Pago</th><th>Borradores</th><th>Citas</th><th>Preguntas</th></tr></thead>
+          <tbody id="clientesRows"></tbody>
+        </table>
+      </div>
+      <div id="clienteDetail" class="card" hidden></div>
+    </div>
+
+
+    <div class="section" id="personajes">
+      <h2>Personajes</h2>
+      <p id="charactersStatus" role="status" aria-live="polite"></p>
+      <div id="charactersList"></div>
+    </div>
+
+    <div class="section" id="analitica">
+      <h2>Analítica</h2>
+      <p class="analitica-note">Muestra solo conteos: sin nombres ni respuestas de clientes.</p>
+    </div>
+
+    <div class="section" id="contenido">
+      <h2 id="contenidoHeading">Contenido</h2>
+      <p id="contentStatus" role="status" aria-live="polite"></p>
+      <label for="contentKind">Tipo</label>
+      <select id="contentKind">
+        <option value="item">Lecciones</option>
+        <option value="datos">Tus datos</option>
+        <option value="summary">Resúmenes</option>
+        <option value="persona">Personajes (instrucciones)</option>
+      </select>
+      <div id="contentEntries" class="card content-entries"></div>
+      <div id="contentDetail" class="card" hidden></div>
+      <div class="content-preview"></div>
+    </div>
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script src="admin.js"></script>
+<script src="content.js"></script>
+<script src="characters.js"></script>
+<script src="analytics.js"></script>
+<script src="review.js"></script>
+<script src="firm.js"></script>
+<script src="clients.js"></script>
 <script>
 function openModal(id){const dialog=document.getElementById(id);document.getElementById('adminOut').textContent='';dialog.showModal();dialog.querySelector('input')?.focus();}
 function closeModal(id){document.getElementById(id).close();document.getElementById('matterForm').reset();}

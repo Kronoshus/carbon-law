@@ -8,14 +8,14 @@ import re
 import uuid
 
 import yaml
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import app as backend_app
 import db
 from ai import ModelError
-from aprende import characters, datos, journey, learn
+from aprende import auth, characters, content, datos, firm, journey, learn
 from carbon_intake import UNTRUSTED, spoken
 
 router = APIRouter()
@@ -32,6 +32,19 @@ def model_client():
     return BeamClient()
 
 
+# The persona forbids these (personas.yaml); the server also refuses a reply that does them anyway (brief s.6):
+# a question about immigration status, or an annuity pitch. Tags are removed first: they hold the client's own words.
+IMMIGRATION = re.compile(r"inmigra|migratori|ciudadan|indocumentad|green card|tarjeta verde|\bvisas?\b|immigra|citizen|"
+                         r"undocumented|residencia permanente|permanent resident", re.I)
+ANNUITY = re.compile(r"anualidad|annuit", re.I)
+UNAVAILABLE = "El servicio no está disponible en este momento. Intente de nuevo en unos minutos."
+
+
+def _breaks_rules(reply):
+    asks = [s for s in re.split(r"(?<=[.!?])\s+", reply) if "?" in s and IMMIGRATION.search(s)]
+    return bool(asks or ANNUITY.search(reply))
+
+
 def _fill(text, **values):
     for k, v in values.items():
         text = text.replace("{" + k + "}", str(v))
@@ -39,8 +52,9 @@ def _fill(text, **values):
 
 
 def _persona(character, lang, mode, **values):
-    c = PERSONAS["characters"][character]
-    parts = (PERSONAS["shared"], c["persona"], PERSONAS["modes"][mode])
+    live = content.live_entries("persona")
+    c = live[f"persona:characters.{character}"]
+    parts = (live["persona:shared"]["text"], c["persona"], live[f"persona:modes.{mode}"]["text"])
     return _fill("\n\n".join(parts), name=c["name"][lang], language=LANGUAGE[lang], **values) + "\n\n" + UNTRUSTED
 
 
@@ -102,12 +116,15 @@ def _messages(raw):
 
 
 @router.post("/chat")
-async def post_chat(body: ChatBody, authorization: str = Header(None)):
+async def post_chat(body: ChatBody, authorization: str = Header(None), user: dict = Depends(auth.client_user)):
     gate = "may_chat" if body.mode == "learn" else "may_collect_details"
     j, open_ = _client_journey(authorization, gate)          # who is asking comes first (401/403)
+    if not firm.switch("ai_chat"):
+        return JSONResponse(status_code=503, content={"error": "ai_chat_off"})
     if body.mode not in ("learn", "intake"):
         raise HTTPException(422, "unsupported mode")
-    if body.character not in PERSONAS["characters"] or characters.get(body.character) is None:
+    _ch = characters.get(body.character)
+    if body.character not in PERSONAS["characters"] or _ch is None or not _ch["enabled"]:
         raise HTTPException(422, "unknown character")
     if body.mode == "learn" and not db.query("SELECT id FROM content_lessons WHERE id = ?", (body.lesson_id or "",)):
         raise HTTPException(404, "lesson not found")
@@ -125,9 +142,11 @@ async def post_chat(body: ChatBody, authorization: str = Header(None)):
         completion = await model_client().complete(system=system, messages=_messages(body.messages), max_tokens=400,
                                                    purpose=f"aprende_chat_{body.mode}", temperature=0.4)
     except ModelError:
-        raise HTTPException(503, "El servicio no está disponible en este momento. Intente de nuevo en unos minutos.")
+        raise HTTPException(503, UNAVAILABLE)
 
     raw = completion.text or ""
+    if _breaks_rules(DONE.sub(" ", TAG.sub(" ", raw))):
+        raise HTTPException(503, UNAVAILABLE)
     # Tags come off before the spoken() guard, which stops at the first "?" and could cut a tag in half.
     asked = TAG.findall(raw)
     question = asked[-1].strip() if asked else None
@@ -157,7 +176,12 @@ def _reply(j, body, lang, *, text, history, reasoning, question):
         out["covered"] = [q["id"] for q in d["questions"] if q["status"] != "open"]     # from the server only: it only grows
         out["open"] = d["open"]
         nxt = _current(j, body.group)
-        out["next_question"] = {"id": nxt["id"], "text": nxt[lang]} if nxt else None
+        if nxt:
+            live = content.live_entries("datos")
+            body = live.get("datos:" + nxt["id"], {"es": nxt["es"], "en": nxt["en"]})
+            out["next_question"] = {"id": nxt["id"], "text": body[lang]}
+        else:
+            out["next_question"] = None
     return out
 
 

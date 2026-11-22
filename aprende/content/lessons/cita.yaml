@@ -89,7 +89,7 @@ steps:
       - Revisar los documentos con el abogado
       - Firmar con testigos y notario
       - Llevarse sus originales
-      explain: ¡Listo para firmar!
+      explain: ¡Todo listo para firmar!
     en:
       prompt: Put the signing-day steps in order
       steps:

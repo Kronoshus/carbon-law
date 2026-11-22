@@ -30,9 +30,11 @@ export function Shell({ children, bare = false }: { children?: ComponentChildren
     <div class="shell">
       <header class="topbar">
         <span class="topbar-title">{t('top.title')}</span>
-        <button type="button" class="topbar-signout" onClick={() => void signOut()}>
-          {t('top.signout')}
-        </button>
+        {bare ? (
+          <button type="button" class="topbar-signout" onClick={() => void signOut()}>
+            {t('top.signout')}
+          </button>
+        ) : null}
       </header>
       {bare ? <main class="shell-main">{children}</main> : <>
       <div class="shell-body">

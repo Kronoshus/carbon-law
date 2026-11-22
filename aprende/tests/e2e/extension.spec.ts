@@ -43,7 +43,13 @@ test('popup reads journey and opens side panel', async () => {
     });
   });
 
+  await page.route('**/progress', (route) => route.fulfill({ json: { streak: { count: 0 } } }));
+  await page.route('**/learn/map', (route) => route.fulfill({ json: { units: [] } }));
+  await page.route('**/settings/public', (route) => route.fulfill({ json: { switches: { ai_chat: true, voice_recording: true, extension: true } } }));
+
   await page.goto(`chrome-extension://${extId}/popup.html`);
+  await page.evaluate(async () => { await chrome.storage.session.set({ aprende_token: 'tok-ana' }); });   // signed in (T8-01: no token shows the signed-out popup)
+  await page.reload();
   await expect(page.getByText('Racha: 0')).toBeVisible();
   await expect(page.getByText('Día 3 de 14')).toBeVisible();
   await expect(page.getByText('Dar su consentimiento')).toBeVisible();

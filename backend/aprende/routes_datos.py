@@ -1,10 +1,10 @@
 """Routes for Tus datos (T5-05)."""
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from aprende import datos
-from aprende.chat import _client_journey
+from aprende import auth, datos, journey
 
 router = APIRouter()
 
@@ -14,17 +14,16 @@ class Answer(BaseModel):
     skipped: bool = False
 
 
-def _journey(authorization):
-    j, open_ = _client_journey(authorization, "may_collect_details")
-    if not open_:
+def _journey(j):
+    if not j["gates"].get("may_collect_details", False):
         raise HTTPException(409, {"error": "gate", "missing": ["may_collect_details"]})
     return j
 
 
 @router.get("/datos")
-def get_datos(lang: str = "es", authorization: str = Header(None)):
+def get_datos(lang: str = "es", j: dict = Depends(auth.client_journey)):
     try:
-        return datos.get_datos(_journey(authorization), "en" if lang == "en" else "es")
+        return datos.get_datos(_journey(j), "en" if lang == "en" else "es")
     except HTTPException as e:
         if e.status_code == 409:
             return JSONResponse(status_code=409, content=e.detail)
@@ -32,9 +31,9 @@ def get_datos(lang: str = "es", authorization: str = Header(None)):
 
 
 @router.put("/datos/{question_id}")
-def put_datos(question_id: str, body: Answer, authorization: str = Header(None)):
+def put_datos(question_id: str, body: Answer, j: dict = Depends(auth.client_journey)):
     try:
-        j = _journey(authorization)
+        j = _journey(j)
     except HTTPException as e:
         if e.status_code == 409:
             return JSONResponse(status_code=409, content=e.detail)
