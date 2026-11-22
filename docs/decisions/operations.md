@@ -2,6 +2,8 @@
 
 How the office runs the conflict list, signings and hosting.
 
+**Answered by Kevin on 2026-11-21.** Asana: https://app.asana.com/1/15811608085686/project/1220675583325073/task/1220771076837856
+
 **How to answer:** merge this PR to accept every recommendation as written. To change one, write the change in a PR comment, or edit the line "Other:". I build to your answers.
 
 **Q-W2. How fast does the firm clear a conflict?** The app assumes 2 business days from the names step.
@@ -10,7 +12,7 @@ How the office runs the conflict list, signings and hosting.
 *Recommend:* 2 business days from the names step (the timeline already uses this; it is the setting `turnaround.conflict_bd`).
 
 - [ ] As recommended
-- [ ] Other: 
+- [x] Other: Within **24 hours at most** (Kevin, 2026-11-21): the firm clears conflicts with an AI-assisted check, almost automatically. The timeline counts 24 hours from the names step, any day (setting `turnaround.conflict_hours`). 
 
 ---
 
@@ -19,7 +21,7 @@ adverse parties and former clients? Without a list the app waits for a person to
 
 *Recommend:* The paralegal uploads a CSV each week from the firm's records: current and former clients and adverse parties, one name per row. The app keeps only the latest list.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -30,7 +32,7 @@ Why it matters: Spanish speakers who need an interpreter complete directives lea
 
 *Recommend:* Spanish staff at every signing; attorney decides on document language
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -40,7 +42,7 @@ use a secure HttpOnly cookie instead of a token in browser storage. Needs one DN
 
 *Recommend:* Yes: `api.carbon.bailment.tech` pointing at Render.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -49,7 +51,7 @@ use a secure HttpOnly cookie instead of a token in browser storage. Needs one DN
 
 *Recommend:* The same site, `carbon.bailment.tech/aprende/`: simplest, with one cookie and one deploy.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -58,5 +60,5 @@ use a secure HttpOnly cookie instead of a token in browser storage. Needs one DN
 before the attorney approves them — the opposite of the new rule. Retire it when Aprende launches, or change it now?
 *Recommend:* hide it behind a staff switch now, retire at launch.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
