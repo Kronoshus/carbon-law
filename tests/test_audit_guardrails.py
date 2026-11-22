@@ -569,3 +569,13 @@ def test_the_browser_code_has_no_model_endpoint_or_key():
     for path in glob.glob(os.path.join(ROOT, "aprende", "src", "**", "*.ts*"), recursive=True):
         text = open(path, encoding="utf-8").read()
         assert not re.search(r"reflection\.ai|anthropic\.com|REFLECTION_API_KEY|BEAM_API_KEY", text), path
+
+
+SPAIN_ONLY = re.compile(r"\b(vosotr\w*|vuestr\w*|ordenador\w*|coche\w*|m[oó]vil(es)?|zumo|gafas|patata\w*|enfadad\w*|"
+                        r"aparcar|billete\w*|sois|hab[eé]is|ten[eé]is|pod[eé]is|quer[eé]is|est[aá]is|coger|cog[ií]\w*|vale\?)\b", re.I)
+
+
+def test_client_facing_spanish_is_mexican_spanish_with_no_spain_only_words():
+    """Decision #53: the Spanish of Mexico, with usted. Spain-only words and the vosotros forms read as foreign to the firm's clients."""
+    es = [t for t in client_facing_text() if t[0].endswith(("es.json", "es.md")) or t[0].endswith(".yaml")]
+    assert [t for t in es if SPAIN_ONLY.search(t[1])] == []

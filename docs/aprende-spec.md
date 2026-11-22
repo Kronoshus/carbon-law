@@ -39,7 +39,7 @@ reviews, signs and closes the plan with them. The whole path takes about two wee
 3. **The attorney is the gate.** Conflict clearance, the engagement letter, every draft and every word of legal content pass through the attorney before a client relies on them. The app makes those gates visible to the client instead of hiding them.
 4. **Respectful game mechanics.** Streaks, petals (XP), seals (badges) and celebration — but **no lives, no hearts, no penalty for wrong answers, no countdown timers**, and **no confetti on hard topics** (incapacity, end of life, death of a parent). El Oso's lessons run in a calm mode (section 7.6).
 5. **One thing per screen.** One question per screen and one question per character turn (the prototype's rule).
-6. **Spanish and English say the same thing.** Every string exists in both catalogs; CI fails if one is missing. Spanish uses *usted* (the prototype's register; question Q-L4).
+6. **Spanish and English say the same thing.** Every string exists in both catalogs; CI fails if one is missing. Spanish is the Spanish of Mexico, the most common variety among the firm's clients, with *usted* (decision #53, Q-L4); no Spain-only words.
 7. **Order of collection is enforced by the server, not the screen.** Consent → names-only conflict check → everything else. The UI only reflects the server's gates.
 
 ## 3. Scope
@@ -242,7 +242,7 @@ Days 1–4 are the client's own pace (one core lesson a day). From day 5 the fir
 ### 6.3 Timeline rules (what "Día 9" means on a calendar)
 
 - Days 1–4: calendar days from the first lesson, in the client's time zone.
-- Firm steps use **business days** in `America/Los_Angeles`, with a firm holiday list (setting): conflict clearance (target 2), scope review (2), attorney review (3), revisions (2). Each step's due date is computed at the moment its clock starts and stored with the step.
+- Firm steps use **business days** in `America/Los_Angeles`, with a firm holiday list (setting): scope review (2), attorney review (3), revisions (2). Conflict clearance is the exception: the firm's AI-assisted check clears names within **24 hours, any day** (decision #54, setting `turnaround.conflict_hours`). Each step's due date is computed at the moment its clock starts and stored with the step.
 - Every later day is computed from the actual completion time of the step before it. The tracker shows the **date** next to each day number, and when a weekend or holiday moves a date it says so: *"Día 9 · jueves 10 de diciembre (el fin de semana movió esta fecha 2 días)"*.
 - **A step is late** when its due date passes without its event; staff are alerted once (dashboard flag + ntfy), and the client sees a calm message, never a blame.
 
