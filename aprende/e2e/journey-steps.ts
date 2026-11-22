@@ -387,9 +387,12 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await expect(page.getByText('Modo de prueba: no se cobra nada.')).toBeVisible();
     await page.getByRole('button', { name: 'Pagar con Stripe' }).click();
     await expect(page.getByRole('heading', { name: 'Stripe: pago de prueba' })).toBeVisible();
+    // the address Stripe returns to, read as it loads: in the side panel's case the web app then sends a signed-out
+    // visitor on to #/bienvenida (F3), so page.url() a moment later is no longer the return address
+    const returned = page.waitForEvent('framenavigated', (f) => f === page.mainFrame() && /#\/pago\/listo\?session_id=/.test(f.url()));
     await page.getByRole('button', { name: 'Pagar (prueba)' }).click();
-    await page.waitForURL(/#\/pago\/listo\?session_id=/);
-    if (c.backFromStripe) await c.backFromStripe(page.url());
+    const back = (await returned).url();
+    if (c.backFromStripe) await c.backFromStripe(back);
     await expect(page.getByText('¡Pago recibido!', { exact: false })).toBeVisible();
     expect(dbCounts(jid).payments).toBe(1);
     await landsOnItsDay(c, 'pay', plan);
