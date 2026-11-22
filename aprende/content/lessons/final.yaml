@@ -6,7 +6,7 @@ sensitive: false
 datos: []
 title:
   es: Cuide sus documentos
-  en: Look after your documents
+  en: Take care of your documents
 steps:
 - id: final.1
   title:
@@ -90,7 +90,7 @@ steps:
       - - Agente de salud
         - Directiva
       - - Apoderado
-        - Poder financiero
+        - Poder para finanzas
       explain: ¡Muy bien! Cada persona sabe dónde buscar.
     en:
       prompt: Match each person with the document they need
@@ -168,15 +168,15 @@ steps:
     legal: true
     source: pc-21620
     es:
-      text: 'Lo mismo pasa con un hijo que nace o adopta después: puede recibir la parte que le tocaría sin testamento.'
+      text: 'Lo mismo pasa con un hijo que nace o que usted adopta después: puede recibir la parte que le tocaría sin testamento.'
     en:
       text: 'The same goes for a child born or adopted later: they may receive the share they would get without a will.'
   - id: final.4.4
     kind: explain
     es:
-      text: Para pedir un cambio, use «Pedir un cambio» en Mi plan. La oficina le responde.
+      text: Para pedir un cambio, llame a la oficina. La oficina le responde.
     en:
-      text: To ask for a change, use "Ask for a change" in My plan. The office will answer you.
+      text: To ask for a change, call the office. The office will answer you.
   - id: final.4.5
     kind: choice
     legal: true

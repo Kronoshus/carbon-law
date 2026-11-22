@@ -32,8 +32,10 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text); background: var(--paper); }
-  h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; }
+  img, svg, canvas, video { max-inline-size: 100%; }
+  input, select, textarea { max-inline-size: 100%; }
+  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text); background: var(--paper); }
+  h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--link); }
   :focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
@@ -45,7 +47,8 @@
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-block-size: var(--tap);
          padding: var(--s3) var(--s5); border: var(--stroke) solid var(--outline); border-radius: var(--radius);
          font: 700 var(--step-0)/1.2 var(--font-display); letter-spacing: 0.02em; color: var(--plum);
-         background: var(--marigold); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; text-decoration: none;
+         background: var(--marigold); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
+         flex-wrap: wrap; text-align: center;
          transition: translate .08s, box-shadow .08s; }
   .btn:active { translate: 0 3px; box-shadow: 0 1px 0 var(--outline); }
   .btn.secondary { background: var(--card); color: var(--text); }

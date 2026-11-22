@@ -63,3 +63,14 @@ def set_stage(journey, stage):
         backend_app.save_data()
         return backend_app.matters[mid]
 
+
+def add_document_version(matter_id, journey_id, name, fields):
+    """A new version of a matter's document, stored where the legacy portal reads documents. Returns the record."""
+    with backend_app._request_lock:
+        version = max((d.get("version", 0) for d in backend_app.documents.values()
+                       if d.get("matter_id") == matter_id and d.get("name") == name), default=0) + 1
+        rec = {"id": str(uuid.uuid4()), "matter_id": matter_id, "journey_id": journey_id, "name": name, "version": version,
+               "created_at": backend_app.now_iso(), **fields}
+        backend_app.documents[rec["id"]] = rec
+        backend_app.save_data()
+        return rec

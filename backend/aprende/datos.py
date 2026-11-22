@@ -8,7 +8,8 @@ import uuid
 import yaml
 
 import db
-from aprende import journey
+from aprende import journey, content
+from aprende import analytics
 
 QUESTIONS = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "..", "..", "aprende", "content", "datos.yaml"),
                                 encoding="utf-8"))
@@ -21,11 +22,15 @@ def applicable(j):
 
 
 def get_datos(j, lang="es"):
+    live = content.live_entries("datos")
     saved = {qid: (status, answer) for qid, status, answer in
              db.query("SELECT question_id, status, answer FROM datos_answers WHERE journey_id = ?", (j["id"],))}
-    qs = [{"id": q["id"], "asked_after": q["asked_after"], "docs": q["docs"], "text": q[lang],
-           "status": saved.get(q["id"], ("open", None))[0], "answer": saved.get(q["id"], ("open", None))[1]}
-          for q in applicable(j)]
+    qs = []
+    for q in applicable(j):
+        body = live.get("datos:" + q["id"], {"es": q["es"], "en": q["en"]})
+        text = body[lang]
+        qs.append({"id": q["id"], "asked_after": q["asked_after"], "docs": q["docs"], "text": text,
+                   "status": saved.get(q["id"], ("open", None))[0], "answer": saved.get(q["id"], ("open", None))[1]})
     open_ = [q["id"] for q in qs if q["status"] == "open"]
     return {"questions": qs, "open": open_, "completed": not open_}
 
@@ -44,5 +49,6 @@ def save(j, qid, *, answer=None, actor="client"):
         conn.execute("INSERT INTO datos_answers (journey_id, question_id, status, answer, updated_at) VALUES (?, ?, ?, ?, ?) "
                      "ON CONFLICT (journey_id, question_id) DO UPDATE SET status = excluded.status, answer = excluded.answer, "
                      "updated_at = excluded.updated_at", (j["id"], qid, status, answer, journey._now_iso()))
+    analytics.record(j["id"], "datos_question_answered", {"question_id": qid, "skipped": answer is None})
     if get_datos(j)["completed"]:
         journey.apply(j["id"], "intake_completed", {}, actor="system")

@@ -84,7 +84,7 @@ steps:
       explain: El original va al tribunal, dentro de los 30 días.
     en:
       story: Mateo finds his aunt's original will in a drawer, a week after she died.
-      prompt: What should they do with the original will?
+      prompt: What should he do with the original will?
       options:
       - Keep it at home
       - Give it to the bank

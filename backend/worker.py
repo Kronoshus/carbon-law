@@ -28,9 +28,12 @@ def run_one(worker_id):
 
 def run_forever(stop_event):
     migrate.run()
-    from datetime import datetime, timezone
-    from aprende import timeline        # registers its job; the hourly tick re-queues itself from here on
-    timeline.schedule(datetime.now(timezone.utc))
+    import app  # noqa: F401  (the job handlers use the app's stores; loaded first, as in the web process, it avoids a circular import)
+    from aprende import clock, drafts, reminders, retention, signing, timeline  # noqa: F401  (each registers its jobs; the ticks re-queue themselves)
+    now = clock.now()
+    timeline.schedule(now)
+    retention.schedule(now)
+    reminders.schedule_daily(now)
     worker_id = "worker-{}".format(os.getpid())
     while not (stop_event is not None and stop_event.is_set()):
         did = run_one(worker_id)

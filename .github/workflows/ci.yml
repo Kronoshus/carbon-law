@@ -33,6 +33,17 @@ jobs:
       - name: avatar-intake check
         run: cd avatar-intake && python server.py --check
 
+  render:
+    # Builds and starts the backend the way Render does: repo root, root requirements.txt only, Python 3.11.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: start as on Render and answer /health
+        run: bash scripts/render-check.sh
+
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -54,6 +65,13 @@ jobs:
         run: cd aprende && npm run build:web
       - name: build extension
         run: cd aprende && npm run build:ext
+      - name: pack + check extension
+        run: cd aprende && npm run pack:ext && node scripts/check-extension.mjs dist/aprende-extension.zip
+      - name: upload extension zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: aprende-extension
+          path: aprende/dist/aprende-extension.zip
       - name: i18n parity
         run: cd aprende && npm run i18n:check
 
@@ -73,4 +91,55 @@ jobs:
       - run: cd aprende && npm ci
       - run: cd aprende && npx playwright install --with-deps chromium
       - run: cd aprende && npm run build:ext
-      - run: cd aprende && npm run test:e2e
+      # projects named one by one: a project's dependencies would run again without the --grep-invert filter
+      - name: web and extension
+        run: cd aprende && npx playwright test --project=web --project=extension --grep-invert 'INP on the lesson player'
+      # INP alone on one worker: parallel tests would share the CPU it measures
+      - name: INP on a quiet runner
+        run: cd aprende && npx playwright test --project=web --workers=1 e2e/performance.spec.ts -g 'INP on the lesson player'
+      - name: release journeys (fake clock, one worker)
+        run: cd aprende && npx playwright test --project=release --no-deps
+      - name: upload what the failed tests saw
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: aprende/test-results/
+
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: aprende/package-lock.json
+      - run: python -m pip install -r requirements.txt -r backend/requirements.txt
+      - run: cd aprende && npm ci
+      - run: cd aprende && npx playwright install chromium
+      - run: cd aprende && npm run build:web
+      - name: start backend
+        env:
+          PORT: '8011'
+          PYTHON: python
+        run: bash scripts/start-e2e-backend.sh &
+      - name: start preview
+        env:
+          E2E_API_PORT: '8011'
+        run: cd aprende && npx vite preview --port 4173 --strictPort &
+      - name: wait for services
+        run: |
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:4173/ >/dev/null && curl -sf http://127.0.0.1:8011/health >/dev/null && exit 0; sleep 2; done; exit 1
+      - name: run lighthouse
+        run: cd aprende && PW_CHROMIUM=$(find ~ -name chrome -path '*chrome-linux64*' | head -1) node scripts/lighthouse.mjs --url http://127.0.0.1:4173/
+      - name: upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: aprende/lighthouse/

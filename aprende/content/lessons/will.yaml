@@ -28,7 +28,7 @@ steps:
     es:
       text: Un testamento no es solo para quien tiene mucho. Es para que su familia sepa qué hacer con lo que usted deja, aunque sea una casa, un carro o una cuenta.
     en:
-      text: A will is not only for people who have a lot. It tells your family what to do with what you leave, even if it is a house, a car or one account.
+      text: A will is not only for people who have a lot. It tells your family what to do with what you leave, even if it is a house, a car or an account.
   - id: will.1.1
     kind: explain
     legal: true
@@ -219,7 +219,7 @@ steps:
       prompt: ¿Quién propondría al juez a la persona que cuidaría de Sofía y Mateo?
       options:
       - El banco
-      - La persona que Ana y Luis nombraron como tutor
+      - La persona que Ana y Luis nombraron como tutora
       - Nadie; el juez elige solo
       explain: Su nombramiento le dice al juez lo que ustedes quieren.
     en:

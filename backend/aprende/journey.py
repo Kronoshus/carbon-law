@@ -4,11 +4,11 @@ import json
 import uuid
 
 import db
-from aprende import legacy
+from aprende import clock, legacy
 
 CLIENT_EVENTS = {"ai_disclosed", "consent", "names_submitted", "documents_tentative", "documents_confirmed"}
 SERVER_EVENTS = {
-    "conflict_auto", "conflict_firm", "scope_approved", "engagement_signed",
+    "conflict_auto", "conflict_firm", "scope_approved", "engagement_signed", "engagement_countersigned",
     "paid", "drafts_ready", "attorney_approved", "signed", "intake_completed",
     "client_confirmed", "changes_requested", "signing_booked", "final_lesson_completed",
     "funding_done",
@@ -29,7 +29,7 @@ DOC_CODES = {"will", "trust", "poa", "ahcd"}
 
 
 def _now_iso():
-    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
+    return clock.now_iso()
 
 
 def conflict_status(facts):
@@ -61,6 +61,7 @@ def gates(facts):
     scope = _scope_currently_approved(facts)
     firm_cleared = facts.get("conflict_firm_result") == "cleared"
     engagement = "engagement_signed" in facts
+    countersigned = "engagement_countersigned" in facts
     paid = "paid" in facts
     drafts = "drafts_ready" in facts
     attorney = "attorney_approved" in facts
@@ -73,7 +74,7 @@ def gates(facts):
     may_collect_details = base_open
     may_chat = base_open
     may_sign_engagement = base_open and firm_cleared and scope
-    may_pay = may_sign_engagement and engagement
+    may_pay = may_sign_engagement and engagement and countersigned
     may_see_documents = paid and drafts and attorney
     may_book_signing = may_see_documents and client_confirmed
     may_take_final_lesson = signed
@@ -109,7 +110,7 @@ def compute_day(started_at, tz="America/Los_Angeles"):
     start = datetime.datetime.fromisoformat(str(started_at).replace("Z", "+00:00"))
     if start.tzinfo is None:
         start = start.replace(tzinfo=datetime.timezone.utc)
-    now = datetime.datetime.now(zone)
+    now = clock.now().astimezone(zone)
     start_local = start.astimezone(zone)
     delta = (now.date() - start_local.date()).days
     if delta < 0:
@@ -198,12 +199,12 @@ def get_or_create_for_user(user_id, tz="America/Los_Angeles"):
     return get_journey_by_user(user_id)
 
 
-def _insert_event(journey_id, event_type, payload, actor, created_at):
+def _insert_event(journey_id, event_type, payload, actor, created_at, conn=None):
     """Record an event unless it repeats the latest one of its type (a resend is a no-op). For consent and the conflict
     results only an unchanged answer is a repeat, so a changed decision is always recorded. Read and insert happen in one
     transaction, so concurrent requests cannot both insert. Earned discounts are recorded in the same transaction."""
-    with db.transaction() as conn:
-        row = conn.execute(
+    def _work(c):
+        row = c.execute(
             "SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = ? ORDER BY created_at DESC, id DESC LIMIT 1",
             (journey_id, event_type)).fetchone()
         if row is not None and event_type not in ("scope_approved", "scope_reopened"):
@@ -218,18 +219,30 @@ def _insert_event(journey_id, event_type, payload, actor, created_at):
                 key = "answer" if event_type == "consent" else "result"
                 if last.get(key) == payload.get(key):
                     return False
-        conn.execute(
+        c.execute(
             "INSERT INTO journey_events (id, journey_id, type, payload_json, actor, created_at, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (str(uuid.uuid4()), journey_id, event_type, json.dumps(payload), actor, created_at, uuid.uuid4().hex))
-        r = conn.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
+        r = c.execute("SELECT value_json FROM settings WHERE key = ?", ("pricing",)).fetchone()
         settings = json.loads(r[0]) if r else {}
         for doc, cfg in (settings.get("discounts") or {}).items():
             if event_type in (cfg.get("events") or []):
-                conn.execute(
+                c.execute(
                     "INSERT INTO discounts (id, journey_id, document, event, amount_cents, earned_at) "
                     "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (journey_id, document, event) DO NOTHING",
                     (str(uuid.uuid4()), journey_id, doc, event_type, int(cfg["amount"]), created_at))
-    return True
+        return True
+    if conn is None:
+        with db.transaction() as c:
+            return _work(c)
+    return _work(conn)
+
+
+def _scope_codes(j):
+    """The documents the attorney's latest scope approval covers: recorded with it, else the confirmed choice."""
+    rows = db.query("SELECT payload_json FROM journey_events WHERE journey_id = ? AND type = 'scope_approved' "
+                    "ORDER BY created_at DESC, id DESC LIMIT 1", (j["id"],))
+    codes = (json.loads(rows[0][0] or "{}") if rows else {}).get("codes")
+    return list(codes) if codes is not None else list(j["documents"]["confirmed"])
 
 
 def apply(journey_id, event_type, payload=None, actor="system"):
@@ -242,8 +255,12 @@ def apply(journey_id, event_type, payload=None, actor="system"):
     if event_type == "scope_approved" and _scope_currently_approved(j["facts"]):
         return j                                                  # already approved: a repeat is a no-op
     scope_was_approved = _scope_currently_approved(j.get("facts") or {}) if event_type == "documents_confirmed" else False
-    prev_confirmed = list(j.get("documents", {}).get("confirmed") or []) if event_type == "documents_confirmed" else []
-    inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso())
+    prev_confirmed = _scope_codes(j) if scope_was_approved else []
+    with db.transaction() as _conn:
+        inserted = _insert_event(j["id"], event_type, payload, actor, _now_iso(), conn=_conn)
+        if inserted:
+            from aprende import analytics as _analytics  # cycle: analytics imports journey
+            _analytics.from_journey_event(j["id"], event_type, payload, conn=_conn)
     if not inserted:
         return get_journey(j["id"])
     if event_type == "documents_confirmed":

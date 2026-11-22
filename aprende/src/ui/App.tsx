@@ -1,35 +1,46 @@
 import { h, Fragment } from 'preact';
 import { IconSprite } from './Icons';
-import '@fontsource/work-sans/400.css';
-import '@fontsource/work-sans/600.css';
-import '@fontsource/work-sans/700.css';
-import '@fontsource/league-spartan/700.css';
-import '@fontsource/league-spartan/800.css';
+import '@fontsource/work-sans/latin-400.css';
+import '@fontsource/work-sans/latin-600.css';
+import '@fontsource/work-sans/latin-700.css';
+import '@fontsource/league-spartan/latin-700.css';
+import '@fontsource/league-spartan/latin-800.css';
 import './tokens.css';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';
-import { getToken } from '../core/api';
+import { getToken, extensionOff, apiFetch } from '../core/api';
 import { Shell } from './Shell';
 import { Bienvenida } from './screens/Bienvenida';
+import { Privacidad } from './screens/Privacidad';
 import { InicioIa, InicioConsentimiento, InicioNoAcepto, InicioNombres, InicioEspera } from './screens/Inicio';
 import { CuentaNueva } from './screens/CuentaNueva';
 import { Entrar } from './screens/Entrar';
 import { Placeholder } from './screens/Placeholder';
+import { NoDisponible } from './screens/NoDisponible';
 import { Plan } from './screens/Plan';
 import { Aprender } from './screens/Aprender';
 import { Leccion } from './screens/Leccion';
 import { Datos } from './screens/Datos';
 import { Documentos } from './screens/Documentos';
 import { Resumen } from './screens/Resumen';
+import { Firmados } from './screens/Firmados';
+import { Revisar } from './screens/Revisar';
+import { Preguntas } from './screens/Preguntas';
+import { Perfil } from './screens/Perfil';
+import { Acuerdo } from './screens/Acuerdo';
+import { Cita } from './screens/Cita';
+import { Pago, PagoListo } from './screens/Pago';
 import { DevCharacter } from './DevCharacter';
 
 const PUBLIC = new Set(['/bienvenida', '/cuenta-nueva', '/entrar']);
+const OPEN = new Set(['/privacidad']);
 
 function Screens() {
   const r = route.value;
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const datosMatch = r.match(/^\/datos\/(.+)$/);
+  const pagoListo = r.startsWith('/pago/listo');
   const [ready, setReady] = useState(true);
   const [authed, setAuthed] = useState(false);
 
@@ -41,11 +52,12 @@ function Screens() {
       setAuthed(!!tok);
       setReady(true);
       const isPublic = PUBLIC.has(r);
-      if (!tok && !isPublic) {
+      const isOpen = OPEN.has(r);
+      if (!tok && !isPublic && !isOpen) {
         navigate('/bienvenida');
       } else if (tok && isPublic) {
         try {
-          const res = await fetch('/journey', { headers: { Authorization: `Bearer ${tok}` } });
+          const res = await apiFetch('/journey');
           if (res.ok) {
             const j = await res.json();
             const facts = j.facts || {};
@@ -73,10 +85,13 @@ function Screens() {
     return h(DevCharacter, null);
   }
 
+  if (extensionOff.value) return h(NoDisponible, null);
+
   if (!ready) return null;
 
   let screen;
   if (r === '/bienvenida') screen = h(Bienvenida, null);
+  else if (r === '/privacidad') screen = h(Privacidad, null);
   else if (r === '/cuenta-nueva') screen = h(CuentaNueva, null);
   else if (r === '/entrar') screen = h(Entrar, null);
   else if (r === '/plan') screen = h(Plan, null);
@@ -89,6 +104,14 @@ function Screens() {
   else if (leccionMatch) screen = h(Leccion, { id: decodeURIComponent(leccionMatch[1]) });
   else if (r === '/documentos') screen = h(Documentos, null);
   else if (r === '/resumen') screen = h(Resumen, null);
+  else if (r === '/firmados') screen = h(Firmados, null);
+  else if (r === '/revisar') screen = h(Revisar, null);
+  else if (r === '/preguntas') screen = h(Preguntas, null);
+  else if (r === '/perfil') screen = h(Perfil, null);
+  else if (r === '/acuerdo') screen = h(Acuerdo, null);
+  else if (r === '/cita') screen = h(Cita, null);
+  else if (r === '/pago') screen = h(Pago, null);
+  else if (pagoListo) screen = h(PagoListo, null);
   else if (datosMatch) screen = h(Datos, { group: decodeURIComponent(datosMatch[1]) });
   else screen = h(Placeholder, null);
 
@@ -97,6 +120,7 @@ function Screens() {
     return screen;
   }
   if (r.startsWith('/inicio/') || datosMatch) return authed ? h(Shell, { bare: true }, screen) : h(Bienvenida, null);   // one thing at a time
+  if (r === '/privacidad') return authed ? h(Shell, null, screen) : screen;
   if (PUBLIC.has(r)) return screen;
   if (!authed) return h(Bienvenida, null);
   return h(Shell, null, screen);

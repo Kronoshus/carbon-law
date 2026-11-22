@@ -1,9 +1,9 @@
 /* Course map (design doc §7.1, docs/aprende/screens/mapa.html) */
-.map { display: grid; gap: var(--s3); padding-block-end: var(--s6); }
-.map-chips { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); }
+.map { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); padding-block-end: var(--s6); }
+.map-chips { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s2); }
 .map-chips .chip .icon { inline-size: 1.4rem; block-size: 1.4rem; }
 .map-day { margin: 0; font: 800 var(--step-0)/1 var(--font-display); }
-.map .host { display: grid; grid-template-columns: 4rem 1fr; gap: var(--s3); align-items: center; }
+.map .host { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: var(--s3); align-items: center; }
 .map .host img { inline-size: 4rem; block-size: 4rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
 .banner { position: relative; margin: 0; padding: calc(var(--s3) + 0.6rem) var(--s4) var(--s4); color: #fff; background: var(--night);
           border-radius: var(--radius); border: var(--stroke) solid var(--outline); font: 700 var(--step-1)/1.1 var(--font-display); overflow: clip; }
@@ -11,12 +11,12 @@
 .banner::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 0.6rem;
                   background: repeating-linear-gradient(90deg, var(--rosa) 0 1.5rem, var(--marigold) 1.5rem 3rem, var(--teal) 3rem 4.5rem, var(--gold) 4.5rem 6rem, var(--purple) 6rem 7.5rem);
                   mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, #000 0.37rem) 0 0 / 1.5rem 100%; }
-ol.path { list-style: none; margin: 0; padding: var(--s2) 0; display: grid; gap: var(--s3); position: relative; }
+ol.path { list-style: none; margin: 0; padding: var(--s2) 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); position: relative; }
 ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 50%; translate: -50% 0; inline-size: 0.5rem;
                   background: radial-gradient(circle, var(--marigold) 45%, transparent 50%) 0 0 / 0.5rem 1rem repeat-y; opacity: .7; }
-.node { position: relative; display: flex; align-items: center; gap: var(--s3); inline-size: fit-content; color: var(--text); text-decoration: none; }
-.node:nth-child(odd) { margin-inline-start: 18%; }
-.node:nth-child(even) { margin-inline-start: 42%; }
+.node { position: relative; display: flex; align-items: center; gap: var(--s3); justify-self: start; color: var(--text); text-decoration: none; }
+.node:nth-child(odd) { margin-inline-start: 18%; max-inline-size: 82%; }
+.node:nth-child(even) { margin-inline-start: 42%; max-inline-size: 58%; }
 .disc { position: relative; display: grid; place-items: center; inline-size: 4.5rem; block-size: 4.5rem; flex: none; border-radius: 50%;
         border: var(--stroke) solid var(--outline); background: var(--card); box-shadow: var(--ledge); }
 .disc .icon { inline-size: 2.25rem; block-size: 2.25rem; }
@@ -26,14 +26,31 @@ ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-
 .locked .disc { background: var(--paper-2); box-shadow: none; }
 .locked .disc > .icon { opacity: .55; }
 .locked .disc .badge { color: var(--ink-soft); }
-.node-label { background: var(--paper); padding: var(--s1) var(--s2); border-radius: var(--s2); }
+.node-label { min-inline-size: 0; background: var(--paper); padding: var(--s1) var(--s2); border-radius: var(--s2); }
 .node-label b { display: block; font: 700 var(--step-0)/1.15 var(--font-display); }
 .node-label span { font-size: var(--step--1); color: var(--text-soft); }
-.node.current { margin-inline-start: 6% !important; }
+.node.current { margin-inline-start: 6% !important; max-inline-size: 94%; flex-wrap: wrap; }
 .current .disc { inline-size: 5.5rem; block-size: 5.5rem; background: var(--marigold); padding: 0; overflow: clip; }
 .current .disc img { inline-size: 100%; block-size: 100%; }
-.current .card { padding: var(--s3); display: grid; gap: var(--s2); inline-size: 13.5rem; box-shadow: var(--ledge); }
+.current .card { padding: var(--s3); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); flex: 1 1 10rem; min-inline-size: 0; max-inline-size: 13.5rem; box-shadow: var(--ledge); }
 .current .node-label { background: none; padding: 0; }
 .current .btn { padding-block: var(--s2); }
 .pulse { @media (prefers-reduced-motion: no-preference) { animation: pulse 2.4s ease-in-out infinite; } }
 @keyframes pulse { 50% { scale: 1.05; } }
+
+@media (max-height: 700px) {
+  .map { gap: var(--s2); }
+  .map-chips { gap: var(--s1); }
+  .map-chips .chip { font-size: var(--step--1); }
+  .map-day { font-size: var(--step-0); }
+  .map .host { gap: var(--s2); }
+  .map .host img { inline-size: 3rem; block-size: 3rem; }
+  .map .bubble { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map .card.price { order: 10; }
+}
+
+@media (max-width: 320px) {
+  .node.current { margin-inline-start: 4% !important; }
+  .current .card { inline-size: 12rem; }
+  .current .disc { inline-size: 4.75rem; block-size: 4.75rem; }
+}
