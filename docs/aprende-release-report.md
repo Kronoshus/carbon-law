@@ -48,16 +48,18 @@ Known noise in CI: the tap-speed test and the lesson-resume test are sensitive t
 
 | Work | Model | Output tokens | Input incl. cache | Cost (USD) |
 |---|---|---|---|---|
-| Audit | Beam-1.0-501B-A23B | 56,316 | 15,968,553 | 0.00 |
+| Audit | Beam-1.0-501B-A23B | 56,316 | 15,968,553 | 0.97 |
 | Audit | claude-opus-5-5 | 142,059 | 44,886,994 | 17.58 |
-| Audit fixes | Beam-1.0-501B-A23B | 14,340 | 2,753,922 | 0.00 |
-| Lead | claude-opus-5-5 | 342,434 | 273,739,137 | 79.58 |
-| Phase 7 | Beam-1.0-501B-A23B | 272,830 | 73,619,670 | 0.00 |
+| Audit fixes | Beam-1.0-501B-A23B | 14,340 | 2,753,922 | 0.19 |
+| Lead | claude-opus-5-5 | 362,258 | 294,935,825 | 91.75 |
+| Phase 7 | Beam-1.0-501B-A23B | 272,830 | 73,619,670 | 4.33 |
 | Phase 7 | claude-opus-5-5 | 191,138 | 33,157,555 | 14.18 |
-| Phase 8 | Beam-1.0-501B-A23B | 145,548 | 43,525,635 | 0.00 |
+| Phase 8 | Beam-1.0-501B-A23B | 145,548 | 43,525,635 | 2.65 |
 | Phase 8 | claude-opus-5-5 | 347,913 | 109,440,106 | 45.22 |
 
-Beam's price per token on the firm's account is not known, so Beam cost shows as 0. No paid model run was made (#49 and #65 wait for approval). Tests never call a paid model.
+**Totals:** Opus about **$169**, Beam about **$8**. Beam is priced at $0.25 per 1M input tokens, $1.00 per 1M output tokens and $0.05 per 1M cache-read tokens (Kevin, 2026-11-21). No paid run of the app's own model calls was made (#49 and #65 wait for approval). Tests never call a paid model.
+
+**The two paid runs, in dollars** (at Beam's price): #49, about 145,000 tokens, costs **under $0.30** even if every token were output and the estimate were twice too low. #65, about 0.3–0.5 million tokens, mostly output, costs **under $1**, including retries.
 
 ## 4. Open questions
 
