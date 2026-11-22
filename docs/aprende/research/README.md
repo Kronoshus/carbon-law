@@ -11,6 +11,7 @@ contacts or interviews anyone.
 | `R1-painpoints.md` | Who has a will or trust, why people wait, what makes them act |
 | `R2-process.md` | The real California process, where clients stall, what goes wrong |
 | `R3-market-and-learning.md` | Existing products, learning evidence, whether teaching first saves attorney time |
+| `extra-lessons-research.md` | Children (guardians, CUTMA, caregiver affidavit, joint guardianship) and one-line facts on TOD deeds, Prop 19, Medi-Cal estate recovery; checked 2026-11-22 |
 
 ## Field research instruments
 

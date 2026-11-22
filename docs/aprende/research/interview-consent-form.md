@@ -1,4 +1,4 @@
-**DRAFT — attorney Pankaj Raval must approve this form before it is used.**
+**BORRADOR (DRAFT) — el abogado Pankaj Raval debe aprobar este formulario antes de usarlo.**
 
 # Formulario de consentimiento para la entrevista
 
