@@ -2,6 +2,8 @@
 
 Who checks the Spanish, and the characters' names and voices.
 
+**Answered by Kevin on 2026-11-21.** Asana: https://app.asana.com/1/15811608085686/project/1220675583325073/task/1220770914639393
+
 **How to answer:** merge this PR to accept every recommendation as written. To change one, write the change in a PR comment, or edit the line "Other:". I build to your answers.
 
 **Q-L1. Native-speaker review.** Who in the firm (or which reviewer) checks the Spanish for the firm's clients?
@@ -9,7 +11,7 @@ Who checks the Spanish, and the characters' names and voices.
 
 *Recommend:* One bilingual staff member reads every screen and lesson, and a professional legal translator checks the legal statements once before launch.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -18,7 +20,7 @@ Who checks the Spanish, and the characters' names and voices.
 clients, a law firm). *Phase 2 (strings).*
 
 - [ ] As recommended
-- [ ] Other: 
+- [x] Other: *Usted*, in the Spanish of Mexico (Kevin, 2026-11-21): the most common variety among the firm's clients in California and in Latin America. No Spain-only words or *vosotros*. 
 
 ---
 
@@ -27,7 +29,7 @@ clients, a law firm). *Phase 2 (strings).*
 
 *Recommend:* Keep "La Calavera" until the cultural review. If reviewers prefer a name, use "Don Catrín".
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -36,7 +38,7 @@ clients, a law firm). *Phase 2 (strings).*
 
 *Recommend:* 3–5 people from the firm's client community, during the client-interview round (see the research PR).
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
 
 ---
@@ -46,5 +48,5 @@ picks two, as Kevin picked La Calavera's on 2026-11-16. I will prepare samples. 
 
 *Recommend:* Keep the browser's voice for now (F-003). Choose the server voices when the firm approves hosting.
 
-- [ ] As recommended
+- [x] As recommended
 - [ ] Other: 
