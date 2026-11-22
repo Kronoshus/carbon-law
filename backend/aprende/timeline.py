@@ -1,7 +1,9 @@
 """Timeline engine (spec 6.3): when each step of a client's journey falls on the calendar, and which firm steps are late.
 
 `plan` is pure. Days 1-4 are calendar days from the start in the client's time zone; firm steps count business days in
-America/Los_Angeles with the firm's holiday list; every later step chains from what actually happened before it."""
+America/Los_Angeles with the firm's holiday list, except the conflict check: the firm clears it with an AI-assisted
+review within `conflict_hours` of the names, any day (decision #54); every later step chains from what actually happened
+before it."""
 import datetime
 import json
 import uuid
@@ -14,7 +16,7 @@ from aprende.notify import notify_staff
 LA = ZoneInfo("America/Los_Angeles")
 UTC = datetime.timezone.utc
 DAY = datetime.timedelta(days=1)
-DEFAULT_TURNAROUND = {"conflict_bd": 2, "scope_bd": 2, "scope_change_bd": 1, "review_bd": 3, "revise_bd": 2}
+DEFAULT_TURNAROUND = {"conflict_hours": 24, "scope_bd": 2, "scope_change_bd": 1, "review_bd": 3, "revise_bd": 2}
 NOMINAL = {"lesson_will": 1, "lesson_trust": 2, "lesson_ahcd": 3, "lesson_poa": 4, "pay": 5, "attorney_review": 8,
            "client_review": 9, "changes": 10, "signing": 13, "final_lesson": 14}
 DONE_BY = {"lesson_will": "lesson_completed:will", "lesson_trust": "lesson_completed:trust",
@@ -23,9 +25,19 @@ DONE_BY = {"lesson_will": "lesson_completed:will", "lesson_trust": "lesson_compl
            "signing": "signed", "final_lesson": "final_lesson_completed"}
 
 
-def _local(iso):
+def _utc(iso):
     t = datetime.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
-    return (t if t.tzinfo else t.replace(tzinfo=UTC)).astimezone(LA).date()
+    return t if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def _local(iso):
+    return _utc(iso).astimezone(LA).date()
+
+
+def _conflict_due(facts, t, fallback):
+    """When the conflict check must be cleared: `conflict_hours` after the names (calendar time, weekends included)."""
+    names = _utc(facts["names_submitted"]) if "names_submitted" in facts else fallback
+    return names + datetime.timedelta(hours=t["conflict_hours"])
 
 
 class _Calendar:
@@ -62,7 +74,7 @@ def _dates(facts, turnaround, cal, changes):
         scope_done = cal.add(_local(reopened), t["scope_change_bd"])
     else:
         scope_done = cal.add(on("documents_tentative", start + DAY) - DAY, t["scope_bd"])
-    conflict_done = cal.add(on("names_submitted", start) - DAY, t["conflict_bd"])
+    conflict_done = _conflict_due(facts, t, _utc(facts["started_at"])).astimezone(LA).date()
     pay = on("paid", max(start + 4 * DAY, scope_done + DAY, conflict_done + DAY))
     out["pay"] = (pay, None)
     review_due = cal.add(pay, t["review_bd"])
@@ -123,13 +135,17 @@ def for_journey(j, now):
     return plan(facts, {"turnaround": _setting("turnaround", DEFAULT_TURNAROUND)}, _setting("holidays", []), now)
 
 
-def _firm_clocks(facts, turnaround, holidays):
-    """The firm's background clocks that are not steps on the client's map: (name, due) for each still open."""
+def _late_firm_clocks(facts, turnaround, holidays, now):
+    """The firm's background clocks that are not steps on the client's map and are past due: (name, due ISO)."""
     t, cal, out = {**DEFAULT_TURNAROUND, **(turnaround or {})}, _Calendar(holidays), []
     if "names_submitted" in facts and "conflict_firm" not in facts:
-        out.append(("conflict_review", cal.add(_local(facts["names_submitted"]) - DAY, t["conflict_bd"])))
+        due = _conflict_due(facts, t, now)
+        if now > due:
+            out.append(("conflict_review", due.astimezone(UTC).replace(tzinfo=None, microsecond=0).isoformat()))
     if "documents_tentative" in facts and "scope_approved" not in facts:
-        out.append(("scope_review", cal.add(_local(facts["documents_tentative"]) - DAY, t["scope_bd"])))
+        due = cal.add(_local(facts["documents_tentative"]) - DAY, t["scope_bd"])
+        if now.astimezone(LA).date() > due:
+            out.append(("scope_review", due.isoformat()))
     return out
 
 
@@ -137,12 +153,11 @@ def tick(now):
     """Record each newly late firm step once (the dashboard flag) and alert staff once for it."""
     from aprende import journey
     turnaround, holidays = _setting("turnaround", DEFAULT_TURNAROUND), _setting("holidays", [])
-    today = now.astimezone(LA).date()
     for (jid,) in db.query("SELECT id FROM journeys"):
         j = journey.get_journey(jid)
         facts = {**j["facts"], "started_at": j["started_at"]}
         late = [(s["step"], s["due"]) for s in plan(facts, {"turnaround": turnaround}, holidays, now) if s["status"] == "late"]
-        late += [(name, due.isoformat()) for name, due in _firm_clocks(facts, turnaround, holidays) if today > due]
+        late += _late_firm_clocks(facts, turnaround, holidays, now)
         for step, due in late:
             new = db.execute("INSERT INTO timeline_alerts (id, journey_id, step, due, created_at) VALUES (?, ?, ?, ?, ?) "
                              "ON CONFLICT (journey_id, step, due) DO NOTHING",

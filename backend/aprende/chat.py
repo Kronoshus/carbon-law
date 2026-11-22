@@ -22,7 +22,7 @@ router = APIRouter()
 TAG = re.compile(r"\[ATTORNEY_QUESTION:\s*([^\]]*)\]")
 DONE = re.compile(r"\[DONE:\s*([^\]]*)\]")
 GROUPS = ("will", "trust", "ahcd", "poa", "resumen")
-LANGUAGE = {"es": "Spanish", "en": "English"}
+LANGUAGE = {"es": "Mexican Spanish", "en": "English"}            # decision #53: the Spanish of Mexico, with usted
 PERSONAS = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "..", "..", "aprende", "content", "personas.yaml"),
                                encoding="utf-8"))
 
