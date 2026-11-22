@@ -1,0 +1,225 @@
+id: hijos
+unit: bonus
+day: null
+character: oso
+sensitive: true
+datos: []
+title:
+  es: Un plan para sus hijos
+  en: A plan for your children
+steps:
+- id: hijos.1
+  title:
+    es: Dos tipos de tutor
+    en: Two kinds of guardian
+  items:
+  - id: hijos.1.1
+    kind: explain
+    legal: true
+    source: cc-guardianship
+    es:
+      text: Hay dos tipos de tutor. El tutor de la persona cuida a sus hijos y decide sobre su escuela y su salud. El tutor de los bienes maneja su dinero y sus bienes.
+    en:
+      text: There are two kinds of guardian. The guardian of the person cares for your children and decides about their school and health. The guardian of the estate manages their money and property.
+  - id: hijos.1.2
+    kind: explain
+    legal: true
+    source: pc-1500
+    es:
+      text: Usted puede nombrar a un tutor de la persona, a un tutor de los bienes, o a los dos. Puede ser la misma persona o dos personas distintas.
+    en:
+      text: You can name a guardian of the person, a guardian of the estate, or both. It can be the same person or two different people.
+  - id: hijos.1.3
+    kind: match
+    legal: true
+    source: cc-guardianship
+    character: pinata
+    es:
+      prompt: Una cada palabra con lo que hace
+      pairs:
+      - - Tutor de la persona
+        - Cuida a los niños y decide sobre su escuela
+      - - Tutor de los bienes
+        - Maneja el dinero de los niños
+      - - El juez
+        - Nombra al tutor
+      explain: ¡Muy bien! Son dos funciones distintas, y el juez hace el nombramiento.
+    en:
+      prompt: Match each word with what it does
+      pairs:
+      - - Guardian of the person
+        - Cares for the children and decides about school
+      - - Guardian of the estate
+        - Manages the children's money
+      - - The judge
+        - Appoints the guardian
+      explain: Well done! They are two different roles, and the judge makes the appointment.
+- id: hijos.2
+  title:
+    es: Cómo nombrar a un tutor
+    en: How to name a guardian
+  items:
+  - id: hijos.2.1
+    kind: explain
+    legal: true
+    source: pc-1502
+    es:
+      text: Puede nombrar al tutor en su testamento o en otro documento firmado.
+    en:
+      text: You can name the guardian in your will or in another signed document.
+  - id: hijos.2.2
+    kind: explain
+    legal: true
+    source: pc-1502
+    es:
+      text: 'Ese documento puede decir que su nombramiento cuenta solo si algo pasa: por ejemplo, si usted fallece, ya no puede decidir o está lejos y no puede cuidarlos.'
+    en:
+      text: 'That document can say your choice counts only if something happens: for example, if you die, can no longer make decisions, or are away and cannot care for them.'
+  - id: hijos.2.3
+    kind: explain
+    legal: true
+    source: pc-1514
+    es:
+      text: El juez toma en serio su nombramiento, pero siempre decide lo que es mejor para los niños.
+    en:
+      text: The judge takes your choice seriously, but always decides what is best for the children.
+  - id: hijos.2.4
+    kind: truefalse
+    legal: true
+    source: pc-1500
+    answer: true
+    es:
+      statement: Su nombramiento cuenta más si el otro padre o madre nombra a la misma persona, o si ya falleció.
+      explain: Cierto. Por eso ayuda que los dos padres nombren a la misma persona.
+    en:
+      statement: Your choice counts more if the other parent names the same person, or has died.
+      explain: True. That is why it helps when both parents name the same person.
+- id: hijos.3
+  title:
+    es: Si no nombró a nadie
+    en: If you named no one
+  items:
+  - id: hijos.3.1
+    kind: explain
+    legal: true
+    source: cc-guardianship
+    es:
+      text: Si usted no nombró a nadie y sus hijos necesitan un tutor, un familiar u otro adulto tiene que pedirle al juez ser el tutor.
+    en:
+      text: If you named no one and your children need a guardian, a relative or another adult has to ask the court to become guardian.
+  - id: hijos.3.2
+    kind: explain
+    legal: true
+    source: cc-guardianship
+    es:
+      text: Antes de decidir, un investigador del tribunal hace un informe y la familia puede dar su opinión. La familia puede no estar de acuerdo.
+    en:
+      text: Before deciding, a court investigator writes a report and the family can be heard. The family may not agree.
+  - id: hijos.3.3
+    kind: scenario
+    legal: true
+    source: pc-1502
+    answer: 1
+    es:
+      story: Rosa cría sola a su hijo Daniel, de 8 años. Su hermana y su prima dicen que lo cuidarían si a Rosa le pasa algo. Rosa no ha escrito nada.
+      prompt: ¿Qué ayudaría a que el juez sepa lo que Rosa quiere?
+      options:
+      - Nada; el juez lo adivina
+      - Nombrar a un tutor por escrito
+      - Contárselo a una vecina
+      explain: Un nombramiento por escrito le dice al juez lo que usted quiere.
+    en:
+      story: Rosa is raising her son Daniel, 8, on her own. Her sister and her cousin both say they would care for him if something happened to Rosa. Rosa has not written anything down.
+      prompt: What would help the judge know what Rosa wants?
+      options:
+      - Nothing; the judge will guess
+      - Naming a guardian in writing
+      - Telling a neighbor
+      explain: A written nomination tells the judge what you want.
+- id: hijos.4
+  title:
+    es: El dinero para sus hijos
+    en: Money for your children
+  items:
+  - id: hijos.4.1
+    kind: explain
+    legal: true
+    source: cc-guardianship
+    es:
+      text: Si un niño recibe mucho dinero o bienes, puede necesitar un tutor de los bienes, con reglas estrictas del tribunal.
+    en:
+      text: If a child receives a lot of money or property, the child may need a guardian of the estate, with strict court rules.
+  - id: hijos.4.2
+    kind: explain
+    legal: true
+    source: pc-3920
+    es:
+      text: Otra forma es un custodio bajo la ley de California para transferencias a menores. El custodio guarda el dinero y se lo entrega a su hijo a los 18 años.
+    en:
+      text: Another way is a custodian under the California Uniform Transfers to Minors Act. The custodian holds the money and gives it to your child at 18.
+  - id: hijos.4.3
+    kind: explain
+    legal: true
+    source: pc-3920.5
+    es:
+      text: En su testamento o fideicomiso puede elegir una edad más tarde para la entrega, hasta los 25 años.
+    en:
+      text: In your will or trust you can choose a later age for the handover, up to 25.
+  - id: hijos.4.4
+    kind: truefalse
+    legal: true
+    source: pc-3920.5
+    answer: false
+    es:
+      statement: Con un custodio de su testamento, puede hacer que su hijo reciba el dinero a los 30 años.
+      explain: Falso. Con un custodio, la edad más tarde es 25. Si quiere más tiempo, pregúntele al abogado Raval por un fideicomiso.
+    en:
+      statement: With a custodian named in your will, you can have your child receive the money at 30.
+      explain: False. With a custodian, the latest age is 25. If you want longer, ask attorney Raval about a trust.
+- id: hijos.5
+  title:
+    es: Si usted falta por un tiempo
+    en: If you are away for a while
+  items:
+  - id: hijos.5.1
+    kind: explain
+    legal: true
+    source: cc-guardianship-options
+    es:
+      text: Si su hijo vive con otro adulto en California, ese adulto puede firmar un formulario llamado Caregiver's Authorization Affidavit (declaración del cuidador) para inscribirlo en la escuela. Si es familiar, también puede dar permiso para su atención médica.
+    en:
+      text: If your child lives with another adult in California, that adult can sign a form called the Caregiver's Authorization Affidavit to enroll the child in school. A relative can also consent to the child's medical care.
+  - id: hijos.5.2
+    kind: explain
+    legal: true
+    source: cc-guardianship-options
+    es:
+      text: Ese formulario no se presenta en el tribunal ni necesita notario. Usted puede cancelarlo cuando quiera y sigue siendo el padre o la madre.
+    en:
+      text: That form is not filed with the court and needs no notary. You can cancel it at any time, and you are still the parent.
+  - id: hijos.5.3
+    kind: explain
+    legal: true
+    source: pc-2105
+    es:
+      text: Desde 2026, si usted podría faltar por un tiempo, por ejemplo por una enfermedad grave o el servicio militar, el juez puede nombrarlos a usted y a la persona que eligió como tutores juntos.
+    en:
+      text: Since 2026, if you might be away for a while, for example for a serious illness or military service, the judge can appoint you and the person you chose as joint guardians.
+  - id: hijos.5.4
+    kind: truefalse
+    legal: true
+    source: cc-guardianship-options
+    answer: false
+    es:
+      statement: Para inscribir a su hijo en la escuela, el familiar que lo cuida siempre necesita una orden del juez.
+      explain: Falso. Puede usar la declaración del cuidador, sin ir al tribunal.
+    en:
+      statement: To enroll your child in school, the relative caring for the child always needs a court order.
+      explain: False. They can use the Caregiver's Authorization Affidavit, without going to court.
+  - id: hijos.5.5
+    kind: explain
+    legal: false
+    es:
+      text: Cuál de estas opciones le conviene depende de su familia. Esa es una pregunta para el abogado Raval.
+    en:
+      text: Which of these options fits your family depends on your situation. That is a question for attorney Raval.

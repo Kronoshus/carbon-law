@@ -1,0 +1,66 @@
+id: sorpresas
+unit: bonus
+day: null
+character: calavera
+sensitive: false
+datos: []
+title:
+  es: Lo que las familias no esperan
+  en: What families don't expect
+steps:
+- id: sorpresas.1
+  title:
+    es: Tres sorpresas
+    en: Three surprises
+  items:
+  - id: sorpresas.1.1
+    kind: explain
+    legal: false
+    es:
+      text: Hay tres temas que sorprenden a muchas familias. Aquí va una idea de cada uno; para su caso, pregúntele al abogado Raval.
+    en:
+      text: Three topics surprise many families. Here is one idea about each; for your own case, ask attorney Raval.
+  - id: sorpresas.1.2
+    kind: explain
+    legal: true
+    source: pc-5614
+    es:
+      text: Una escritura de transferencia al fallecer (TOD deed) pasa su casa a la persona que usted nombra cuando usted fallece, y puede cancelarla mientras vive. Tiene reglas estrictas para firmarla.
+    en:
+      text: A transfer-on-death (TOD) deed passes your home to the person you name when you die, and you can cancel it while you are alive. It has strict signing rules.
+  - id: sorpresas.1.3
+    kind: explain
+    legal: true
+    source: boe-prop19
+    es:
+      text: Si sus hijos heredan su casa, conservan su impuesto predial bajo solo si uno de ellos se muda a vivir ahí y lo pide dentro de un año, y solo hasta cierto valor (Proposición 19).
+    en:
+      text: If your children inherit your home, they keep your lower property tax only if one of them moves in and applies within a year, and only up to a value limit (Proposition 19).
+  - id: sorpresas.1.4
+    kind: explain
+    legal: true
+    source: dhcs-estate-recovery
+    es:
+      text: Si una persona recibió cuidados a largo plazo de Medi-Cal desde los 55 años, Medi-Cal puede pedir que se le pague de los bienes que pasan por la sucesión.
+    en:
+      text: If a person received long-term care from Medi-Cal from age 55, Medi-Cal can ask to be repaid from the property that goes through probate.
+  - id: sorpresas.1.5
+    kind: scenario
+    legal: false
+    answer: 1
+    es:
+      story: Carmen quiere dejarle su casa a su hijo Tomás. Oyó hablar de la escritura TOD y del impuesto predial, y no sabe qué le conviene.
+      prompt: ¿A quién le pregunta qué significa esto para su familia?
+      options:
+      - A una vecina
+      - Al abogado Raval
+      - A nadie; se resuelve solo
+      explain: El abogado Raval revisa su caso y le explica sus opciones.
+    en:
+      story: Carmen wants to leave her home to her son Tomás. She has heard about the TOD deed and the property tax, and does not know what fits her.
+      prompt: Who should she ask what this means for her family?
+      options:
+      - A neighbor
+      - Attorney Raval
+      - No one; it sorts itself out
+      explain: Attorney Raval reviews her case and explains her options.

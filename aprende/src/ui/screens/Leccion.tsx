@@ -187,7 +187,7 @@ function FeedbackSheet({ feedback, onNext }: { feedback: Feedback; onNext: () =>
     feedback.explain ? h('p', null, feedback.explain) : null,
     h('p', { class: 'source' },
       s ? [t('feedback.sourceLabel'), ' ', h('a', { href: s.url, target: '_blank', rel: 'noopener' },
-        s.kind === 'probate_code' ? t('feedback.probateCode', { cite: s.cite }) : t('feedback.courts')), ' · '] : null,
+        s.kind === 'probate_code' ? t('feedback.probateCode', { cite: s.cite }) : s.kind === 'state_agency' ? t('feedback.agency') : t('feedback.courts')), ' · '] : null,
       t('feedback.disclaimer')),
     h('div', { class: 'feedback-actions' },
       feedback.petals ? h('p', { class: 'gain' }, h(Icon, { name: 'petalo' }), t('feedback.petals', { n: feedback.petals })) : null,

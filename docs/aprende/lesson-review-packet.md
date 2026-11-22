@@ -6,6 +6,21 @@ Every legal statement in the five lessons (the four core lessons and «Cuide sus
 
 How to answer: for each item, *approve*, or write the change you want. Items marked (non-legal) are general guidance and copy; please read them too.
 
+## Two new bonus lessons for decision #55 (added 2026-11-22, not yet approved)
+
+«Un plan para sus hijos» and «Lo que las familias no esperan» are at the end of this packet: 21 legal statements in 24 items.
+They are imported as drafts and no client sees them until you approve each item. Statutes and agency pages were read on
+2026-11-22; the research behind them is `docs/aprende/research/extra-lessons-research.md`. Please also decide:
+
+1. The scope of the children lesson: the Caregiver's Authorization Affidavit (hijos.5.1–5.2, 5.4) and the joint guardianship
+   for a parent who may be away for a while (hijos.5.3, Probate Code § 2105(g), in force since 2026-01-01). The lesson names
+   only illness and military service as examples.
+2. Whether the TOD deed line (sorpresas.1.2) should also mention that the TOD deed law ends on 2032-01-01 unless extended.
+3. Whether the Prop 19 line (sorpresas.1.3) should give the dollar limit ($1,044,586 until 2027-02-15) or keep "a value limit".
+4. The Medi-Cal line (sorpresas.1.4) leaves out the exceptions (surviving spouse, child under 21, hardship waiver).
+
+The reading-level figures above were measured before these two lessons were added.
+
 ## Changes after the research review (2026-11-18)
 
 New or changed after reading the research in `docs/aprende-research.md`. These replace the versions below.
@@ -764,3 +779,135 @@ New or changed after reading the research in `docs/aprende-research.md`. These r
   - ES: Ordene los pasos del día de la firma — Llegar con su identificación → Revisar los documentos con el abogado → Firmar con testigos y notario → Llevarse sus originales *(Explicación: ¡Listo para firmar!)*
   - EN: Put the signing-day steps in order — Arrive with your ID → Review the documents with the attorney → Sign with witnesses and notary → Take your originals home *(Feedback: Ready to sign!)*
 
+## Bonus — Un plan para sus hijos / A plan for your children
+
+### Dos tipos de tutor
+
+- **hijos.1.1** — California Courts self-help, “Probate guardianships in California” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship)
+  - ES: Hay dos tipos de tutor. El tutor de la persona cuida a sus hijos y decide sobre su escuela y su salud. El tutor de los bienes maneja su dinero y sus bienes.
+  - EN: There are two kinds of guardian. The guardian of the person cares for your children and decides about their school and health. The guardian of the estate manages their money and property.
+  - [ ] approve   changes: 
+
+- **hijos.1.2** — Probate Code § 1500 (read 2026-11-18): a parent may nominate a guardian of the person or estate of a minor child where the other parent nominates or consents to the same guardian, or where the other parent is dead, lacks capacity to consent, or would not need to consent to an adoption. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1500)
+  - ES: Usted puede nombrar a un tutor de la persona, a un tutor de los bienes, o a los dos. Puede ser la misma persona o dos personas distintas.
+  - EN: You can name a guardian of the person, a guardian of the estate, or both. It can be the same person or two different people.
+  - [ ] approve   changes: 
+
+- **hijos.1.3** — California Courts self-help, “Probate guardianships in California” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship)
+  - ES: Una cada palabra con lo que hace — Tutor de la persona = Cuida a los niños y decide sobre su escuela; Tutor de los bienes = Maneja el dinero de los niños; El juez = Nombra al tutor *(Explicación: ¡Muy bien! Son dos funciones distintas, y el juez hace el nombramiento.)*
+  - EN: Match each word with what it does — Guardian of the person = Cares for the children and decides about school; Guardian of the estate = Manages the children's money; The judge = Appoints the guardian *(Feedback: Well done! They are two different roles, and the judge makes the appointment.)*
+  - [ ] approve   changes: 
+
+### Cómo nombrar a un tutor
+
+- **hijos.2.1** — Probate Code § 1502 (read 2026-11-22): a guardian nomination may be made in the petition, at the hearing, or in a writing signed before or after the petition; the court gives due weight to a nomination of a guardian of the person (Family Code 3043); a writing may make it effective only on a condition such as the nominator's later absence, incapacity or death, and it stays effective despite them. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1502)
+  - ES: Puede nombrar al tutor en su testamento o en otro documento firmado.
+  - EN: You can name the guardian in your will or in another signed document.
+  - [ ] approve   changes: 
+
+- **hijos.2.2** — Probate Code § 1502 (read 2026-11-22): a guardian nomination may be made in the petition, at the hearing, or in a writing signed before or after the petition; the court gives due weight to a nomination of a guardian of the person (Family Code 3043); a writing may make it effective only on a condition such as the nominator's later absence, incapacity or death, and it stays effective despite them. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1502)
+  - ES: Ese documento puede decir que su nombramiento cuenta solo si algo pasa: por ejemplo, si usted fallece, ya no puede decidir o está lejos y no puede cuidarlos.
+  - EN: That document can say your choice counts only if something happens: for example, if you die, can no longer make decisions, or are away and cannot care for them.
+  - [ ] approve   changes: 
+
+- **hijos.2.3** — Probate Code § 1514 (read 2026-11-22): the court may appoint a guardian of the person, the estate, or both; for the person it follows the Family Code custody rules; it appoints a section 1500 nominee as guardian of the estate, and a section 1501 nominee for the covered property, unless unsuitable. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1514)
+  - ES: El juez toma en serio su nombramiento, pero siempre decide lo que es mejor para los niños.
+  - EN: The judge takes your choice seriously, but always decides what is best for the children.
+  - [ ] approve   changes: 
+
+- **hijos.2.4** — Probate Code § 1500 (read 2026-11-18): a parent may nominate a guardian of the person or estate of a minor child where the other parent nominates or consents to the same guardian, or where the other parent is dead, lacks capacity to consent, or would not need to consent to an adoption. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1500)
+  - ES: Su nombramiento cuenta más si el otro padre o madre nombra a la misma persona, o si ya falleció. — **Cierto** *(Explicación: Cierto. Por eso ayuda que los dos padres nombren a la misma persona.)*
+  - EN: Your choice counts more if the other parent names the same person, or has died. — **True** *(Feedback: True. That is why it helps when both parents name the same person.)*
+  - [ ] approve   changes: 
+
+### Si no nombró a nadie
+
+- **hijos.3.1** — California Courts self-help, “Probate guardianships in California” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship)
+  - ES: Si usted no nombró a nadie y sus hijos necesitan un tutor, un familiar u otro adulto tiene que pedirle al juez ser el tutor.
+  - EN: If you named no one and your children need a guardian, a relative or another adult has to ask the court to become guardian.
+  - [ ] approve   changes: 
+
+- **hijos.3.2** — California Courts self-help, “Probate guardianships in California” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship)
+  - ES: Antes de decidir, un investigador del tribunal hace un informe y la familia puede dar su opinión. La familia puede no estar de acuerdo.
+  - EN: Before deciding, a court investigator writes a report and the family can be heard. The family may not agree.
+  - [ ] approve   changes: 
+
+- **hijos.3.3** — Probate Code § 1502 (read 2026-11-22): a guardian nomination may be made in the petition, at the hearing, or in a writing signed before or after the petition; the court gives due weight to a nomination of a guardian of the person (Family Code 3043); a writing may make it effective only on a condition such as the nominator's later absence, incapacity or death, and it stays effective despite them. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1502)
+  - ES: Rosa cría sola a su hijo Daniel, de 8 años. Su hermana y su prima dicen que lo cuidarían si a Rosa le pasa algo. Rosa no ha escrito nada. ¿Qué ayudaría a que el juez sepa lo que Rosa quiere? — Nada; el juez lo adivina / **Nombrar a un tutor por escrito** / Contárselo a una vecina *(Explicación: Un nombramiento por escrito le dice al juez lo que usted quiere.)*
+  - EN: Rosa is raising her son Daniel, 8, on her own. Her sister and her cousin both say they would care for him if something happened to Rosa. Rosa has not written anything down. What would help the judge know what Rosa wants? — Nothing; the judge will guess / **Naming a guardian in writing** / Telling a neighbor *(Feedback: A written nomination tells the judge what you want.)*
+  - [ ] approve   changes: 
+
+### El dinero para sus hijos
+
+- **hijos.4.1** — California Courts self-help, “Probate guardianships in California” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship)
+  - ES: Si un niño recibe mucho dinero o bienes, puede necesitar un tutor de los bienes, con reglas estrictas del tribunal.
+  - EN: If a child receives a lot of money or property, the child may need a guardian of the estate, with strict court rules.
+  - [ ] approve   changes: 
+
+- **hijos.4.2** — Probate Code § 3920 (read 2026-11-22): a California Uniform Transfers to Minors Act custodian transfers the custodial property to the minor at 18, unless the time is delayed under section 3920.5, or at the minor's death. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=3920)
+  - ES: Otra forma es un custodio bajo la ley de California para transferencias a menores. El custodio guarda el dinero y se lo entrega a su hijo a los 18 años.
+  - EN: Another way is a custodian under the California Uniform Transfers to Minors Act. The custodian holds the money and gives it to your child at 18.
+  - [ ] approve   changes: 
+
+- **hijos.4.3** — Probate Code § 3920.5 (read 2026-11-22): a will may continue a California Uniform Transfers to Minors Act custodianship only until a specified age no later than 25. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=3920.5)
+  - ES: En su testamento o fideicomiso puede elegir una edad más tarde para la entrega, hasta los 25 años.
+  - EN: In your will or trust you can choose a later age for the handover, up to 25.
+  - [ ] approve   changes: 
+
+- **hijos.4.4** — Probate Code § 3920.5 (read 2026-11-22): a will may continue a California Uniform Transfers to Minors Act custodianship only until a specified age no later than 25. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=3920.5)
+  - ES: Con un custodio de su testamento, puede hacer que su hijo reciba el dinero a los 30 años. — **Falso** *(Explicación: Falso. Con un custodio, la edad más tarde es 25. Si quiere más tiempo, pregúntele al abogado Raval por un fideicomiso.)*
+  - EN: With a custodian named in your will, you can have your child receive the money at 30. — **False** *(Feedback: False. With a custodian, the latest age is 25. If you want longer, ask attorney Raval about a trust.)*
+  - [ ] approve   changes: 
+
+### Si usted falta por un tiempo
+
+- **hijos.5.1** — California Courts self-help, “Options other than a guardianship” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship/other-options)
+  - ES: Si su hijo vive con otro adulto en California, ese adulto puede firmar un formulario llamado Caregiver's Authorization Affidavit (declaración del cuidador) para inscribirlo en la escuela. Si es familiar, también puede dar permiso para su atención médica.
+  - EN: If your child lives with another adult in California, that adult can sign a form called the Caregiver's Authorization Affidavit to enroll the child in school. A relative can also consent to the child's medical care.
+  - [ ] approve   changes: 
+
+- **hijos.5.2** — California Courts self-help, “Options other than a guardianship” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship/other-options)
+  - ES: Ese formulario no se presenta en el tribunal ni necesita notario. Usted puede cancelarlo cuando quiera y sigue siendo el padre o la madre.
+  - EN: That form is not filed with the court and needs no notary. You can cancel it at any time, and you are still the parent.
+  - [ ] approve   changes: 
+
+- **hijos.5.3** — Probate Code § 2105 (read 2026-11-22): the court may appoint joint guardians; a custodial parent with a terminal condition, or one temporarily unavailable for reasons specified in the nomination (such as a serious medical condition or military service), may be appointed joint guardian of the person with the parent's nominee, and those records are confidential. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=2105)
+  - ES: Desde 2026, si usted podría faltar por un tiempo, por ejemplo por una enfermedad grave o el servicio militar, el juez puede nombrarlos a usted y a la persona que eligió como tutores juntos.
+  - EN: Since 2026, if you might be away for a while, for example for a serious illness or military service, the judge can appoint you and the person you chose as joint guardians.
+  - [ ] approve   changes: 
+
+- **hijos.5.4** — California Courts self-help, “Options other than a guardianship” (read 2026-11-22). [official text](https://selfhelp.courts.ca.gov/guardianship/other-options)
+  - ES: Para inscribir a su hijo en la escuela, el familiar que lo cuida siempre necesita una orden del juez. — **Falso** *(Explicación: Falso. Puede usar la declaración del cuidador, sin ir al tribunal.)*
+  - EN: To enroll your child in school, the relative caring for the child always needs a court order. — **False** *(Feedback: False. They can use the Caregiver's Authorization Affidavit, without going to court.)*
+  - [ ] approve   changes: 
+
+- **hijos.5.5** (non-legal)
+  - ES: Cuál de estas opciones le conviene depende de su familia. Esa es una pregunta para el abogado Raval.
+  - EN: Which of these options fits your family depends on your situation. That is a question for attorney Raval.
+
+## Bonus — Lo que las familias no esperan / What families don't expect
+
+### Tres sorpresas
+
+- **sorpresas.1.1** (non-legal)
+  - ES: Hay tres temas que sorprenden a muchas familias. Aquí va una idea de cada uno; para su caso, pregúntele al abogado Raval.
+  - EN: Three topics surprise many families. Here is one idea about each; for your own case, ask attorney Raval.
+
+- **sorpresas.1.2** — Probate Code § 5614 (read 2026-11-22): a revocable transfer on death deed makes a donative transfer of real property to a named beneficiary, operates on the transferor's death, and remains revocable until then. [official text](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5614)
+  - ES: Una escritura de transferencia al fallecer (TOD deed) pasa su casa a la persona que usted nombra cuando usted fallece, y puede cancelarla mientras vive. Tiene reglas estrictas para firmarla.
+  - EN: A transfer-on-death (TOD) deed passes your home to the person you name when you die, and you can cancel it while you are alive. It has strict signing rules.
+  - [ ] approve   changes: 
+
+- **sorpresas.1.3** — Proposition 19 (State Board of Equalization) (read 2026-11-22). [official page](https://www.boe.ca.gov/prop19/)
+  - ES: Si sus hijos heredan su casa, conservan su impuesto predial bajo solo si uno de ellos se muda a vivir ahí y lo pide dentro de un año, y solo hasta cierto valor (Proposición 19).
+  - EN: If your children inherit your home, they keep your lower property tax only if one of them moves in and applies within a year, and only up to a value limit (Proposition 19).
+  - [ ] approve   changes: 
+
+- **sorpresas.1.4** — Estate Recovery Program (Department of Health Care Services) (read 2026-11-22). [official page](https://www.dhcs.ca.gov/services/estate-recovery-program/)
+  - ES: Si una persona recibió cuidados a largo plazo de Medi-Cal desde los 55 años, Medi-Cal puede pedir que se le pague de los bienes que pasan por la sucesión.
+  - EN: If a person received long-term care from Medi-Cal from age 55, Medi-Cal can ask to be repaid from the property that goes through probate.
+  - [ ] approve   changes: 
+
+- **sorpresas.1.5** (non-legal)
+  - ES: Carmen quiere dejarle su casa a su hijo Tomás. Oyó hablar de la escritura TOD y del impuesto predial, y no sabe qué le conviene. ¿A quién le pregunta qué significa esto para su familia? — A una vecina / **Al abogado Raval** / A nadie; se resuelve solo *(Explicación: El abogado Raval revisa su caso y le explica sus opciones.)*
+  - EN: Carmen wants to leave her home to her son Tomás. She has heard about the TOD deed and the property tax, and does not know what fits her. Who should she ask what this means for her family? — A neighbor / **Attorney Raval** / No one; it sorts itself out *(Feedback: Attorney Raval reviews her case and explains her options.)*

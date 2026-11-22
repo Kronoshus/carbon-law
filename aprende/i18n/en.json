@@ -82,6 +82,7 @@
   "feedback.wrong": "Almost. We'll see it again in a moment.",
   "feedback.probateCode": "California Probate Code, section {cite}",
   "feedback.courts": "California Courts self-help guide",
+  "feedback.agency": "Official State of California page",
   "feedback.sourceLabel": "Source:",
   "feedback.disclaimer": "General information, not legal advice.",
   "feedback.petals": "+{n}",

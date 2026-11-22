@@ -13,7 +13,7 @@ aprende/content/
 
 ```yaml
 - id: pc-6110                     # unique; referenced by items
-  kind: probate_code              # probate_code | courts_selfhelp
+  kind: probate_code              # probate_code | courts_selfhelp | state_agency
   cite: "6110"                    # probate_code: a section on carbon_intake.VERIFIED (read on leginfo in a real browser)
   url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=6110
   read_on: 2026-11-15
@@ -75,5 +75,6 @@ Optional on any item: `character`, `sensitive: true` (calm mode for that item).
 - `es` and `en` both exist and have the same fields; lists (options, pairs, steps) have the same length in both languages.
 - `answer` is a valid index (choice, scenario, listen) or a boolean (truefalse); match and order have no `answer`.
 - An item with `legal: true` has a `source` that exists in `sources.yaml`.
-- A `probate_code` source cites a section on `carbon_intake.VERIFIED`; a `courts_selfhelp` source is on `https://selfhelp.courts.ca.gov/`.
+- A `probate_code` source cites a section on `carbon_intake.VERIFIED`; a `courts_selfhelp` source is on `https://selfhelp.courts.ca.gov/`;
+  a `state_agency` source is on www.boe.ca.gov (Prop 19) or www.dhcs.ca.gov (Medi-Cal estate recovery).
 - Lessons with a `day` have unique days; `unit` and `kind` come from the lists above; `datos` ids exist in `guion-plan`.

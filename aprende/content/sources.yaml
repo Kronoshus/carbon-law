@@ -278,3 +278,53 @@
   cite: Formal probate
   url: https://selfhelp.courts.ca.gov/probate/formal-probate
   read_on: '2026-11-18'
+- id: pc-1502
+  kind: probate_code
+  cite: '1502'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1502
+  read_on: '2026-11-22'
+- id: pc-1514
+  kind: probate_code
+  cite: '1514'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=1514
+  read_on: '2026-11-22'
+- id: pc-2105
+  kind: probate_code
+  cite: '2105'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=2105
+  read_on: '2026-11-22'
+- id: pc-3920
+  kind: probate_code
+  cite: '3920'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=3920
+  read_on: '2026-11-22'
+- id: pc-3920.5
+  kind: probate_code
+  cite: '3920.5'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=3920.5
+  read_on: '2026-11-22'
+- id: pc-5614
+  kind: probate_code
+  cite: '5614'
+  url: https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PROB&sectionNum=5614
+  read_on: '2026-11-22'
+- id: cc-guardianship
+  kind: courts_selfhelp
+  cite: Probate guardianships in California
+  url: https://selfhelp.courts.ca.gov/guardianship
+  read_on: '2026-11-22'
+- id: cc-guardianship-options
+  kind: courts_selfhelp
+  cite: Options other than a guardianship
+  url: https://selfhelp.courts.ca.gov/guardianship/other-options
+  read_on: '2026-11-22'
+- id: boe-prop19
+  kind: state_agency
+  cite: Proposition 19 (State Board of Equalization)
+  url: https://www.boe.ca.gov/prop19/
+  read_on: '2026-11-22'
+- id: dhcs-estate-recovery
+  kind: state_agency
+  cite: Estate Recovery Program (Department of Health Care Services)
+  url: https://www.dhcs.ca.gov/services/estate-recovery-program/
+  read_on: '2026-11-22'
