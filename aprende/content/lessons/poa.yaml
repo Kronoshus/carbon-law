@@ -9,8 +9,8 @@ datos:
 - poder_alcance
 - poder_regalos
 title:
-  es: Los poderes notariales
-  en: Financial powers of attorney
+  es: El poder para finanzas
+  en: The financial power of attorney
 steps:
 - id: poa.1
   title:

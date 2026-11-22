@@ -8,7 +8,7 @@ import uuid
 from zoneinfo import ZoneInfo
 
 import db
-from aprende import jobs
+from aprende import analytics, clock, jobs
 from aprende.notify import notify_staff
 
 LA = ZoneInfo("America/Los_Angeles")
@@ -148,12 +148,13 @@ def tick(now):
                              "ON CONFLICT (journey_id, step, due) DO NOTHING",
                              (str(uuid.uuid4()), jid, step, due, now.astimezone(UTC).replace(tzinfo=None).isoformat()))
             if new:
+                analytics.record(jid, "step_late", {"step": step})
                 notify_staff("Paso atrasado", f"{step} venció el {due}. Expediente: /dashboard#journey={jid}")
 
 
 def _tick_job(job):
     """Hourly: run the tick, then queue the next hour's (the job key makes each hour's job unique)."""
-    now = datetime.datetime.now(UTC)
+    now = clock.now()
     tick(now)
     schedule(now + datetime.timedelta(hours=1))
 

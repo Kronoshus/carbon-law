@@ -1,5 +1,5 @@
 import { h, type ComponentChildren } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { t, lang } from '../../core/i18n';
 import { apiFetch } from '../../core/api';
 import { platform } from '../../platform';
@@ -51,6 +51,7 @@ export function Leccion({ id }: { id: string }) {
   const item = state && !finished(state) ? byId.get(state.queue[0]) ?? null : null;
 
   useEffect(() => {
+    setLesson(null); setFailure(null); setState(null); setChoice(null); setFeedback(null); setResult(null); setMayCollect(false);
     let cancelled = false;
     (async () => {
       const res = await apiFetch(`/learn/lessons/${encodeURIComponent(id)}?lang=${l}`);
@@ -68,7 +69,7 @@ export function Leccion({ id }: { id: string }) {
     return () => { cancelled = true; };
   }, [id, l]);
 
-  useEffect(() => {                               // remember where the client is
+  useLayoutEffect(() => {                         // remember where the client is, before the screen paints (a reload right after keeps it)
     if (state && item) void platform.storage.set(posKey(id), JSON.stringify({ step: state.step, item: item.id }));
   }, [item?.id]);
 
@@ -102,7 +103,7 @@ export function Leccion({ id }: { id: string }) {
     if (res.ok) setFeedback((await res.json()) as Feedback);
   };
 
-  if (failure) return h(Frame, { title: lesson?.title ?? '' }, h('p', { class: 'lesson-note', role: 'alert' }, t(failure === 'locked' ? 'leccion.locked' : 'leccion.error')),
+  if (failure) return h(Frame, { title: t(failure === 'locked' ? 'leccion.locked' : 'leccion.error') }, h('p', { class: 'lesson-note', role: 'alert' }, t(failure === 'locked' ? 'leccion.locked' : 'leccion.error')),
     h('button', { class: 'btn', type: 'button', onClick: () => navigate('/aprender') }, t('celebration.back')));
   if (!lesson || !state) return h(Frame, { title: '' }, h('p', { class: 'lesson-note', role: 'status' }, t('leccion.loading')));
 
@@ -130,6 +131,7 @@ export function Leccion({ id }: { id: string }) {
   if (!item) return null;
 
   return h('div', { class: 'lesson-player' }, bar, h('main', null,
+    item.kind === 'explain' ? h('h1', { class: 'visually-hidden' }, lesson.title) : null,
     h('div', { class: 'stage-wrap' }, h(CharacterStage, { character, state: charState, onEngine: (e) => { engine.current = e; setEngineTick((n) => n + 1); } })),
     item.kind === 'explain'           // a question is on screen as its heading; only explanations need the bubble
       ? h('div', { class: 'talk' }, h('p', { class: 'bubble', 'aria-live': 'polite' }, spoken(item),

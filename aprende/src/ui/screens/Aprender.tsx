@@ -21,15 +21,20 @@ const CORE = ['will', 'trust', 'ahcd', 'poa'];
 const PAY = { key: 'map.node.pay', sub: 'map.node.pay.day', icon: 'pluma' } as const;
 const REVIEW = { key: 'map.node.review', sub: 'map.node.review.day', icon: 'lupa' } as const;
 const FINISH = [{ key: 'map.node.documents', sub: 'map.node.documents.day', icon: 'plan' }, { key: 'map.node.signing', sub: 'map.node.signing.day', icon: 'pluma' }] as const;
-const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }) => h('li', { class: 'node locked', key: s.key },
-  h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: 'candado' }))),
-  h('span', { class: 'node-label' }, h('b', null, t(s.key)), h('span', null, t(s.sub))));
+const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }) => {
+  const isReview = s.key === 'map.node.review';
+  const inner = [h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: 'candado' }))),
+    h('span', { class: 'node-label' }, h('b', null, t(s.key)), h('span', null, t(s.sub)))];
+  if (isReview) return h('li', { class: 'node-item', key: s.key }, h('a', { class: 'node available', href: '#/revisar' }, ...inner));
+  return h('li', { class: 'node locked', key: s.key }, ...inner);
+};
 
 export function Aprender() {
   const [map, setMap] = useState<MapData | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [day, setDay] = useState<number | null>(null);
   const [tentative, setTentative] = useState<string[] | null>(null);
+  const [signed, setSigned] = useState(false);
   const [failed, setFailed] = useState(false);
   const l = lang.value;
 
@@ -39,7 +44,7 @@ export function Aprender() {
       if (!m.ok) { setFailed(true); return; }
       setMap((await m.json()) as MapData);
       if (p.ok) setProgress((await p.json()) as Progress);
-      if (j.ok) { const jd = await j.json() as { day: number; documents?: { tentative?: string[] } }; setDay(jd.day); setTentative(jd.documents?.tentative ?? []); }
+      if (j.ok) { const jd = await j.json() as { day: number; documents?: { tentative?: string[] }; facts?: Record<string, unknown> }; setDay(jd.day); setTentative(jd.documents?.tentative ?? []); setSigned(!!jd.facts?.signed); }
     })();
   }, []);
 
@@ -67,7 +72,7 @@ export function Aprender() {
     const label = h('span', { class: 'node-label' }, h('b', null, title(ls)), h('span', null, reason(ls)));
     if (ls === current) {
       return h('li', { class: 'node current', key: ls.id },
-        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${ls.character}-face.png`, alt: '' })),
+        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${ls.character}-face.png`, alt: '', width: 48, height: 48 })),
         h('div', { class: 'card' }, h('span', { class: 'node-label' }, h('b', null, title(ls)),
           h('span', null, t('map.withCharacter', { day: ls.day ?? '', name: t(CHARACTER_NAME[ls.character]) }))),
           h('a', { class: 'btn', href: `#/leccion/${ls.id}` }, t(ls.status === 'done' ? 'map.review' : 'map.start'))));
@@ -87,7 +92,7 @@ export function Aprender() {
       h('span', { class: 'chip', title: t('map.petals') }, h(Icon, { name: 'petalo' }), String(progress?.petals ?? 0),
         h('span', { class: 'visually-hidden' }, t('map.petalsSr')))),
     host ? h('section', { class: 'host', 'aria-label': t('character.calavera.name') },
-      h('img', { src: `${BASE}img/calavera-face.png`, alt: '' }),
+      h('img', { src: `${BASE}img/calavera-face.png`, alt: '', width: 96, height: 96 }),
       h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: t(CHARACTER_NAME[current.character]), title: title(current) }) : t('map.hostDone'))) : null,
     h(PriceCard, { codes: ['will'] }),
     (tentative !== null && (tentative.length === 0) && core.some((ls) => ls.unit === 'trust' && ls.status === 'done'))
@@ -99,6 +104,6 @@ export function Aprender() {
     h('h2', { class: 'banner' }, t('map.step.review'), h('small', null, t('map.step.review.day'))),
     h('ol', { class: 'path' }, step(REVIEW)),
     h('h2', { class: 'banner' }, t('map.step.finish'), h('small', null, t('map.step.finish.day'))),
-    h('ol', { class: 'path' }, FINISH.map(step), final ? node(final) : null),
+    h('ol', { class: 'path' }, [step(FINISH[0]), signed ? h('li', { class: 'node', key: 'signing' }, h('a', { class: 'node available', href: '#/firmados' }, h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: 'pluma' })), h('span', { class: 'node-label' }, h('b', null, t('map.node.signing')), h('span', null, t('map.node.signing.day'))))) : step(FINISH[1]), final ? node(final) : null]),
     bonus.length ? [h('h2', { class: 'banner', key: 'bonus' }, t('map.bonus'), h('small', null, t('map.bonus.sub'))), h('ol', { class: 'path', key: 'bonusp' }, bonus.map(node))] : null);
 }

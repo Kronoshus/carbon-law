@@ -1,7 +1,7 @@
 import os, json, uuid, hashlib, hmac, datetime, smtplib, csv, io, asyncio, urllib.request, urllib.error
 from fastapi import FastAPI, HTTPException, Header, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 
@@ -39,14 +39,21 @@ if os.environ.get("APRENDE_INPROCESS_WORKER") == "1":
     def _start_inprocess_worker():
         _worker_mod.start_in_background()
 
+from aprende import firm
+
 _cors_origins = ["https://carbon.bailment.tech", "http://127.0.0.1:8080", "http://localhost:8080"]
 _aprende_ext_origin = os.environ.get("APRENDE_EXTENSION_ORIGIN")
 if _aprende_ext_origin:
     _cors_origins.append(_aprende_ext_origin)
-app.add_middleware(CORSMiddleware,
-                   allow_origins=_cors_origins,
-                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                   allow_headers=["Authorization", "Content-Type"])
+
+@app.middleware("http")
+async def _extension_origin_guard(request, call_next):
+    origin = request.headers.get("origin")
+    if origin and (origin.startswith("chrome-extension://") or origin == _aprende_ext_origin) and request.url.path != "/health":
+        if not firm.switch("extension"):
+            return JSONResponse(status_code=503, content={"error": "extension_off"})
+    return await call_next(request)
+
 
 # Handlers share the in-memory dicts below and save them as whole JSON blobs, so run one request at a time.
 # /health touches no shared state and must answer Render's health check even while a slow request runs.
@@ -56,19 +63,77 @@ import threading
 _request_lock = threading.Lock()
 
 from aprende import APRENDE_PREFIXES
+from aprende.analytics import TARGET as _analytics_target
 
 @app.middleware("http")
 async def serialize_requests(request, call_next):
-    if request.url.path == "/health":
-        return await call_next(request)
-    if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
-        return await call_next(request)
-    while not _request_lock.acquire(blocking=False):   # polled, not to_thread(acquire): a cancelled request must never
-        await asyncio.sleep(0.005)                      # leave a background thread holding the lock
+    origin = request.headers.get("origin") or ""
+    token = _analytics_target.set("extension" if origin.startswith("chrome-extension://") else "web")
     try:
-        return await call_next(request)
+        if request.url.path == "/health":
+            return await call_next(request)
+        if any(request.url.path.startswith(p) for p in APRENDE_PREFIXES):
+            return await call_next(request)
+        while not _request_lock.acquire(blocking=False):   # polled, not to_thread(acquire): a cancelled request must never
+            await asyncio.sleep(0.005)                      # leave a background thread holding the lock
+        try:
+            return await call_next(request)
+        finally:
+            _request_lock.release()
     finally:
-        _request_lock.release()
+        _analytics_target.reset(token)
+
+@app.middleware("http")
+async def staff_guard(request, call_next):
+    path = request.url.path
+    if path.startswith("/staff/") or path.startswith("/conflicts") or path == "/chat/attorney-questions":
+        auth = request.headers.get("authorization")
+        if not auth:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        token = auth.replace("Bearer ", "").strip()
+        u = get_user_from_token(token)
+        if not u:
+            return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+        if u.get("role") == "client":
+            return JSONResponse(status_code=403, content={"detail": "insufficient role"})
+    return await call_next(request)
+
+@app.middleware("http")
+async def audit_aprende_writes(request, call_next):
+    path = request.url.path
+    is_aprende = any(path.startswith(p) for p in APRENDE_PREFIXES)
+    method = request.method.upper()
+    state_changing = method in ("POST", "PUT", "PATCH", "DELETE")
+    mark = len(audit) if is_aprende else 0
+    response = await call_next(request)
+    if (is_aprende and state_changing and 200 <= response.status_code < 300):
+        if len(audit) == mark:   # the handler wrote no audit row of its own
+            auth = request.headers.get("authorization")
+            actor = "stripe" if path == "/payments/webhook" else None
+            if actor is None and auth:
+                token = auth.replace("Bearer ", "").strip()
+                u = get_user_from_token(token)
+                actor = (u or {}).get("email")
+            if not actor:
+                actor = "anonymous"
+            route = request.scope.get("route")
+            route_path = getattr(route, "path", path)
+            params = getattr(request, "path_params", {}) or {}
+            entity_id = ",".join(str(v) for v in params.values())
+            while not _request_lock.acquire(blocking=False):     # polled like serialize_requests: never block the event loop
+                await asyncio.sleep(0.005)
+            try:
+                log_audit(actor, f"{method} {route_path}", "route", entity_id, "")
+            finally:
+                _request_lock.release()
+    return response
+
+# Added last, so it is the outermost layer: preflights and the guards' 401/403 answers carry the CORS headers.
+app.add_middleware(CORSMiddleware,
+                   allow_origins=_cors_origins,
+                   allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                   allow_headers=["Authorization", "Content-Type"])
+
 
 # ---------- in-memory stores (persisted to data.json) ----------
 matters: Dict[str, Dict[str, Any]] = {}
@@ -355,6 +420,11 @@ Once you sign up, you can review documents, schedule appointments, and message y
 Best,
 Carbon Law Group
 """
+    return send_email(to_email, subject, body)
+
+
+def send_email(to_email, subject, body):
+    """Send a plain-text email through the firm's webhook or SMTP. False when neither is configured or sending fails."""
     webhook = os.environ.get("EMAIL_WEBHOOK_URL")
     if webhook:
         try:
@@ -499,6 +569,19 @@ def matter_history(matter_id: str, authorization: Optional[str]=Header(None)):
             "comms":[c for c in comms if c["matter_id"]==matter_id]}
 
 # change requests
+def record_change_request(rec, actor_email):
+    """A change request and its revision task (docs/interrupt-and-change-control.md). Used by staff, the portal and Aprende."""
+    rec = {**rec, "id": str(uuid.uuid4()), "created_at": now_iso()}
+    tid = str(uuid.uuid4())
+    tasks[tid] = {"id":tid,"matter_id":rec["matter_id"],"title":f"Review change: {rec['change_type']}",
+                  "owner":matters[rec["matter_id"]].get("owner","Unassigned"),"due_date":None,
+                  "status":"Open","blocker":"None","created_at":now_iso()}
+    rec["task_id"] = tid
+    changes.append(rec)
+    log_audit(actor_email,"create","change_request",rec["id"],rec["change_type"])
+    save_data()
+    return rec
+
 @app.post("/change-requests")
 def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
@@ -509,17 +592,7 @@ def create_change_request(cr: ChangeRequest, authorization: Optional[str]=Header
     if u["role"] == "client":
         rec["requested_by"] = u["email"]
         rec["status"] = "Open"
-    rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
-    # auto-create revision task and retain its link for status changes
-    tid = str(uuid.uuid4())
-    tasks[tid] = {"id":tid,"matter_id":cr.matter_id,"title":f"Review change: {cr.change_type}",
-                  "owner":matters[cr.matter_id].get("owner","Unassigned"),"due_date":None,
-                  "status":"Open","blocker":"None","created_at":now_iso()}
-    rec["task_id"] = tid
-    changes.append(rec)
-    log_audit(u["email"],"create","change_request",rec["id"],cr.change_type)
-    save_data()
-    return rec
+    return record_change_request(rec, u["email"])
 
 @app.get("/change-requests")
 def list_change_requests(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
@@ -1510,8 +1583,8 @@ app.include_router(_rj.router)
 from aprende import routes_characters as _rc
 app.include_router(_rc.router)
 
-# Aprende payments routes (T4-08)
-from aprende import routes_payments as _rp
+# Aprende payments routes (T4-08 / T6-02)
+from aprende import payments as _rp
 app.include_router(_rp.router)
 
 # Aprende learn routes (T4-03)
@@ -1531,6 +1604,36 @@ app.include_router(_rco.router)
 # Aprende datos routes (T5-05)
 from aprende import routes_datos as _rda
 app.include_router(_rda.router)
+
+# Aprende staff routes (T6-09)
+from aprende import routes_staff as _rst
+from aprende import review as _rev
+app.include_router(_rst.router)
+app.include_router(_rev.router)
+# Aprende engagement routes (T6-01)
+from aprende import routes_engagement as _ren
+app.include_router(_ren.router)
+# Aprende booking routes (T6-07)
+from aprende import booking as _rb
+app.include_router(_rb.router)
+from aprende import routes_signing as _rsi
+app.include_router(_rsi.router)
+
+# Aprende client review routes (T6-06)
+from aprende import client_review as _rcr
+app.include_router(_rcr.router)
+from aprende import routes_content as _rct
+app.include_router(_rct.router)
+
+# Aprende firm settings routes (T7-05)
+from aprende import routes_firm as _rf
+app.include_router(_rf.router)
+
+# The movable test clock (T8-06): the route exists only in the Playwright backend
+from aprende import clock as _clock
+if _clock.ENABLED:
+    from aprende import routes_e2e as _re2e
+    app.include_router(_re2e.router)
 
 if __name__ == "__main__":
     import uvicorn

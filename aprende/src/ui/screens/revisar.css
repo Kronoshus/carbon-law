@@ -1,0 +1,8 @@
+.document-text { white-space: pre-wrap; max-block-size: 50vh; overflow: auto; background: #fff; color: #1d1424; padding: var(--s3);
+                 border-radius: var(--radius); font: 400 var(--step--1)/1.5 var(--font-body); }
+.revisar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.revisar-actions form { grid-column: 1 / -1; }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.parts strong { color: var(--text-soft); }
+.revisar-actions select { min-block-size: var(--tap); padding-inline: var(--s2); border: var(--stroke) solid var(--outline);
+                          border-radius: var(--radius); background: var(--card); font: inherit; color: var(--text); inline-size: 100%; }
