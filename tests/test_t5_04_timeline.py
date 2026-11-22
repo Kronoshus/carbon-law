@@ -53,7 +53,7 @@ from zoneinfo import ZoneInfo
 from aprende import timeline
 
 LA = ZoneInfo("America/Los_Angeles")
-SETTINGS = {"turnaround": {"conflict_bd": 2, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}}
+SETTINGS = {"turnaround": {"conflict_hours": 24, "scope_bd": 2, "review_bd": 3, "revise_bd": 2}}
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
@@ -232,11 +232,24 @@ def test_an_open_conflict_review_past_its_due_date_alerts_once(monkeypatch, aler
     jid = state(h)["id"]
     send(h, "ai_disclosed"); send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
     mine = lambda: [a for a in alerts if jid in a[1]]
-    timeline.tick(utc(at(2026, 12, 3, 17)))                                    # due Thursday 3 Dec: not late that day
+    timeline.tick(utc(at(2026, 12, 3, 9, 59)))                                 # names Wed 2 Dec 10:00: 24 hours to clear (#54)
     assert mine() == []
-    timeline.tick(utc(at(2026, 12, 4, 9)))
+    timeline.tick(utc(at(2026, 12, 3, 10, 1)))
     timeline.tick(utc(at(2026, 12, 7, 9)))
     assert len(mine()) == 1 and "conflict_review" in mine()[0][1]
+
+
+def test_the_conflict_check_counts_24_hours_over_a_weekend(monkeypatch, alerts):
+    """Decision #54: the AI-assisted review clears names within 24 hours, any day, so a Friday names step is due Saturday."""
+    clock = {"now": at(2026, 12, 4, 16)}                                          # Friday 4 Dec, 4 p.m.
+    monkeypatch.setattr(journey, "_now_iso", lambda: clock["now"])
+    h = client()
+    jid = state(h)["id"]
+    send(h, "ai_disclosed"); send(h, "consent", answer="yes"); send(h, "names_submitted", names=["Ana Torres"])
+    timeline.tick(utc(at(2026, 12, 5, 15)))
+    assert [a for a in alerts if jid in a[1]] == []
+    timeline.tick(utc(at(2026, 12, 5, 17)))                                       # Saturday, 25 hours later
+    assert len([a for a in alerts if jid in a[1] and "conflict_review" in a[1]]) == 1
 
 
 ATTORNEY_EMAIL = "t5-04-attorney@example.com"
