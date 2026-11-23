@@ -308,6 +308,12 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     expect(j.conflict).toBe('clear');
   });
 
+  // decision #54: the firm clears names within 24 hours of the names, any day. Cleared the next day, after her day-2
+  // lessons, the check is seconds late, and the hourly tick that runs after the clock moves would flag it.
+  await test.step('Day 1: staff clear the conflict check (staff fixture), within its 24 hours', async () => {
+    expect((await asStaff('paralegal', 'POST', `/conflicts/${jid}/decision`, { result: 'cleared' })).status).toBe(200);
+  });
+
   await test.step('Day 1: her plan shows every step with its date, about two weeks in all', async () => {
     plan = byStep((await journey(c)).timeline);
     expect([plan.lesson_will.day, plan.lesson_trust.day, plan.lesson_ahcd.day, plan.lesson_poa.day]).toEqual([1, 2, 3, 4]);
@@ -333,10 +339,6 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await expect(page).toHaveURL(/#\/aprender/);
     await giveDatos(c, 'trust');
     await landsOnItsDay(c, 'lesson_trust', plan);
-  });
-
-  await test.step('Day 2: staff clear the conflict check (staff fixture), on its due date', async () => {
-    expect((await asStaff('paralegal', 'POST', `/conflicts/${jid}/decision`, { result: 'cleared' })).status).toBe(200);
   });
 
   await test.step('Day 3: the health care directive lesson, in calm mode; the attorney approves the scope (staff fixture)', async () => {
