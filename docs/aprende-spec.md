@@ -176,7 +176,7 @@ Days 1–4 are the client's own pace (one core lesson a day). From day 5 the fir
 1. Sign-up with an adult check ("Tengo 18 años o más": yes/no; the birth date is collected later, in "Tus datos").
 2. La Calavera introduces himself: *"Soy un programa de inteligencia artificial de la oficina del abogado Pankaj Raval. No soy el abogado ni una persona. Lo que le explico es información general, no asesoría legal."*
 3. Consent to record and transcribe (voice and typed chat are both transcripts). Three-way answer, as in the prototype: clear yes → continue; clear no → learning-only mode, and any audio of the answer is deleted; unclear → he asks once more in simpler words; still unclear → treated as no, with a button to change it later.
-4. Names only, for the conflict check: the client, spouse or partner, children, and anyone they might name. The automatic check runs at once against the firm's uploaded list; the firm's own check continues in the background (target: cleared by the end of day 2, question Q-W2).
+4. Names only, for the conflict check: the client, spouse or partner, children, and anyone they might name. The automatic check runs at once against the firm's uploaded list; the firm's own AI-assisted check continues in the background and clears the names within 24 hours, any day (decision #54, Q-W2).
 5. Core lesson 1, the will (5 steps of 3–4 minutes): what a will does; executor, gifts and the residue; guardians for minor children; what happens without a will; what passes outside a will; community property. Quiz.
 6. **Tus datos — testamento** (if the automatic check is clear): question ids `nombre, nacimiento, domicilio, estado_civil, hijos, herederos, legados, tutor, albacea` from `guion-plan.json`. Optional; skippable per question; resumable.
 7. Celebration, price chip $2,900, reminder time chosen ("¿A qué hora le recuerdo mañana?").
@@ -246,9 +246,10 @@ Days 1–4 are the client's own pace (one core lesson a day). From day 5 the fir
 - Every later day is computed from the actual completion time of the step before it. The tracker shows the **date** next to each day number, and when a weekend or holiday moves a date it says so: *"Día 9 · jueves 10 de diciembre (el fin de semana movió esta fecha 2 días)"*.
 - **A step is late** when its due date passes without its event; staff are alerted once (dashboard flag + ntfy), and the client sees a calm message, never a blame.
 
-**What this means in practice.** Simulating the firm's own turnaround standards (conflict 2, scope 2, review 3, revisions
+**What this means in practice.** Simulating the firm's own turnaround standards (conflict within 24 hours, any day; scope 2, review 3, revisions
 2 business days; signing on a business day) for each weekday a client could start on, with the reference implementation
-the timeline ticket (T5-04) turns into a tested function:
+the timeline ticket (T5-04) turns into a tested function (rerun with `timeline.plan` after decision #54 on 2026-11-23: the
+24-hour conflict check changes no row, because the scope review sets the payment day):
 
 | Client starts on | Pays on | Drafts released | Total days, no changes | Total days, with changes |
 |---|---|---|---|---|

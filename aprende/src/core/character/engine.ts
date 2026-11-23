@@ -34,6 +34,7 @@ export class CharacterEngine {
   canvas: HTMLCanvasElement | null = null;
   fallback = false;
   mounted = false;
+  unmounted = false;
   rafId = 0;
   reduced = false;
   paused = false;
@@ -105,6 +106,7 @@ export class CharacterEngine {
       }
       this.scene.add(root);
       await this.warmUp(root);
+      if (this.unmounted) return false;                 // the screen closed while the character loaded: never start drawing
       this.mounted = true;
       this.startLoop();
       return true;
@@ -146,13 +148,15 @@ export class CharacterEngine {
     };
     await draw();                                       // the shaders and pictures reach the graphics card
     // once shown, the main thread waits for every frame to finish: start as light as the phone needs
-    while (await draw() > 24 && this.lighten()) { /* one step lighter, then measure again */ }
+    while (!this.unmounted && await draw() > 24 && this.lighten()) { /* one step lighter, then measure again */ }
   }
 
   unmount(): void {
+    this.unmounted = true;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = 0;
     this.mounted = false;
+    this.renderer?.dispose();                           // free the graphics memory; the canvas may be reused by the next character
   }
 
   pauseRendering(): void {
