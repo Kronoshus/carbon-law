@@ -29,6 +29,7 @@
   "error.required": "This field is required",
   "error.adult": "You must confirm you are over 18.",
   "error.invalid": "Incorrect email or password.",
+  "error.network": "We couldn't reach the server. Check your internet and try again.",
   "bienvenida.host": "La Calavera, an artificial intelligence program",
   "bienvenida.note": "General information, not legal advice. Carbon Law Group, Los Angeles.",
   "popup.streak": "Streak: {count}",
