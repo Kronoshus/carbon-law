@@ -55,10 +55,10 @@ test('on the lesson, three.js and the GLB start only after the first contentful 
   for (const r of t.heavy) expect(r.start, r.url).toBeGreaterThan(t.fcp!);
 });
 
-test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({ page, context }) => {
+/** Records every interaction's INP with its attribution (web-vitals; one init script, the library's `var webVitals` is
+ *  only visible to code in the same script). */
+async function recordInp(page: Page) {
   expect(fs.existsSync(WEB_VITALS), 'add web-vitals as a devDependency').toBe(true);
-  await signUp(page);
-  // one init script: the library's `var webVitals` is only visible to code in the same script
   await page.addInitScript({ content: `${fs.readFileSync(WEB_VITALS, 'utf8')}
     window.__inp = [];
     webVitals.onINP((m) => { const a = m.attribution;
@@ -66,6 +66,23 @@ test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({
         presentation: Math.round(a.presentationDelay),
         scripts: (a.longAnimationFrameEntries || []).flatMap((f) => f.scripts.map((s) => [s.invoker, s.sourceURL.split('/').pop(), Math.round(s.duration)])).slice(0, 6) }); },
       { reportAllChanges: true, durationThreshold: 16 });` });
+}
+
+/** The page is hidden, so web-vitals reports the final INP; the worst interaction stays under 200 ms. */
+async function expectInpUnder200(page: Page) {
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const inp = await page.evaluate(() => (window as unknown as { __inp: { value: number }[] }).__inp);
+  expect(inp.length, 'web-vitals measured at least one interaction').toBeGreaterThan(0);
+  const worst = inp.reduce((a, b) => (b.value > a.value ? b : a));
+  expect(worst.value, JSON.stringify(worst)).toBeLessThan(200);                 // the message names what was slow
+}
+
+test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({ page, context }) => {
+  await signUp(page);
+  await recordInp(page);
   await load(page, '#/leccion/will');
   const cont = page.getByRole('button', { name: 'Continuar' });
   await expect(cont).toBeVisible({ timeout: 30000 });
@@ -78,12 +95,23 @@ test('INP on the lesson player stays under 200 ms on a 4× slower CPU', async ({
   await cont.click();
   await page.waitForTimeout(1000);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-  await page.evaluate(() => {                                                   // the page is hidden: web-vitals reports the final INP
-    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  const inp = await page.evaluate(() => (window as unknown as { __inp: { value: number }[] }).__inp);
-  expect(inp.length, 'web-vitals measured at least one interaction').toBeGreaterThan(0);
-  const worst = inp.reduce((a, b) => (b.value > a.value ? b : a));
-  expect(worst.value, JSON.stringify(worst)).toBeLessThan(200);                 // the message names what was slow
+  await expectInpUnder200(page);
+});
+
+// The test above taps whenever the page lets it, so its taps meet the 3D character's set-up only some of the time. Here
+// the taps come just as the character file arrives, when the character's first frames are made.
+test('INP on the lesson player stays under 200 ms when she taps as the 3D character arrives (4× slower CPU)', async ({ page, context }) => {
+  await signUp(page);
+  await recordInp(page);
+  await load(page, '#/leccion/will');
+  await expect(page.getByRole('button', { name: 'Continuar' })).toBeVisible({ timeout: 30000 });
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType('resource').some((r) => r.name.includes('.glb'))),
+    { intervals: [5], timeout: 30000 }).toBe(true);
+  const stage = (await page.locator('.character-stage').boundingBox())!;
+  for (let i = 0; i < 12; i++) { await page.mouse.click(stage.x + 10, stage.y + 10); await page.waitForTimeout(40); }
+  await page.waitForTimeout(1500);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  await expectInpUnder200(page);
 });

@@ -37,8 +37,8 @@ export class CharacterEngine {
   rafId = 0;
   reduced = false;
   paused = false;
-  // a phone without fast graphics draws in software: when a frame is slow, draw fewer pixels and fewer frames
-  renderMs = 0; minGap = 0; lastDraw = 0;
+  // a phone without fast graphics draws in software: when frames come slowly, draw fewer pixels and fewer frames
+  frameMs = 0; minGap = 0; lastDraw = 0;
 
   // overlay key targets
   overlayTargets: Record<string, number> = {};
@@ -64,7 +64,7 @@ export class CharacterEngine {
       this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       this.renderer.setClearColor(0x111111);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // crisp on phones, capped for low-end GPUs
-      const s = Math.min(canvas.clientWidth || 256, canvas.clientHeight || 256);
+      const s = this.side();
       this.renderer.setSize(s, s, false);
       this.scene = new THREE.Scene();
       this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
@@ -104,6 +104,7 @@ export class CharacterEngine {
         (face as THREE.Object3D).position.y = 1.3;
       }
       this.scene.add(root);
+      await this.warmUp(root);
       this.mounted = true;
       this.startLoop();
       return true;
@@ -111,6 +112,41 @@ export class CharacterEngine {
       this.fallback = true;
       return false;
     }
+  }
+
+  /** The stage is square; while the canvas is still hidden, its box is the stage's. */
+  private side(): number {
+    const c = this.canvas!, box = c.clientWidth ? c : c.parentElement ?? c;
+    return Math.min(box.clientWidth || 256, box.clientHeight || 256);
+  }
+
+  /** The first draw compiles the shaders and uploads the pictures. In the graphics process that takes most of a second on a
+   *  phone without fast graphics, and the main thread waits for it, so a tap that lands then waits too (INP). The
+   *  character does it here, while the canvas is still hidden behind the still image: each step is its own short task,
+   *  and nothing on the main thread waits for the graphics process to finish. */
+  private async warmUp(root: THREE.Object3D): Promise<void> {
+    const r = this.renderer!, scene = this.scene!, camera = this.camera!;
+    const task = () => new Promise((res) => setTimeout(res, 0));
+    await r.compileAsync(scene, camera);
+    const maps = new Set<THREE.Texture>();
+    root.traverse((o) => { const map = ((o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined)?.map; if (map) maps.add(map); });
+    for (const map of maps) { await task(); r.initTexture(map); }
+    await task();
+    const ctx = r.getContext(), gl = ctx instanceof WebGL2RenderingContext ? ctx : null;
+    /** Draws one frame and waits, without blocking, until the graphics process has finished it: how long it took (ms). */
+    const draw = async () => {
+      const start = performance.now();
+      r.render(scene, camera);
+      const done = gl?.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+      if (!gl || !done) return 0;
+      gl.flush();
+      while (gl.getSyncParameter(done, gl.SYNC_STATUS) !== gl.SIGNALED) await new Promise((res) => setTimeout(res, 4));
+      gl.deleteSync(done);
+      return performance.now() - start;
+    };
+    await draw();                                       // the shaders and pictures reach the graphics card
+    // once shown, the main thread waits for every frame to finish: start as light as the phone needs
+    while (await draw() > 24 && this.lighten()) { /* one step lighter, then measure again */ }
   }
 
   unmount(): void {
@@ -128,7 +164,16 @@ export class CharacterEngine {
     if (!this.rafId && this.mounted) this.startLoop();
   }
   startLoop(): void {
+    let prev = 0;
     const loop = (t: number) => {
+      // the time from one frame to the next, not the time in render(): the browser reads a software-drawn canvas back
+      // after render() returns, and that wait on the main thread is most of a slow frame; one long pause (a new screen)
+      // counts as 100 ms, so it takes a few slow frames in a row to draw lighter
+      if (prev) {
+        this.frameMs = this.frameMs * 0.8 + Math.min(t - prev, 100) * 0.2;
+        if (this.frameMs > 50) this.lighten();
+      }
+      prev = t;
       this.frame(t);
       if (this.mounted) this.rafId = requestAnimationFrame(loop);
     };
@@ -151,7 +196,7 @@ export class CharacterEngine {
     if (!this.face) return;
     const canvas = this.canvas;
     if (canvas && this.renderer) {
-      const s = Math.min(canvas.clientWidth || 256, canvas.clientHeight || 256);
+      const s = this.side();
       if (this.renderer.domElement.width !== Math.round(s * this.renderer.getPixelRatio())) this.renderer.setSize(s, s, false);
     }
     this.jaw += (this.mouth - this.jaw) * JAW_SMOOTH;
@@ -239,23 +284,21 @@ export class CharacterEngine {
     }
 
     if (this.renderer && this.scene && this.camera && t - this.lastDraw >= this.minGap) {
-      const start = performance.now();
       this.renderer.render(this.scene, this.camera);
       this.lastDraw = t;
-      this.renderMs = this.renderMs * 0.8 + (performance.now() - start) * 0.2;
-      if (this.renderMs > 24) this.lighten();
     }
   }
 
-  /** One step down: pixel ratio to 1, then to 0.5, then at most 15 frames a second. */
-  private lighten(): void {
+  /** One step down: pixel ratio to 1, then to 0.5, then at most 15 frames a second. False when already at the last step. */
+  private lighten(): boolean {
     const r = this.renderer!;
     const ratio = r.getPixelRatio();
     if (ratio > 1) r.setPixelRatio(1);
     else if (ratio > 0.5) r.setPixelRatio(0.5);
     else if (this.minGap < 66) this.minGap = 66;
-    else return;
-    this.renderMs = 0;
+    else return false;
+    this.frameMs = 0;
+    return true;
   }
 
   async speak(text: string, lang: 'es' | 'en' = 'es'): Promise<void> {
