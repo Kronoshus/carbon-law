@@ -29,6 +29,7 @@
   "error.required": "Este campo es obligatorio",
   "error.adult": "Debe confirmar que es mayor de 18 años.",
   "error.invalid": "Correo o contraseña incorrectos.",
+  "error.network": "No pudimos conectar con el servidor. Revise su internet e intente otra vez.",
   "bienvenida.host": "La Calavera, programa de inteligencia artificial",
   "bienvenida.note": "Información general, no asesoría legal. Carbon Law Group, Los Ángeles.",
   "popup.streak": "Racha: {count}",

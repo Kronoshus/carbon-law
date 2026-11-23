@@ -95,3 +95,20 @@ test('axe no violations on four screens', async ({ page }) => {
     expect(results.violations).toEqual([]);
   }
 });
+
+test('when the server cannot be reached, sign-up and sign-in say so instead of "wrong password"', async ({ page }) => {
+  await page.route('**/auth/**', (route) => route.abort('connectionrefused'));
+  await page.goto('/#/cuenta-nueva');
+  await page.getByLabel(/Nombre/i).fill('Ana Torres');
+  await page.getByLabel(/Correo/i).fill('sin-servidor@example.com');
+  await page.getByLabel(/Contraseña/i).fill('long-secure-password');
+  await page.getByLabel(/mayor de 18/i).check();
+  await page.getByRole('button', { name: /Crear cuenta/i }).click();
+  await expect(page.getByText(/No pudimos conectar con el servidor/)).toBeVisible();
+  await expect(page.getByText(/incorrect/i)).toHaveCount(0);
+  await page.goto('/#/entrar');
+  await page.getByLabel(/Correo/i).fill('sin-servidor@example.com');
+  await page.getByLabel(/Contraseña/i).fill('long-secure-password');
+  await page.getByRole('button', { name: /Entrar/i }).click();
+  await expect(page.getByText(/No pudimos conectar con el servidor/)).toBeVisible();
+});

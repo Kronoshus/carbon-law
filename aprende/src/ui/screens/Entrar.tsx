@@ -19,7 +19,7 @@ export function Entrar() {
         method: 'POST',
         json: { email, password },
       });
-      if (!res.ok) { setError(t('error.invalid')); return; }
+      if (!res.ok) { setError(t(res.status >= 500 ? 'error.network' : 'error.invalid')); return; }
       const data = await res.json();
       await setToken(data.token as string);
       // decide landing via journey
@@ -33,7 +33,7 @@ export function Entrar() {
       } catch { /* fall through */ }
       navigate('/aprender');
     } catch {
-      setError(t('error.invalid'));
+      setError(t('error.network'));                    // the server could not be reached: not a wrong password
     } finally {
       setSubmitting(false);
     }
