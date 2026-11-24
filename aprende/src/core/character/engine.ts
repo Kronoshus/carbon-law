@@ -119,7 +119,7 @@ export class CharacterEngine {
         (face as THREE.Object3D).position.y = 1.3;
       }
       this.scene.add(root);
-      await this.warmUp(root);
+      await this.warmUp();
       if (this.unmounted) return false;                 // the screen closed while the character loaded: never start drawing
       this.mounted = true;
       this.startLoop();
@@ -140,12 +140,13 @@ export class CharacterEngine {
    *  phone without fast graphics, and the main thread waits for it, so a tap that lands then waits too (INP). The
    *  character does it here, while the canvas is still hidden behind the still image: each step is its own short task,
    *  and nothing on the main thread waits for the graphics process to finish. */
-  private async warmUp(root: THREE.Object3D): Promise<void> {
+  private async warmUp(): Promise<void> {
     const r = this.renderer!, scene = this.scene!, camera = this.camera!;
     const task = () => new Promise((res) => setTimeout(res, 0));
     await r.compileAsync(scene, camera);
     const maps = new Set<THREE.Texture>();
-    root.traverse((o) => { const map = ((o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined)?.map; if (map) maps.add(map); });
+    // the scene, not the file's root: the character itself was moved into `body` (the head and shoulders group) above
+    scene.traverse((o) => { const map = ((o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined)?.map; if (map) maps.add(map); });
     for (const map of maps) { await task(); r.initTexture(map); }
     await task();
     const ctx = r.getContext(), gl = ctx instanceof WebGL2RenderingContext ? ctx : null;
