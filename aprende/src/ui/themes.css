@@ -1,3 +1,5 @@
+/* Hallmark · waive 37: six families are declared across three themes; a screen only ever uses its theme's two
+ * deal: manual (Memento Mori, by keyword) · themes: vela = spore (head-torch), codice = vellum (parchment; oxblood reversed at night) · scope: app · v2.0.0 */
 /* Memento Mori themes. Día de Muertos is the default and lives in tokens.css; each theme here re-points the role tokens
    (and fonts, radius, stroke, ledge) on <html data-theme="…">. Components never name a theme.
    Hallmark themes, adapted to app screens (they lend palette, faces, radius and surfaces, never layout):
@@ -54,14 +56,13 @@
   }
 }
 
-@layer components {
-  :root[data-theme="vela"] :is(h1, h2, h3) { font-weight: 400; letter-spacing: -0.012em; line-height: 1.05; }
+/* unlayered, like the screen stylesheets, so these win on specificity */
+:root[data-theme="vela"] :is(h1, h2, h3) { font-weight: 400; letter-spacing: -0.012em; line-height: 1.05; }
 
-  /* Grenze Gotisch closes up under 30px: it sets the screen titles and the wordmark only; smaller heads are Hanken Grotesk.
-     A head opening on a capital I reads as J, so "Iniciar sesión" is set in Hanken too. */
-  :root[data-theme="codice"] h1 { font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
-  :root[data-theme="codice"] :is(h2, h3, .q h1, .celebration h1, .entrar h1) { font-family: var(--font-ui); font-weight: 600; line-height: 1.2; }
-  :root[data-theme="codice"] :is(.gate-body h1, .gate-title) { font-size: var(--step-3); }
-  :root[data-theme="codice"] .topbar-title { font: 600 1.875rem/1 var(--font-display); }
-  :root[data-theme="codice"] .topbar { border-bottom: 4px double var(--text); }
-}
+/* Grenze Gotisch closes up under 30px: it sets the screen titles and the wordmark only; smaller heads are Hanken Grotesk.
+   A head opening on a capital I reads as J, so "Iniciar sesión" is set in Hanken too. */
+:root[data-theme="codice"] h1 { font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+:root[data-theme="codice"] :is(h2, h3, .q h1, .celebration h1, .entrar h1, .price .now, .pay-total) { font-family: var(--font-ui); font-weight: 600; line-height: 1.2; }
+:root[data-theme="codice"] :is(.gate-body h1, .gate-title) { font-size: var(--step-3); }
+:root[data-theme="codice"] .topbar-title { font: 600 1.875rem/1 var(--font-display); }
+:root[data-theme="codice"] .topbar { border-bottom: 4px double var(--text); }

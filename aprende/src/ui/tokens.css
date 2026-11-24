@@ -78,6 +78,7 @@
          background: var(--accent); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
          flex-wrap: wrap; text-align: center;
          transition: translate .08s, box-shadow .08s; }
+  @media (max-width: 22rem) { .btn { padding-inline: var(--s3); letter-spacing: 0; } }
   .btn:active { translate: 0 3px; box-shadow: var(--ledge-pressed); }
   .btn.secondary { background: var(--card); color: var(--text); }
   .btn.quiet { background: transparent; box-shadow: none; border-color: transparent; color: var(--link); inline-size: auto; }
@@ -101,7 +102,7 @@
   .option { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); padding: var(--s3) var(--s4);
             border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); box-shadow: var(--ledge);
             font-weight: 600; }
-  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--plum); }
+  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--text); }
   .option .key { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; flex: none; border-radius: 0.5rem;
                  border: var(--stroke) solid var(--outline); font: 700 var(--step--1) var(--font-ui); }
   .option.correct { background: color-mix(in oklab, var(--ok) 35%, var(--card)); }

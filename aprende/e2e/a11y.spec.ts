@@ -198,6 +198,20 @@ for (const lang of ['es', 'en'] as const) {
   }
 }
 
+// Memento Mori themes: every state again in Vela and in Códice (by day and by night), still with zero violations
+for (const [theme, scheme] of [['vela', 'dark'], ['codice', 'light'], ['codice', 'dark']] as const) {
+  for (const s of STATES) {
+    test(`axe (${theme}, ${scheme}): ${s.name}`, async ({ page }, info) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.addInitScript((t) => localStorage.setItem('aprende_theme', t), theme);
+      await open(page, s, 'es');
+      await axeClean(page);
+      await shot(page, info, `${theme}-${scheme}-${s.name}`);
+    });
+  }
+}
+
 const REFLOW = ['bienvenida', 'cuenta-nueva', 'gate: names', 'map', 'lesson: question with feedback', 'Mi plan', 'Perfil', 'summary',
   'agreement: ready to sign', 'payment', 'appointment: times', 'signed documents'];
 for (const name of REFLOW) {

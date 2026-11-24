@@ -8,6 +8,6 @@ describe('App', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     render(h(App, null), container);
-    expect(container.textContent).toContain('Aprende');
+    expect(container.textContent).toContain('Memento Mori');
   });
 });
