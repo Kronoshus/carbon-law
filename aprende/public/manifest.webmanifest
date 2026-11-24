@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Aprende y Planea",
-  "short_name": "Aprende",
+  "name": "Memento Mori",
+  "short_name": "Memento Mori",
   "start_url": "./#/aprender",
   "scope": "./",
   "display": "standalone",

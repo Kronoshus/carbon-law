@@ -51,7 +51,7 @@ test('installable: a manifest with a stable id, standalone display and 192/512 i
   const m = await res.json();
   expect(m.id).toBeTruthy();
   expect(m.display).toBe('standalone');
-  expect(m.name).toBe('Aprende y Planea');
+  expect(m.name).toBe('Memento Mori');
   expect(m.start_url).toBeTruthy();
   for (const size of ['192x192', '512x512']) {
     const icon = (m.icons as { src: string; sizes: string; type: string }[]).find((i) => i.sizes === size);

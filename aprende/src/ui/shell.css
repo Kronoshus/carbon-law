@@ -14,7 +14,7 @@
 .tab-link { display: grid; justify-items: center; gap: 2px; min-block-size: 3.75rem; padding-top: var(--s2); color: var(--text-soft);
             font: 600 var(--step--1)/1.1 var(--font-body); text-decoration: none;
             text-align: center; padding-inline: 2px; overflow-wrap: anywhere; hyphens: auto; }
-.tab-link[aria-current="page"] { color: var(--text); font-weight: 800; box-shadow: inset 0 3px 0 var(--marigold); }
+.tab-link[aria-current="page"] { color: var(--text); font-weight: 800; box-shadow: inset 0 3px 0 var(--accent); }
 .rail { display: none; }
 @media (min-width: 64em) {
   .tabs { display: none; }
@@ -22,7 +22,7 @@
   .rail { display: flex; flex-direction: column; gap: var(--s2); inline-size: 14rem; padding: var(--s4); border-inline-end: var(--stroke) solid var(--outline); }
   .rail-link { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); padding: var(--s2) var(--s3); border-radius: var(--radius);
                color: var(--text); text-decoration: none; font-weight: 600; }
-  .rail-link[aria-current="page"] { background: var(--card); box-shadow: inset 4px 0 0 var(--marigold); font-weight: 800; }
+  .rail-link[aria-current="page"] { background: var(--card); box-shadow: inset 4px 0 0 var(--accent); font-weight: 800; }
 }
 
 /* public screens and forms */
@@ -37,6 +37,9 @@ form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
 .field input, .field select, .field textarea { min-inline-size: 0; }
 .field input, .field select { min-block-size: var(--tap); padding: var(--s2) var(--s3); border: var(--stroke) solid var(--outline); border-radius: var(--radius);
                               font: var(--step-0) var(--font-body); background: var(--card); color: var(--text); }
+.theme-choice { display: grid; gap: var(--s2); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.theme-choice legend { padding: 0; margin-block-end: var(--s1); font-weight: 600; }
+.theme-choice small { display: block; font: 400 var(--step--1)/1.3 var(--font-body); color: var(--text-soft); }
 .check { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); font-weight: 600; }
-.check input { inline-size: 1.4rem; block-size: 1.4rem; accent-color: var(--teal-deep); margin: 0; }
-.error { color: var(--rosa-deep); font-weight: 600; }
+.check input { inline-size: 1.4rem; block-size: 1.4rem; accent-color: var(--ok-deep); margin: 0; }
+.error { color: var(--danger); font-weight: 600; }
