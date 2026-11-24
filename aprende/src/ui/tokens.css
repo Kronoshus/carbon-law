@@ -40,6 +40,10 @@
     --trim: repeating-linear-gradient(90deg, var(--rosa) 0 1.5rem, var(--marigold) 1.5rem 3rem, var(--teal) 3rem 4.5rem, var(--gold) 4.5rem 6rem, var(--purple) 6rem 7.5rem);
     --trim-mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, var(--plum) 0.37rem) 0 0 / 1.5rem 100%;
     --trim-size: 0.6rem;
+    /* the icon fills (Icons.tsx): the paper inside a line icon, and its one fiesta colour */
+    --icon-paper: #FFF7E6;  --icon-warm: var(--gold);  --icon-accent: var(--marigold);  --icon-cool: var(--teal);  --icon-rose: var(--rosa);
+    /* a theme's material: a texture under the page, and one on the map's banners */
+    --paper-texture: none;  --band-texture: none;
     /* type: League Spartan for display, Work Sans for reading (the firm's own pair), self-hosted in the app */
     --font-display: "League Spartan", "Work Sans", system-ui, sans-serif;
     --font-body: "Work Sans", system-ui, sans-serif;
@@ -62,7 +66,8 @@
   html, body { overflow-x: clip; }
   img, svg, canvas, video { max-inline-size: 100%; }
   input, select, textarea { max-inline-size: 100%; }
-  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text); background: var(--paper); }
+  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text);
+         background: var(--paper-texture), var(--paper); }
   h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--link); }

@@ -1,5 +1,5 @@
 /* Day-1 gate screens: full screen, the character above, one primary action */
-.gate { background: var(--paper); padding-block: var(--s2) var(--s6); }
+.gate { background: var(--paper-texture), var(--paper); padding-block: var(--s2) var(--s6); }
 .gate-body { padding: var(--s3) var(--s4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); align-content: start; max-inline-size: min(36rem, 100%); margin-inline: auto; }
 .gate-body h1, .gate-title { font-size: var(--step-2); }
 .gate-title { inline-size: min(100% - 2 * var(--s4), 36rem); margin: var(--s3) auto; }

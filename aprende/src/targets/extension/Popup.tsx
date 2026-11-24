@@ -137,7 +137,7 @@ export function Popup() {
       <div class="popup-head">
         <img src="img/calavera-face.png" alt="" width="56" height="56" />
         <span class="chip">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" fill="#FFB627" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><rect x="8.5" y="12" width="7" height="10" rx="1.5" fill="#FFF7E6" stroke="currentColor" stroke-width="1.8" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" style={{ fill: 'var(--icon-warm)' }} stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><rect x="8.5" y="12" width="7" height="10" rx="1.5" style={{ fill: 'var(--icon-paper)' }} stroke="currentColor" stroke-width="1.8" /></svg>
           {t('popup.streak', { count: streak })}
         </span>
       </div>
