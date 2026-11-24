@@ -5,6 +5,7 @@ import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
 import { navigate } from '../../core/router';
 import './datos.css';
+import { host, nameKey } from '../../core/character/cast';
 
 type Q = { id: string; asked_after: string; text: string; status: 'open' | 'answered' | 'skipped'; answer: string | null };
 const GROUPS = ['will', 'trust', 'ahcd', 'poa', 'resumen'];
@@ -58,6 +59,6 @@ export function Resumen() {
     failed ? h('p', { class: 'gate-error', role: 'alert' }, t('datos.error')) : null,
     confirmed ? h('p', { class: 'confirmed', role: 'status' }, t('resumen.confirmed')) : null,
     h('div', { class: 'resumen-actions' },
-      gaps ? h('button', { class: 'btn secondary', type: 'button', onClick: () => navigate('/datos/resumen') }, t('resumen.complete')) : null,
+      gaps ? h('button', { class: 'btn secondary', type: 'button', onClick: () => navigate('/datos/resumen') }, t('resumen.complete', { name: t(nameKey(host())) })) : null,
       confirmed ? null : h('button', { class: 'btn', type: 'button', disabled: !docs, onClick: () => void confirm() }, t('resumen.confirm'))));
 }

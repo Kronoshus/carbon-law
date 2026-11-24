@@ -5,17 +5,18 @@ import { apiFetch } from '../../core/api';
 import { navigate } from '../../core/router';
 import { CharacterStage } from '../CharacterStage';
 import type { CharacterEngine } from '../../core/character/engine';
+import { cast, type CharacterId } from '../../core/character/cast';
 import './lesson.css';
 import './datos.css';
 
 /** "Tus datos" (spec 6.1, 9.3): the lesson's character asks the open questions one at a time; the client types or skips. */
-const CHARACTER: Record<string, 'calavera' | 'oso'> = { ahcd: 'oso' };
+const CHARACTER: Record<string, CharacterId> = { ahcd: 'oso' };
 type Msg = { role: 'user' | 'assistant'; content: string; shown?: string; question_id?: string; reasoning_content?: string | null };
 type Next = { id: string; text: string } | null;
 type Saved = { msgs: Msg[]; next: Next; done: boolean };
 
 export function Datos({ group }: { group: string }) {
-  const character = CHARACTER[group] ?? 'calavera';
+  const character = cast(CHARACTER[group] ?? 'calavera');
   const key = `aprende.datos.${group}`;
   const saved: Saved | null = (() => { try { return JSON.parse(sessionStorage.getItem(key) ?? 'null'); } catch { return null; } })();
   const [state, setState] = useState<Saved>(saved ?? { msgs: [], next: null, done: false });

@@ -6,6 +6,7 @@ import { apiFetch } from '../../core/api';
 import { navigate } from '../../core/router';
 import './datos.css';
 import './revisar.css';
+import { host, nameKey } from '../../core/character/cast';
 
 type Summary = { article: number; text: string };
 type Doc = { id: string; name: string; version: number; content: string; decision: 'ok' | 'change' | null; summary: Summary[] };
@@ -94,7 +95,7 @@ export function Revisar() {
 
   return h('section', { class: 'screen datos-page' },
     h('h1', null, t('revisar.title')),
-    h('p', null, t('revisar.body')),
+    h('p', null, t('revisar.body', { name: t(nameKey(host())) })),
     docs.map((d) => h(DocCard, { key: d.id, d, editing, setEditing, changeType, setChangeType, note, setNote, sending, speak, decideOk, sendChange })),
     allOk ? h('div', { class: 'revisar-all' },
       h('p', null, t('revisar.all')),

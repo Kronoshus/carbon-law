@@ -5,15 +5,16 @@ import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
 import { Icon, type IconName } from '../Icons';
 import { PriceCard } from '../PriceCard';
+import { cast, host as hostId, nameKey, type CharacterId } from '../../core/character/cast';
 import './map.css';
 
 type Status = 'locked' | 'available' | 'done';
-interface MapLesson { id: string; day: number | null; character: 'calavera' | 'pinata' | 'oso'; title: { es: string; en: string }; status: Status; unlock_at: string | null }
+interface MapLesson { id: string; day: number | null; character: CharacterId; title: { es: string; en: string }; status: Status; unlock_at: string | null }
 interface MapData { units: { id: string; lessons: MapLesson[] }[] }
 interface Progress { petals: number; streak: { count: number } }
 
 const UNIT_ICON: Record<string, IconName> = { will: 'testamento', trust: 'casa', ahcd: 'salud', poa: 'llave', final: 'caja', bonus: 'plan' };
-const CHARACTER_NAME: Record<MapLesson['character'], I18nKey> = { calavera: 'character.calavera.name', pinata: 'character.pinata.name', oso: 'character.oso.name' };
+const nameOf = (id: CharacterId) => t(nameKey(cast(id)));
 const BASE = import.meta.env.BASE_URL;
 const CORE = ['will', 'trust', 'ahcd', 'poa'];
 
@@ -72,9 +73,9 @@ export function Aprender() {
     const label = h('span', { class: 'node-label' }, h('b', null, title(ls)), h('span', null, reason(ls)));
     if (ls === current) {
       return h('li', { class: 'node current', key: ls.id },
-        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${ls.character}-face.png`, alt: '', width: 48, height: 48 })),
+        h('span', { class: 'disc pulse', 'aria-hidden': 'true' }, h('img', { src: `${BASE}img/${cast(ls.character)}-face.png`, alt: '', width: 48, height: 48 })),
         h('div', { class: 'card' }, h('span', { class: 'node-label' }, h('b', null, title(ls)),
-          h('span', null, t('map.withCharacter', { day: ls.day ?? '', name: t(CHARACTER_NAME[ls.character]) }))),
+          h('span', null, t('map.withCharacter', { day: ls.day ?? '', name: nameOf(ls.character) }))),
           h('a', { class: 'btn', href: `#/leccion/${ls.id}` }, t(ls.status === 'done' ? 'map.review' : 'map.start'))));
     }
     const inner = [h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: UNIT_ICON[ls.unit] ?? 'plan' }), badge ? h('span', { class: 'badge' }, badge) : null), label];
@@ -91,9 +92,9 @@ export function Aprender() {
       h('h1', { class: 'map-day' }, day ? t('map.dayOf', { day }) : t('nav.aprender')),
       h('span', { class: 'chip', title: t('map.petals') }, h(Icon, { name: 'petalo' }), String(progress?.petals ?? 0),
         h('span', { class: 'visually-hidden' }, t('map.petalsSr')))),
-    host ? h('section', { class: 'host', 'aria-label': t('character.calavera.name') },
-      h('img', { src: `${BASE}img/calavera-face.png`, alt: '', width: 96, height: 96 }),
-      h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: t(CHARACTER_NAME[current.character]), title: title(current) }) : t('map.hostDone'))) : null,
+    host ? h('section', { class: 'host', 'aria-label': t(nameKey(hostId())) },
+      h('img', { src: `${BASE}img/${hostId()}-face.png`, alt: '', width: 96, height: 96 }),
+      h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: nameOf(current.character), title: title(current) }) : t('map.hostDone'))) : null,
     h(PriceCard, { codes: ['will'] }),
     (tentative !== null && (tentative.length === 0) && core.some((ls) => ls.unit === 'trust' && ls.status === 'done'))
       ? h('a', { class: 'card docs-card', href: '#/documentos' }, h('strong', null, t('docs.title')), h('span', null, t('docs.body'))) : null,

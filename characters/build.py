@@ -90,7 +90,22 @@ def character_calavera():
     return base, bg, layers, rig, S.SWING
 
 
-BUILD = {"calavera": character_calavera, "pinata": character_pinata, "oso": character_oso}
+# The theme hosts (one per Memento Mori theme; La Calavera hosts Día de Muertos). Each art module has draw(jaw, blink,
+# look, **state), rig(), CELEBRATE / COMFORT state kwargs, FACE (the head's box, fractions of the picture) and THEME.
+HOSTS = {"girasol": "girasol_art", "colibri": "colibri_art", "velita": "velita_art", "tortuga": "tortuga_art"}
+
+
+def character_host(name):
+    import importlib
+    A = importlib.import_module(HOSTS[name])
+    base = render(A.draw())
+    states = {"celebrate": render(A.draw(**A.CELEBRATE)), "comfort": render(A.draw(**A.COMFORT))}
+    bg = Image.open(APP / "backdrops" / f"{A.THEME}.jpg").convert("RGB")        # the theme's own backdrop
+    return base, bg, {k: diff_overlay(base, v) for k, v in states.items()}, A.rig(), {}
+
+
+BUILD = {"calavera": character_calavera, "pinata": character_pinata, "oso": character_oso,
+         **{n: (lambda n=n: character_host(n)) for n in HOSTS}}
 
 
 def build(name):
@@ -113,6 +128,11 @@ def build(name):
     shutil.copy(d / f"{name}.glb", APP / f"{name}.glb")
     base.resize((1024, 1024), Image.LANCZOS).save(APP / f"{name}.png", optimize=True)      # still image (no WebGL)
     shutil.copy(d / f"{name}-bg.jpg", APP / f"{name}-bg.jpg")
+    if name in HOSTS:                                                                        # the face on the map and the welcome
+        import importlib
+        x0, y0, x1, y1 = importlib.import_module(HOSTS[name]).FACE
+        face = base.crop((int(x0 * SIZE), int(y0 * SIZE), int(x1 * SIZE), int(y1 * SIZE))).resize((240, 240), Image.LANCZOS)
+        face.save(ROOT / "aprende" / "public" / "img" / f"{name}-face.png", optimize=True)
     for label, img in overlays.items():                                                     # previews for review
         prev = base.copy(); prev.alpha_composite(img)
         prev.resize((512, 512), Image.LANCZOS).save(d / f"preview-{label}.png")

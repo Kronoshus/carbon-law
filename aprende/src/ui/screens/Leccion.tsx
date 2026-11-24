@@ -6,6 +6,7 @@ import { platform } from '../../platform';
 import { navigate } from '../../core/router';
 import { startAt, clear, retryLater, finished, type QueueState } from '../../core/lesson/queue';
 import type { CharacterEngine } from '../../core/character/engine';
+import type { CharacterId } from '../../core/character/cast';
 import type { CharacterState } from '../../core/character/states';
 import { CharacterStage } from '../CharacterStage';
 import { MatchExercise } from '../exercises/Match';
@@ -14,7 +15,7 @@ import { ListenExercise } from '../exercises/Listen';
 import { Icon } from '../Icons';
 import './lesson.css';
 
-type Character = 'calavera' | 'pinata' | 'oso';
+type Character = CharacterId;
 interface Item {
   id: string; kind: string; character?: Character; sensitive?: boolean;
   text?: string; story?: string; prompt?: string; statement?: string; options?: string[];

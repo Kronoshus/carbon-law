@@ -4,6 +4,7 @@ import { t, lang } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch, extensionOff, getToken } from '../../core/api';
 import { NoDisponible } from '../../ui/screens/NoDisponible';
+import { host } from '../../core/character/cast';
 
 type Journey = { day: number; gates: Record<string, boolean>; };
 type Lesson = { id: string; day: number | null; unit: string; title: { es: string; en: string }; status: string };
@@ -118,7 +119,7 @@ export function Popup() {
     return (
       <main class="popup">
         <div class="popup-head">
-          <img src="img/calavera-face.png" alt="" width="56" height="56" />
+          <img src={`img/${host()}-face.png`} alt="" width="56" height="56" />
         </div>
         <h1 class="visually-hidden">{t('top.title')}</h1>
         <p class="popup-signedout">{t('popup.signedOut')}</p>
@@ -135,7 +136,7 @@ export function Popup() {
     <main class="popup">
       <h1 class="visually-hidden">{t('top.title')}</h1>
       <div class="popup-head">
-        <img src="img/calavera-face.png" alt="" width="56" height="56" />
+        <img src={`img/${host()}-face.png`} alt="" width="56" height="56" />
         <span class="chip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 6.5 10 5 12 2Z" style={{ fill: 'var(--icon-warm)' }} stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><rect x="8.5" y="12" width="7" height="10" rx="1.5" style={{ fill: 'var(--icon-paper)' }} stroke="currentColor" stroke-width="1.8" /></svg>
           {t('popup.streak', { count: streak })}
