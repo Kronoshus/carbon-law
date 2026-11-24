@@ -11,5 +11,6 @@
 .seal { color: var(--teal-deep); display: inline-flex; }
 .seal.empty { color: var(--ink-soft); }
 .seal .icon { inline-size: 1.6rem; block-size: 1.6rem; }
-.example { justify-self: start; font: 700 0.7rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; color: var(--rosa-deep);
-           border: 1.5px dashed var(--rosa-deep); border-radius: var(--pill); padding: 2px 6px; }
+/* a placeholder price is marked in words, sentence case: "ejemplo" */
+.example { justify-self: start; font: 600 var(--step--1)/1.2 var(--font-body); color: var(--rosa-deep);
+           border: 1.5px dashed var(--rosa-deep); border-radius: var(--pill); padding: var(--s1) var(--s2); }

@@ -5,7 +5,9 @@
 .icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); flex: none; border: 0; background: none;
             color: var(--text); padding: 0; cursor: pointer; }
 .icon-btn .icon { inline-size: 1.6rem; block-size: 1.6rem; }
-.stage-wrap { margin-inline: var(--s4); }
+/* the stage keeps its 2:1 crop but never takes more than about half a laptop screen, so the words and the action stay in view */
+.stage-wrap { inline-size: min(100% - 2 * var(--s4), 48rem, 90dvh); margin-inline: auto; }
+.lesson-player main { max-inline-size: 48rem; margin-inline: auto; }
 .stage-wrap .character-stage { aspect-ratio: 16 / 8; max-inline-size: none; }
 .stage-wrap .character-canvas, .stage-wrap .character-still { position: absolute; inset-inline: 0; inset-block-start: -40%;
                                                             block-size: auto; aspect-ratio: 1; }      /* a head-and-shoulders crop */
@@ -15,14 +17,16 @@
 .q { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; }
 .q h1 { font-size: var(--step-1); }
 .q .story { font-style: italic; color: var(--text-soft); }
-.kind { font: 700 var(--step--1)/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); }
+.lesson-player .kind { font: 600 var(--step--1)/1.2 var(--font-body); color: var(--text-soft); }
 .q fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--s2); }
-.option { position: relative; cursor: pointer; }
-.option input { position: absolute; opacity: 0; }
-.option:has(input:checked) { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
-.option:has(input:focus-visible) { outline: 3px solid var(--purple); outline-offset: 3px; }
-.option.wrong { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
-.feedback { position: fixed; inset: auto 0 0 0; z-index: 3; box-shadow: 0 -6px 18px rgb(46 22 64 / .18); gap: var(--s2); padding-block: var(--s3); }
+/* answer rows: the whole row is the control, so the native radio is hidden here (and only here) */
+.lesson-player .option { position: relative; cursor: pointer; }
+.lesson-player .option input { position: absolute; opacity: 0; }
+.lesson-player .option:has(input:checked) { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
+.lesson-player .option:has(input:focus-visible) { outline: 3px solid var(--purple); outline-offset: 3px; }
+.lesson-player .option.wrong { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
+.feedback { position: fixed; inset: auto 0 0 0; z-index: 3; box-shadow: 0 -6px 18px var(--sheet-shadow); gap: var(--s2); padding-block: var(--s3);
+            padding-inline: max(var(--s4), (100% - 48rem) / 2); }
 .feedback.wrong { background: color-mix(in oklab, var(--rosa) 18%, var(--paper)); }
 .feedback h2 { display: flex; align-items: center; gap: var(--s2); font-size: var(--step-1); }
 .feedback h2 .icon { inline-size: 1.8rem; block-size: 1.8rem; }
@@ -45,7 +49,7 @@
 .tile[data-pair="3"] { background: color-mix(in oklab, var(--gold) 40%, var(--card)); }
 .tile[data-pair="4"] { background: color-mix(in oklab, var(--purple) 18%, var(--card)); }
 .pair-no { display: grid; place-items: center; inline-size: 1.6rem; block-size: 1.6rem; flex: none; border-radius: 50%;
-           background: var(--plum); color: #fff; font: 800 var(--step--1)/1 var(--font-display); }
+           background: var(--plum); color: var(--on-night); font: 800 var(--step--1)/1 var(--font-display); }
 /* order: rows with up/down buttons */
 .order { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .order-row { display: flex; align-items: center; gap: var(--s2); padding: var(--s1) var(--s1) var(--s1) var(--s3); background: var(--card);
@@ -53,6 +57,6 @@
 .order-no { font: 800 var(--step-0)/1 var(--font-display); color: var(--text-soft); }
 .order-text { flex: 1; font-weight: 600; }
 .order-row .icon-btn { font-size: var(--step-1); }
-.order-row .icon-btn:disabled { opacity: .35; }
+.order-row .icon-btn:disabled { opacity: .35; color: var(--text-soft); cursor: not-allowed; }
 .listen-actions { display: flex; gap: var(--s2); flex-wrap: wrap; }
 .listen-actions .btn { inline-size: auto; }
