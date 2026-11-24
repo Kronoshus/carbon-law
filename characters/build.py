@@ -131,8 +131,10 @@ def build(name):
     if name in HOSTS:                                                                        # the face on the map and the welcome
         import importlib
         x0, y0, x1, y1 = importlib.import_module(HOSTS[name]).FACE
-        face = base.crop((int(x0 * SIZE), int(y0 * SIZE), int(x1 * SIZE), int(y1 * SIZE))).resize((240, 240), Image.LANCZOS)
-        face.save(ROOT / "aprende" / "public" / "img" / f"{name}-face.png", optimize=True)
+        scene = bg.resize((SIZE, SIZE), Image.LANCZOS).convert("RGBA")                     # on its backdrop, like the others
+        scene.alpha_composite(base)
+        face = scene.crop((int(x0 * SIZE), int(y0 * SIZE), int(x1 * SIZE), int(y1 * SIZE))).resize((240, 240), Image.LANCZOS)
+        face.convert("RGB").save(ROOT / "aprende" / "public" / "img" / f"{name}-face.png", optimize=True)
     for label, img in overlays.items():                                                     # previews for review
         prev = base.copy(); prev.alpha_composite(img)
         prev.resize((512, 512), Image.LANCZOS).save(d / f"preview-{label}.png")
