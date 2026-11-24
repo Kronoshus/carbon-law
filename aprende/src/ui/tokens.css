@@ -1,3 +1,7 @@
+/* Hallmark · checked: 2026-11-24 · genre: editorial (inferred) · scope: app
+ * floor: fixed 26a, 34, 39a, 48, 49a, 63, 67, 7a, 44b, 44d · waived: 69 on /inicio/consentimiento (the bubble is the subtitle of the spoken question; the heading is the consent record)
+ * structural: 1 printed (42, the desktop rail for four destinations)
+ * built: the project · redesign: polish · v2.0.0 */
 /* Aprende y Planea — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
    Every text pair here was checked for WCAG 2.1 AA contrast (see docs/aprende-design.md, "Colour"). */
 @layer tokens, base, components;
