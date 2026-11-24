@@ -10,4 +10,4 @@
 dialog.confirm { border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--paper); color: var(--text);
                  padding: var(--s4); max-inline-size: min(26rem, 92vw); display: grid; gap: var(--s3); }
 dialog.confirm:not([open]) { display: none; }
-dialog.confirm::backdrop { background: rgb(46 22 64 / .45); }
+dialog.confirm::backdrop { background: var(--scrim); }

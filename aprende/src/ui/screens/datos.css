@@ -16,14 +16,14 @@
             text-decoration: underline; cursor: pointer; justify-self: start; min-block-size: var(--tap); }
 .choices { border: 0; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .choices .option { display: flex; align-items: center; gap: var(--s3); }
-.choices .option input { position: static; opacity: 1; inline-size: 1.4rem; block-size: 1.4rem; flex-shrink: 0; accent-color: var(--plum); }
+.choices .option input { inline-size: 1.4rem; block-size: 1.4rem; flex-shrink: 0; accent-color: var(--plum); }
 .answer-group h2 { font-size: var(--step-1); margin-block-end: var(--s2); }
 .answer-group ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
 .answer-row .question { color: var(--text-soft); font-size: var(--step--1); }
 .answer { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s2); }
 .answer p { font-weight: 600; }
-.status.open { color: var(--danger, #9b1c31); }
+.status.open { color: var(--danger); }
 .status.skipped { color: var(--text-soft); font-style: italic; }
 .gaps, .confirmed { font-weight: 700; }
 .resumen-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
-.gate-error { color: var(--danger, #9b1c31); font-weight: 600; }
+.gate-error { color: var(--danger); font-weight: 600; }

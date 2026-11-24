@@ -30,7 +30,7 @@ test('Mi plan: every step with its date, a moved date explained, a late step sai
   await page.goto('/#/plan');
   await expect(page.getByRole('heading', { name: 'Mi plan' })).toBeVisible();
   await expect(page.locator('.plan-step')).toHaveCount(9);
-  await expect(page.getByText('Día 10 · miércoles, 9 de diciembre', { exact: false })).toBeVisible();
+  await expect(page.getByText('Día 10, miércoles, 9 de diciembre', { exact: false })).toBeVisible();
   await expect(page.getByText('El fin de semana movió esta fecha 2 días.').first()).toBeVisible();
   await expect(page.getByText('La oficina va un poco atrasada con este paso.', { exact: false })).toBeVisible();
   await expect(page.getByText(/atrasad[oa]/i)).toHaveCount(1);                 // only the calm sentence: no "late" label or alarm

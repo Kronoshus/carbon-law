@@ -16,6 +16,11 @@
     --marigold: #FF8C1A;  --gold: #FFB627;  --rosa: #FF4F9A;  --teal: #2EC4B6;  --purple: #7B2CBF;  --green: #3A9D5D;  --yellow: #FFD23F;
     /* text-safe deep shades for text on paper */
     --marigold-deep: #C2410C;  --teal-deep: #0B7A70;  --rosa-deep: #B8205F;  --link: light-dark(#7B2CBF, #D6B4FF);
+    --danger: #9B1C31;                                  /* error text on paper */
+    /* ink on the night surfaces (banners, the character label), and the paper of a document shown as a letter */
+    --on-night: #FFF9F2;  --on-night-soft: #E9DDF7;  --label-scrim: rgb(28 16 48 / .78);
+    --letter-paper: #FFFDF8;  --letter-ink: #1D1424;
+    --scrim: rgb(46 22 64 / .45);  --sheet-shadow: rgb(46 22 64 / .18);
     /* type: League Spartan for display, Work Sans for reading (the firm's own pair), self-hosted in the app */
     --font-display: "League Spartan", "Work Sans", system-ui, sans-serif;
     --font-body: "Work Sans", system-ui, sans-serif;
@@ -32,6 +37,7 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  html, body { overflow-x: clip; }
   img, svg, canvas, video { max-inline-size: 100%; }
   input, select, textarea { max-inline-size: 100%; }
   body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text); background: var(--paper); }
@@ -45,7 +51,7 @@
 @layer components {
   /* buttons: marigold primary with plum text (6.9:1), paper secondary */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-block-size: var(--tap);
-         padding: var(--s3) var(--s5); border: var(--stroke) solid var(--outline); border-radius: var(--radius);
+         padding: var(--s3) var(--s4); border: var(--stroke) solid var(--outline); border-radius: var(--radius);
          font: 700 var(--step-0)/1.2 var(--font-display); letter-spacing: 0.02em; color: var(--plum);
          background: var(--marigold); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
          flex-wrap: wrap; text-align: center;

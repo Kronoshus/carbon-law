@@ -1,4 +1,4 @@
-.document-text { white-space: pre-wrap; max-block-size: 50vh; overflow: auto; background: #fff; color: #1d1424; padding: var(--s3);
+.document-text { white-space: pre-wrap; max-block-size: 50vh; overflow: auto; background: var(--letter-paper); color: var(--letter-ink); padding: var(--s3);
                  border-radius: var(--radius); font: 400 var(--step--1)/1.5 var(--font-body); }
 .revisar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
 .revisar-actions form { grid-column: 1 / -1; }

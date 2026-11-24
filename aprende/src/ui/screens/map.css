@@ -1,16 +1,16 @@
 /* Course map (design doc §7.1, docs/aprende/screens/mapa.html) */
-.map { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); padding-block-end: var(--s6); }
+.map { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); padding-block-end: var(--s6); max-inline-size: 56rem; margin-inline: auto; }
 .map-chips { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s2); }
 .map-chips .chip .icon { inline-size: 1.4rem; block-size: 1.4rem; }
 .map-day { margin: 0; font: 800 var(--step-0)/1 var(--font-display); }
 .map .host { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: var(--s3); align-items: center; }
 .map .host img { inline-size: 4rem; block-size: 4rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
-.banner { position: relative; margin: 0; padding: calc(var(--s3) + 0.6rem) var(--s4) var(--s4); color: #fff; background: var(--night);
+.banner { position: relative; margin: 0; padding: calc(var(--s3) + 0.6rem) var(--s4) var(--s4); color: var(--on-night); background: var(--night);
           border-radius: var(--radius); border: var(--stroke) solid var(--outline); font: 700 var(--step-1)/1.1 var(--font-display); overflow: clip; }
-.banner small { display: block; font: 500 var(--step--1)/1.3 var(--font-body); color: #E9DDF7; margin-top: var(--s1); }
+.banner small { display: block; font: 400 var(--step--1)/1.3 var(--font-body); color: var(--on-night-soft); margin-top: var(--s1); }
 .banner::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 0.6rem;
                   background: repeating-linear-gradient(90deg, var(--rosa) 0 1.5rem, var(--marigold) 1.5rem 3rem, var(--teal) 3rem 4.5rem, var(--gold) 4.5rem 6rem, var(--purple) 6rem 7.5rem);
-                  mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, #000 0.37rem) 0 0 / 1.5rem 100%; }
+                  mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, var(--plum) 0.37rem) 0 0 / 1.5rem 100%; }
 ol.path { list-style: none; margin: 0; padding: var(--s2) 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); position: relative; }
 ol.path::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 50%; translate: -50% 0; inline-size: 0.5rem;
                   background: radial-gradient(circle, var(--marigold) 45%, transparent 50%) 0 0 / 0.5rem 1rem repeat-y; opacity: .7; }

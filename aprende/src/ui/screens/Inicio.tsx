@@ -10,10 +10,11 @@ import { Icon } from '../Icons';
 import './gate.css';
 
 /** Day 1 before any lesson: disclosure → consent → names (spec 6.1, steps 2-4). Full screen, no tabs: one thing at a time. */
-function Gate({ say, children }: { say?: string; children?: ComponentChildren }) {
+function Gate({ title, say, children }: { title?: string; say?: string; children?: ComponentChildren }) {
   const engine = useRef<CharacterEngine | null>(null);
   const speak = () => { if (say) { engine.current?.cancel(); void engine.current?.speak(say, lang.value); } };
   return h('div', { class: 'gate' }, h('div', null,
+    title ? h('h1', { class: 'gate-title' }, title) : null,
     say ? h('div', { class: 'stage-wrap' }, h(CharacterStage, { character: 'calavera', onEngine: (e: CharacterEngine) => { engine.current = e; speak(); } })) : null,
     say ? h('div', { class: 'talk' }, h('p', { class: 'bubble', 'aria-live': 'polite' }, say,
       h('button', { class: 'icon-btn listen', type: 'button', 'aria-label': t('leccion.replay'), onClick: speak }, h(Icon, { name: 'volumen' })))) : null,
@@ -38,8 +39,7 @@ function useSave() {
 
 export function InicioIa() {
   const { busy, save, error } = useSave();
-  return h(Gate, { say: `${t('gate.disclosure.calavera')} ${t('gate.disclosure.human')}` },
-    h('h1', null, t('gate.disclosure.title')),
+  return h(Gate, { title: t('gate.disclosure.title'), say: `${t('gate.disclosure.calavera')} ${t('gate.disclosure.human')}` },
     error,
     h('button', { class: 'btn', type: 'button', disabled: busy,
       onClick: () => save(async () => { await record('ai_disclosed', {}); navigate('/inicio/consentimiento'); }) }, t('gate.disclosure.ok')));
