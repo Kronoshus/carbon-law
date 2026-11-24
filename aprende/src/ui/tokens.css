@@ -1,5 +1,6 @@
 /* Hallmark · checked: 2026-11-24 · genre: editorial (inferred) · scope: app
  * floor: fixed 26a, 34, 39a, 48, 49a, 63, 67, 7a, 44b, 44d · waived: 69 on /inicio/consentimiento (the bubble is the subtitle of the spoken question; the heading is the consent record)
+ * reworded: the map and plan meta lines, middle dots to commas, and "15 min" to "unos 15 minutos" (63; listed in the PR)
  * structural: 1 printed (42, the desktop rail for four destinations)
  * built: the project · redesign: polish · v2.0.0 */
 /* Aprende y Planea — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
@@ -83,6 +84,7 @@
   .option { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); padding: var(--s3) var(--s4);
             border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); box-shadow: var(--ledge);
             font-weight: 600; }
+  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--plum); }
   .option .key { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; flex: none; border-radius: 0.5rem;
                  border: var(--stroke) solid var(--outline); font: 700 var(--step--1) var(--font-display); }
   .option.correct { background: color-mix(in oklab, var(--teal) 35%, var(--card)); }
