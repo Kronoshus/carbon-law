@@ -3,7 +3,7 @@ export function makeManifest(origin: string) {
   const icons = { '16': 'icons/icon-16.png', '48': 'icons/icon-48.png', '128': 'icons/icon-128.png' };
   return {
     manifest_version: 3 as const,
-    name: 'Aprende y Planea',
+    name: 'Memento Mori',
     version: '0.1.0',
     description: 'Lecciones de planificación patrimonial de Carbon Law Group. Estate-planning lessons.',
     icons,

@@ -1,3 +1,3 @@
 .test-banner { padding: var(--s2) var(--s3); border: var(--stroke) dashed var(--outline); border-radius: var(--radius);
-               background: color-mix(in oklab, var(--gold) 30%, var(--card)); font-weight: 700; }
+               background: color-mix(in oklab, var(--highlight) 30%, var(--card)); font-weight: 700; }
 .pay-total { font: 800 var(--step-2)/1.2 var(--font-display); }

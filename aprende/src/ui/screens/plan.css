@@ -3,13 +3,13 @@
 .plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .plan-step { display: grid; grid-template-columns: minmax(0, 2rem) minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: var(--s3);
              background: var(--card); border: var(--stroke) solid var(--outline); border-radius: var(--radius); }
-.plan-step.next, .plan-step.today { box-shadow: var(--ledge); background: color-mix(in oklab, var(--gold) 22%, var(--card)); }
+.plan-step.next, .plan-step.today { box-shadow: var(--ledge); background: color-mix(in oklab, var(--highlight) 22%, var(--card)); }
 @media (max-width: 30rem) {
   .plan-step { grid-template-columns: minmax(0, 2rem) minmax(0, 1fr); }
   .plan-step > .chip { grid-column: 2; justify-self: start; }
 }
 .plan-mark { inline-size: 1.6rem; block-size: 1.6rem; border-radius: 50%; border: var(--stroke) solid var(--outline); display: grid; place-items: center; }
-.plan-step.done .plan-mark { background: var(--teal); }
+.plan-step.done .plan-mark { background: var(--ok); color: var(--on-ok); }
 .plan-mark .icon { inline-size: 1rem; block-size: 1rem; }
 .plan-day { font: 700 var(--step--1)/1.3 var(--font-body); color: var(--text-soft); }
 .plan-name { font-weight: 700; }

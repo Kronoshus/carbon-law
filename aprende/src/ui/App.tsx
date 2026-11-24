@@ -1,11 +1,9 @@
 import { h, Fragment } from 'preact';
 import { IconSprite } from './Icons';
-import '@fontsource/work-sans/latin-400.css';
-import '@fontsource/work-sans/latin-600.css';
-import '@fontsource/work-sans/latin-700.css';
-import '@fontsource/league-spartan/latin-700.css';
-import '@fontsource/league-spartan/latin-800.css';
+import './fonts';
 import './tokens.css';
+import './themes.css';
+import '../core/theme';
 import './shell.css';
 import { useEffect, useState } from 'preact/hooks';
 import { route, navigate } from '../core/router';

@@ -1,4 +1,6 @@
 import { vis, viseme, type ServerAudio } from './visemes';
+import { theme } from '../theme';
+import { backdropUrl } from './backdrop';
 
 export const SHAPE_KEYS = ['jawOpen', 'blink', 'mouthRound', 'browUp', 'headYaw', 'headPitch', 'headRoll', 'lookX'] as const;
 
@@ -10,6 +12,7 @@ export type CharacterStateFull =
 export const STATES: CharacterStateFull[] = ['idle','talking','thinking','listening','celebrating','comforting','waving','dancing'];
 
 const JAW_SMOOTH = 0.45;
+
 
 export function reducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
@@ -52,7 +55,7 @@ export class CharacterEngine {
 
   glbUrl(): string { return `${import.meta.env.BASE_URL}characters/${this.characterId}.glb`; }
   pngUrl(): string { return `${import.meta.env.BASE_URL}characters/${this.characterId}.png`; }
-  bgUrl(): string { return `${import.meta.env.BASE_URL}characters/${this.characterId}-bg.jpg`; }
+  bgUrl(): string { return backdropUrl(this.characterId); }
 
   async mount(canvas: HTMLCanvasElement): Promise<boolean> {
     this.canvas = canvas;
@@ -98,6 +101,17 @@ export class CharacterEngine {
           depthWrite: mesh.name !== 'Shadow',
         });
       });
+      if (theme.value !== 'muertos') {                  // the GLB carries the Día de Muertos backdrop: swap in the theme's
+        const bg = root.getObjectByName('Background') as THREE.Mesh | undefined;
+        const tex = await new THREE.TextureLoader().loadAsync(this.bgUrl()).catch(() => null);   // offline: the night stays
+        if (bg && tex) {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.flipY = false;                            // glTF texture orientation
+          tex.anisotropy = maxAniso;
+          const m = bg.material as THREE.MeshBasicMaterial;
+          m.map?.dispose(); m.map = tex; m.needsUpdate = true;
+        }
+      }
       const face = root.getObjectByName('Avatar');
       if (face) {
         this.face = face;

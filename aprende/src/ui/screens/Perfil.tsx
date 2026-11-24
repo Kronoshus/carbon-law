@@ -4,6 +4,8 @@ import { navigate } from '../../core/router';
 import { t, lang, setLang } from '../../core/i18n';
 import { apiFetch, clearToken } from '../../core/api';
 import { installPrompt } from '../../core/pwa';
+import { THEMES, theme, setTheme } from '../../core/theme';
+import type { I18nKey } from '../../core/i18n-keys';
 
 type Reminders = { enabled: boolean; local_time: string | null };
 
@@ -121,6 +123,15 @@ export function Perfil() {
           <option value="en">{'English'}</option>
         </select>
       </section>
+      <fieldset class="theme-choice">
+        <legend>{t('perfil.theme')}</legend>
+        {THEMES.map((k) => (
+          <label class="option" key={k}>
+            <input type="radio" name="theme" value={k} checked={theme.value === k} onChange={() => setTheme(k)} />
+            <span>{t(`theme.${k}` as I18nKey)}<small>{t(`theme.${k}.note` as I18nKey)}</small></span>
+          </label>
+        ))}
+      </fieldset>
       <section class="field">
         <label class="option">
           <input type="checkbox" role="switch" checked={reminders.enabled} onChange={(e) => toggleReminder((e.target as HTMLInputElement).checked)} />

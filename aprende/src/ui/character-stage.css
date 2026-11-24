@@ -1,5 +1,5 @@
 .character-stage { position: relative; margin: 0; aspect-ratio: 1; inline-size: 100%; max-inline-size: 32rem; overflow: clip;
-                   border: var(--stroke) solid var(--outline); border-radius: var(--radius-lg); background: var(--night); }
+                   border: var(--stroke) solid var(--outline); border-radius: var(--radius-lg); background: var(--stage); }
 .character-canvas, .character-still { display: block; inline-size: 100%; block-size: 100%; }
 .character-canvas[hidden] { display: none; }
 .character-still { background-size: cover; background-position: center; }

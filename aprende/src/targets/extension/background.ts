@@ -1,3 +1,3 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Aprende y Planea installed');
+  console.log('Memento Mori installed');
 });

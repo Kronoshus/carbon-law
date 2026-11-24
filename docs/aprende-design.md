@@ -220,3 +220,23 @@ The modern-web-guidance skill was consulted (search + local guides) before desig
 - **`sanitize-untrusted-html`** — attorney-approved documents and any staff-authored rich text are inserted with `setHTML()` (DOMPurify fallback); model text is always inserted as text, never HTML.
 
 No conflicts between the guidance and the brief were found.
+
+## 11. Themes (Memento Mori)
+
+The app's name is **Memento Mori**. It has five looks, and each client picks one in Perfil → Tema; the choice is saved on the
+device (`aprende_theme`) and set on `<html data-theme>` before the first paint (`src/core/theme.ts`).
+
+| Theme | Feeling | Paper and ink | Action colour | Faces | Hallmark source |
+|---|---|---|---|---|---|
+| Día de Muertos (default) | fiesta at night, everything above | warm paper, plum ink | marigold | League Spartan, Work Sans | the original system |
+| Sol | happy, a sunny morning | pear-tinted cream with grain and fibre, blue-black ink | pear yellow; mint for done, coral for a miss, blue for links | Chillax (Fontshare, self-hosted) | Hum |
+| Huerto | happy, an orchard | forest green, warm white ink | peach; yellow for done | Gabarito over Manrope | Squeeze |
+| Vela | calm, a candle at night | coffee black, parchment ink, grained banners | candle ochre | Young Serif over Instrument Sans | Spore (head-torch) |
+| Códice | calm, a manuscript | parchment with fibre-washed banners, umber ink; oxblood and gold at night | ultramarine | Grenze Gotisch (titles of 30px or more only) over Hanken Grotesk | Vellum |
+
+How it works: components use only role tokens (`--accent`, `--highlight`, `--ok`, `--wrong`, `--focus`, `--band`, `--stage`,
+`--trail`, `--trim`, `--icon-*`, `--paper-texture`, `--band-texture`, `--font-ui`, `--radius-control`, `--ledge`, …). The Día de
+Muertos values are in `tokens.css`; every other theme re-points them in `themes.css`. A new component never names a theme or a
+fiesta colour. The characters stand on a theme's own backdrop (`public/characters/backdrops/<theme>.jpg`, drawn by
+`characters/backdrops.py`); Día de Muertos keeps each character's own night. Every theme passes the same axe run as the default
+(`e2e/a11y.spec.ts`), by day and, for Códice, by night.

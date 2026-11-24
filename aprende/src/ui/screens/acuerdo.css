@@ -8,4 +8,4 @@
 .sign-form input:not([type]) { min-block-size: var(--tap); padding-inline: var(--s3); border: var(--stroke) solid var(--outline);
                                border-radius: var(--radius); background: var(--card); font: inherit; color: var(--text); }
 .sign-form .option { display: flex; gap: var(--s3); align-items: center; font-weight: 600; }
-.sign-form .option input { inline-size: 1.4rem; block-size: 1.4rem; accent-color: var(--plum); }
+.sign-form .option input { inline-size: 1.4rem; block-size: 1.4rem; accent-color: var(--text); }

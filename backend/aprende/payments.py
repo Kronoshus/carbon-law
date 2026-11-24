@@ -46,7 +46,7 @@ class StripeClient:
             "success_url": success_url,
             "cancel_url": cancel_url,
             "line_items[0][price_data][currency]": currency,
-            "line_items[0][price_data][product_data][name]": description or "Aprende y Planea",
+            "line_items[0][price_data][product_data][name]": description or "Memento Mori",
             "line_items[0][price_data][unit_amount]": int(amount_cents),
             "line_items[0][quantity]": 1,
         }
@@ -134,7 +134,7 @@ def checkout(user: dict = Depends(auth.client_user)):
     session = client.create_checkout_session(
         amount_cents=amount,
         currency="usd",
-        description="Aprende y Planea",
+        description="Memento Mori",
         metadata={"journey_id": j["id"]},
         success_url=success_url,
         cancel_url=cancel_url,

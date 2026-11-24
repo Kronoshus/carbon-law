@@ -3,7 +3,7 @@
  * reworded: the map and plan meta lines, middle dots to commas, and "15 min" to "unos 15 minutos" (63; listed in the PR)
  * structural: 1 printed (42, the desktop rail for four destinations)
  * built: the project · redesign: polish · v2.0.0 */
-/* Aprende y Planea — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
+/* Memento Mori (the Aprende y Planea app) — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
    Every text pair here was checked for WCAG 2.1 AA contrast (see docs/aprende-design.md, "Colour"). */
 @layer tokens, base, components;
 
@@ -26,9 +26,28 @@
     --on-night: #FFF9F2;  --on-night-soft: #E9DDF7;  --label-scrim: rgb(28 16 48 / .78);
     --letter-paper: #FFFDF8;  --letter-ink: #1D1424;
     --scrim: rgb(46 22 64 / .45);  --sheet-shadow: rgb(46 22 64 / .18);
+    /* roles: components use these, never the fiesta names; a theme (themes.css) re-points them */
+    --accent: var(--marigold);  --accent-ink: var(--plum);       /* the primary action and the current step */
+    --highlight: var(--gold);                                    /* the chosen answer, today's step, the price card */
+    --ok: var(--teal);  --ok-deep: var(--teal-deep);  --on-ok: var(--plum);
+    --wrong: var(--rosa);  --wrong-deep: var(--rosa-deep);
+    --focus: var(--purple);
+    --pair-1: var(--teal);  --pair-2: var(--rosa);  --pair-3: var(--gold);  --pair-4: var(--purple);
+    --band: var(--night);  --on-band: var(--on-night);  --on-band-soft: var(--on-night-soft);   /* the map's section banners */
+    --stage: var(--night);                                       /* behind a character */
+    --trail: var(--marigold);                                    /* the dotted path on the map */
+    /* the trim along the top of a banner: papel picado, its scallops cut by the mask */
+    --trim: repeating-linear-gradient(90deg, var(--rosa) 0 1.5rem, var(--marigold) 1.5rem 3rem, var(--teal) 3rem 4.5rem, var(--gold) 4.5rem 6rem, var(--purple) 6rem 7.5rem);
+    --trim-mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, var(--plum) 0.37rem) 0 0 / 1.5rem 100%;
+    --trim-size: 0.6rem;
+    /* the icon fills (Icons.tsx): the paper inside a line icon, and its one fiesta colour */
+    --icon-paper: #FFF7E6;  --icon-warm: var(--gold);  --icon-accent: var(--marigold);  --icon-cool: var(--teal);  --icon-rose: var(--rosa);
+    /* a theme's material: a texture under the page, and one on the map's banners */
+    --paper-texture: none;  --band-texture: none;
     /* type: League Spartan for display, Work Sans for reading (the firm's own pair), self-hosted in the app */
     --font-display: "League Spartan", "Work Sans", system-ui, sans-serif;
     --font-body: "Work Sans", system-ui, sans-serif;
+    --font-ui: var(--font-display);     /* buttons, banners, small display type: a theme whose display face is only for big heads changes this */
     --step--1: 0.875rem;  --step-0: 1.0625rem;  --step-1: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
     --step-2: clamp(1.5rem, 1.25rem + 1vw, 2rem);  --step-3: clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem);
     /* space, on a 4px rhythm expressed in rem so it grows with the user's text size */
@@ -36,6 +55,8 @@
     --radius: 1rem;  --radius-lg: 1.5rem;  --pill: 999px;
     --stroke: 2px;                      /* the sticker outline every component shares with the characters */
     --ledge: 0 4px 0 var(--outline);    /* the tactile bottom ledge on pressable things */
+    --ledge-pressed: 0 1px 0 var(--outline);
+    --radius-control: var(--radius);
     --tap: 3rem;                        /* 48px minimum target */
   }
 }
@@ -45,23 +66,25 @@
   html, body { overflow-x: clip; }
   img, svg, canvas, video { max-inline-size: 100%; }
   input, select, textarea { max-inline-size: 100%; }
-  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text); background: var(--paper); }
+  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text);
+         background: var(--paper-texture), var(--paper); }
   h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--link); }
-  :focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 
 @layer components {
-  /* buttons: marigold primary with plum text (6.9:1), paper secondary */
+  /* buttons: the accent primary (marigold with plum text, 6.9:1, in Día de Muertos), paper secondary */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-block-size: var(--tap);
-         padding: var(--s3) var(--s4); border: var(--stroke) solid var(--outline); border-radius: var(--radius);
-         font: 700 var(--step-0)/1.2 var(--font-display); letter-spacing: 0.02em; color: var(--plum);
-         background: var(--marigold); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
+         padding: var(--s3) var(--s4); border: var(--stroke) solid var(--outline); border-radius: var(--radius-control);
+         font: 700 var(--step-0)/1.2 var(--font-ui); letter-spacing: 0.02em; color: var(--accent-ink);
+         background: var(--accent); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
          flex-wrap: wrap; text-align: center;
          transition: translate .08s, box-shadow .08s; }
-  .btn:active { translate: 0 3px; box-shadow: 0 1px 0 var(--outline); }
+  @media (max-width: 22rem) { .btn { padding-inline: var(--s3); letter-spacing: 0; } }
+  .btn:active { translate: 0 3px; box-shadow: var(--ledge-pressed); }
   .btn.secondary { background: var(--card); color: var(--text); }
   .btn.quiet { background: transparent; box-shadow: none; border-color: transparent; color: var(--link); inline-size: auto; }
 
@@ -77,21 +100,21 @@
   progress.lesson { appearance: none; border: 0 solid; overflow: clip; inline-size: 100%; block-size: 0.875rem;
                     border-radius: var(--pill); background: var(--paper-2); box-shadow: inset 0 0 0 var(--stroke) var(--outline); }
   progress.lesson::-webkit-progress-bar { background: transparent; }
-  progress.lesson::-webkit-progress-value { background: var(--teal); border-radius: var(--pill); transition: inline-size .3s; }
-  progress.lesson::-moz-progress-bar { background: var(--teal); border-radius: var(--pill); }
+  progress.lesson::-webkit-progress-value { background: var(--ok); border-radius: var(--pill); transition: inline-size .3s; }
+  progress.lesson::-moz-progress-bar { background: var(--ok); border-radius: var(--pill); }
 
   /* answer options: whole-row targets, state shown by icon and text as well as colour */
   .option { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); padding: var(--s3) var(--s4);
             border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); box-shadow: var(--ledge);
             font-weight: 600; }
-  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--plum); }
+  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--text); }
   .option .key { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; flex: none; border-radius: 0.5rem;
-                 border: var(--stroke) solid var(--outline); font: 700 var(--step--1) var(--font-display); }
-  .option.correct { background: color-mix(in oklab, var(--teal) 35%, var(--card)); }
-  .option.correct .key { background: var(--teal); }
+                 border: var(--stroke) solid var(--outline); font: 700 var(--step--1) var(--font-ui); }
+  .option.correct { background: color-mix(in oklab, var(--ok) 35%, var(--card)); }
+  .option.correct .key { background: var(--ok); color: var(--on-ok); }
 
   .feedback { border-top: var(--stroke) solid var(--outline); padding: var(--s4); display: grid; gap: var(--s3); }
-  .feedback.correct { background: color-mix(in oklab, var(--teal) 30%, var(--paper)); }
+  .feedback.correct { background: color-mix(in oklab, var(--ok) 30%, var(--paper)); }
   .feedback .source { font-size: var(--step--1); color: var(--text-soft); }
 
   .gen-info { font-size: var(--step--1); color: var(--text-soft); text-align: center; }

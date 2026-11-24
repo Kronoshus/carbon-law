@@ -1,5 +1,5 @@
 /* Lesson player (design doc §7.2, docs/aprende/screens/leccion.html) */
-.lesson-player { min-block-size: 100dvh; background: var(--paper); padding-block-end: 14rem; overflow-wrap: break-word; }
+.lesson-player { min-block-size: 100dvh; background: var(--paper-texture), var(--paper); padding-block-end: 14rem; overflow-wrap: break-word; }
 .lessonbar { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); }
 .lessonbar .chip .icon { inline-size: 1.2rem; block-size: 1.2rem; }
 .icon-btn { display: grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); flex: none; border: 0; background: none;
@@ -22,12 +22,12 @@
 /* answer rows: the whole row is the control, so the native radio is hidden here (and only here) */
 .lesson-player .option { position: relative; cursor: pointer; }
 .lesson-player .option input { position: absolute; opacity: 0; }
-.lesson-player .option:has(input:checked) { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
-.lesson-player .option:has(input:focus-visible) { outline: 3px solid var(--purple); outline-offset: 3px; }
-.lesson-player .option.wrong { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
+.lesson-player .option:has(input:checked) { background: color-mix(in oklab, var(--highlight) 30%, var(--card)); }
+.lesson-player .option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 3px; }
+.lesson-player .option.wrong { background: color-mix(in oklab, var(--wrong) 22%, var(--card)); }
 .feedback { position: fixed; inset: auto 0 0 0; z-index: 3; box-shadow: 0 -6px 18px var(--sheet-shadow); gap: var(--s2); padding-block: var(--s3);
             padding-inline: max(var(--s4), (100% - 48rem) / 2); }
-.feedback.wrong { background: color-mix(in oklab, var(--rosa) 18%, var(--paper)); }
+.feedback.wrong { background: color-mix(in oklab, var(--wrong) 18%, var(--paper)); }
 .feedback h2 { display: flex; align-items: center; gap: var(--s2); font-size: var(--step-1); }
 .feedback h2 .icon { inline-size: 1.8rem; block-size: 1.8rem; }
 .feedback-actions { display: flex; gap: var(--s3); align-items: center; }
@@ -43,18 +43,18 @@
 .tile { display: flex; align-items: center; gap: var(--s2); min-block-size: var(--tap); padding: var(--s2) var(--s3); text-align: start;
         border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); color: var(--text);
         box-shadow: var(--ledge); font: 600 var(--step-0)/1.25 var(--font-body); cursor: pointer; }
-.tile[aria-pressed="true"] { background: color-mix(in oklab, var(--gold) 30%, var(--card)); }
-.tile[data-pair="1"] { background: color-mix(in oklab, var(--teal) 30%, var(--card)); }
-.tile[data-pair="2"] { background: color-mix(in oklab, var(--rosa) 22%, var(--card)); }
-.tile[data-pair="3"] { background: color-mix(in oklab, var(--gold) 40%, var(--card)); }
-.tile[data-pair="4"] { background: color-mix(in oklab, var(--purple) 18%, var(--card)); }
+.tile[aria-pressed="true"] { background: color-mix(in oklab, var(--highlight) 30%, var(--card)); }
+.tile[data-pair="1"] { background: color-mix(in oklab, var(--pair-1) 30%, var(--card)); }
+.tile[data-pair="2"] { background: color-mix(in oklab, var(--pair-2) 22%, var(--card)); }
+.tile[data-pair="3"] { background: color-mix(in oklab, var(--pair-3) 40%, var(--card)); }
+.tile[data-pair="4"] { background: color-mix(in oklab, var(--pair-4) 18%, var(--card)); }
 .pair-no { display: grid; place-items: center; inline-size: 1.6rem; block-size: 1.6rem; flex: none; border-radius: 50%;
-           background: var(--plum); color: var(--on-night); font: 800 var(--step--1)/1 var(--font-display); }
+           background: var(--text); color: var(--paper); font: 800 var(--step--1)/1 var(--font-ui); }
 /* order: rows with up/down buttons */
 .order { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .order-row { display: flex; align-items: center; gap: var(--s2); padding: var(--s1) var(--s1) var(--s1) var(--s3); background: var(--card);
              border: var(--stroke) solid var(--outline); border-radius: var(--radius); box-shadow: var(--ledge); }
-.order-no { font: 800 var(--step-0)/1 var(--font-display); color: var(--text-soft); }
+.order-no { font: 800 var(--step-0)/1 var(--font-ui); color: var(--text-soft); }
 .order-text { flex: 1; font-weight: 600; }
 .order-row .icon-btn { font-size: var(--step-1); }
 .order-row .icon-btn:disabled { opacity: .35; color: var(--text-soft); cursor: not-allowed; }

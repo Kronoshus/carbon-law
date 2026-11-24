@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { CharacterEngine } from '../core/character/engine';
+import { backdropUrl } from '../core/character/backdrop';
 import type { CharacterState, Costume } from '../core/character/states';
 import { t } from '../core/i18n';
 import type { I18nKey } from '../core/i18n-keys';
@@ -84,7 +85,7 @@ export function CharacterStage({ character, state = 'idle', costume = null, onEn
   const name = t(`character.${character}.name` as I18nKey);
   return h('figure', { class: 'character-stage', 'aria-label': t('character.stageLabel', { name }) },
     ready ? null
-      : h('div', { class: 'character-still', style: { backgroundImage: `url(${BASE}characters/${character}-bg.jpg)` } },
+      : h('div', { class: 'character-still', style: { backgroundImage: `url(${backdropUrl(character)})` } },
           h('img', { src: `${BASE}characters/${character}.png`, alt: '', width: 240, height: 240 })),
     fallback ? null : h('canvas', { ref: canvasRef, class: 'character-canvas', hidden: !ready }),
     h('figcaption', { class: 'character-label' }, t('character.aiLabel')),

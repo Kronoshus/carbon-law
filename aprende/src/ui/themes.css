@@ -1,0 +1,129 @@
+/* Hallmark · waive 37: nine families are declared across five themes; a screen only ever uses its theme's two
+ * deal: manual (Memento Mori, by keyword) · themes: vela = spore (head-torch), codice = vellum (parchment; oxblood reversed at night),
+ *   sol = hum (dealt 2/3, seed memento-mori-happy-warm-4fb6), huerto = squeeze · scope: app · v2.0.0 */
+/* Memento Mori themes. Día de Muertos is the default and lives in tokens.css; each theme here re-points the role tokens
+   (and fonts, radius, stroke, ledge) on <html data-theme="…">. Components never name a theme.
+   Hallmark themes, adapted to app screens (they lend palette, faces, radius and surfaces, never layout):
+   vela   = Hallmark "Spore", head-torch colourway: a candle at night, the vanitas still life
+   codice = Hallmark "Vellum", parchment by day and the oxblood reversal by night: the illuminated manuscript
+   sol    = Hallmark "Hum": pear-yellow paper, blue-black ink, Chillax, pear for action, mint for growth, coral for a miss
+   huerto = Hallmark "Squeeze": a green orchard page, warm white ink, Gabarito heads over Manrope, juicy peach buttons */
+@layer tokens {
+  :root[data-theme="vela"] {
+    color-scheme: dark;
+    --paper: oklch(15% 0.012 60);  --paper-2: oklch(19% 0.014 58);  --card: oklch(23% 0.018 52);
+    --text: oklch(93% 0.03 85);  --text-soft: oklch(78% 0.024 78);  --outline: oklch(55% 0.025 70);
+    --link: oklch(93% 0.03 85);
+    --accent: oklch(74% 0.13 80);  --accent-ink: oklch(15% 0.012 60);
+    --highlight: oklch(74% 0.13 80);
+    --ok: oklch(48% 0.05 85);  --ok-deep: oklch(80% 0.09 85);  --on-ok: oklch(93% 0.03 85);
+    --wrong: oklch(52% 0.12 28);  --wrong-deep: oklch(76% 0.1 30);  --danger: oklch(76% 0.1 30);
+    --focus: oklch(86% 0.1 85);
+    --pair-1: oklch(74% 0.13 80);  --pair-2: oklch(70% 0.09 30);  --pair-3: oklch(85% 0.03 85);  --pair-4: oklch(52% 0.05 60);
+    --band: var(--card);  --on-band: var(--text);  --on-band-soft: var(--text-soft);
+    --stage: var(--paper-2);  --trail: var(--accent);
+    --trim: linear-gradient(var(--accent), var(--accent));  --trim-mask: none;  --trim-size: 3px;
+    --letter-paper: oklch(95% 0.02 85);  --letter-ink: oklch(20% 0.015 60);
+    --scrim: oklch(8% 0.01 60 / 0.6);  --sheet-shadow: oklch(8% 0.01 60 / 0.5);
+    --font-display: "Young Serif", Georgia, serif;  --font-body: "Instrument Sans", system-ui, sans-serif;  --font-ui: var(--font-body);
+    --radius: 14px;  --radius-lg: 14px;  --radius-control: 999px;
+    --stroke: 1px;  --ledge: none;  --ledge-pressed: none;
+    font-synthesis: none;                 /* Young Serif has one weight: size makes the hierarchy, never a faked bold */
+    --icon-paper: oklch(28% 0.02 55);  --icon-warm: oklch(74% 0.13 80);  --icon-accent: oklch(70% 0.09 30);  --icon-cool: oklch(60% 0.05 85);  --icon-rose: oklch(70% 0.09 30);
+    --band-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="codice"] {
+    color-scheme: light dark;
+    --paper: light-dark(oklch(94% 0.024 82), oklch(27% 0.09 20));
+    --paper-2: light-dark(oklch(90% 0.032 80), oklch(31% 0.09 20));
+    --card: light-dark(oklch(96.5% 0.018 82), oklch(33% 0.085 20));
+    --text: light-dark(oklch(23% 0.025 55), oklch(94% 0.02 80));
+    --text-soft: light-dark(oklch(44% 0.024 64), oklch(84% 0.03 75));
+    --outline: light-dark(oklch(31% 0.024 58), oklch(74% 0.05 55));
+    --link: light-dark(oklch(43% 0.17 268), oklch(86% 0.1 85));
+    --accent: light-dark(oklch(43% 0.17 268), oklch(84% 0.11 85));
+    --accent-ink: light-dark(oklch(95% 0.02 82), oklch(27% 0.09 20));
+    --highlight: var(--accent);
+    --ok: var(--accent);  --ok-deep: var(--link);  --on-ok: var(--accent-ink);
+    --wrong: light-dark(oklch(45% 0.12 25), oklch(66% 0.14 38));
+    --wrong-deep: light-dark(oklch(40% 0.13 25), oklch(84% 0.08 50));  --danger: var(--wrong-deep);
+    --focus: light-dark(oklch(50% 0.18 268), oklch(84% 0.11 85));
+    --pair-1: oklch(43% 0.17 268);  --pair-2: oklch(45% 0.12 25);  --pair-3: oklch(80% 0.11 85);  --pair-4: oklch(55% 0.05 60);
+    --band: var(--paper-2);  --on-band: var(--text);  --on-band-soft: var(--text-soft);
+    --stage: oklch(23% 0.025 55);  --trail: var(--text);
+    /* a printer's double rule */
+    --trim: linear-gradient(var(--text) 0 1px, transparent 1px 3px, var(--text) 3px 4px);  --trim-mask: none;  --trim-size: 4px;
+    --letter-paper: oklch(97% 0.015 82);  --letter-ink: oklch(23% 0.025 55);
+    --scrim: oklch(23% 0.025 55 / 0.45);  --sheet-shadow: oklch(23% 0.025 55 / 0.18);
+    --font-display: "Grenze Gotisch", Georgia, serif;  --font-body: "Hanken Grotesk", system-ui, sans-serif;  --font-ui: var(--font-body);
+    --radius: 2px;  --radius-lg: 2px;  --radius-control: 2px;  --pill: 2px;
+    --stroke: 1px;  --ledge: none;  --ledge-pressed: none;
+    --icon-paper: light-dark(oklch(96.5% 0.018 82), oklch(33% 0.085 20));  --icon-warm: oklch(80% 0.11 85);
+    --icon-accent: light-dark(oklch(45% 0.12 25), oklch(84% 0.11 85));  --icon-cool: light-dark(oklch(70% 0.1 268), oklch(80% 0.08 268));  --icon-rose: light-dark(oklch(55% 0.13 25), oklch(72% 0.12 30));
+    --band-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.02' numOctaves='4' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.52 0 0 0 0 0.36 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  }
+
+  :root[data-theme="sol"] {
+    color-scheme: light;
+    --paper: oklch(97% 0.012 95);  --paper-2: oklch(94.5% 0.018 95);  --card: oklch(98.8% 0.007 95);
+    --text: oklch(20% 0.014 255);  --text-soft: oklch(45% 0.014 255);  --outline: oklch(56% 0.02 250);
+    --link: oklch(50% 0.17 250);
+    --accent: oklch(87% 0.175 96);  --accent-ink: oklch(20% 0.014 255);       /* pear */
+    --highlight: oklch(87% 0.175 96);
+    --ok: oklch(82% 0.15 152);  --ok-deep: oklch(48% 0.12 155);  --on-ok: oklch(20% 0.014 255);   /* mint: growth */
+    --wrong: oklch(70% 0.2 22);  --wrong-deep: oklch(50% 0.19 25);  --danger: oklch(50% 0.19 25);  /* coral */
+    --focus: oklch(50% 0.17 250);
+    --pair-1: oklch(87% 0.175 96);  --pair-2: oklch(50% 0.17 250);  --pair-3: oklch(70% 0.2 22);  --pair-4: oklch(82% 0.15 152);
+    --band: oklch(50% 0.17 250);  --on-band: oklch(98.8% 0.007 95);  --on-band-soft: oklch(93% 0.03 250);   /* the blue sugar-paper sheet */
+    --stage: oklch(20% 0.014 255);  --trail: oklch(64% 0.15 150);
+    --trim: linear-gradient(oklch(87% 0.175 96), oklch(87% 0.175 96));  --trim-mask: none;  --trim-size: 6px;
+    --scrim: oklch(20% 0.014 255 / 0.45);  --sheet-shadow: oklch(20% 0.014 255 / 0.22);
+    --font-display: "Chillax", ui-rounded, system-ui, sans-serif;  --font-body: var(--font-display);  --font-ui: var(--font-display);
+    --radius: 16px;  --radius-lg: 24px;  --radius-control: 16px;
+    --stroke: 1px;  --ledge: 0 4px 0 oklch(83% 0.04 88);  --ledge-pressed: 0 1px 0 oklch(83% 0.04 88);
+    font-synthesis: none;                 /* two weights, 500 and 600: a 700 or 800 asks for 600, never a faked bold */
+    --icon-paper: oklch(98.8% 0.007 95);  --icon-warm: oklch(87% 0.175 96);  --icon-accent: oklch(70% 0.2 22);  --icon-cool: oklch(82% 0.15 152);  --icon-rose: oklch(70% 0.2 22);
+    --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.36 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.03' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.75 0 0 0 0 0.66 0 0 0 0 0.35 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    --band-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.36 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="huerto"] {
+    color-scheme: dark;
+    --paper: oklch(41% 0.1 154);  --paper-2: oklch(34% 0.09 156);  --card: oklch(47% 0.105 154);
+    --text: oklch(99% 0.005 90);  --text-soft: oklch(94% 0.025 130);  --outline: oklch(84% 0.07 150);
+    --link: oklch(99% 0.005 90);
+    --accent: oklch(83% 0.115 56);  --accent-ink: oklch(30% 0.07 40);         /* peach */
+    --highlight: oklch(22% 0.07 158);                                         /* a chosen tile sinks a green deeper */
+    --ok: oklch(88% 0.14 85);  --ok-deep: oklch(88% 0.14 85);  --on-ok: oklch(30% 0.07 40);
+    --wrong: oklch(62% 0.19 28);  --wrong-deep: oklch(90% 0.08 45);  --danger: oklch(90% 0.08 45);
+    --focus: oklch(88% 0.14 85);
+    --pair-1: oklch(88% 0.14 85);  --pair-2: oklch(83% 0.115 56);  --pair-3: oklch(78% 0.1 210);  --pair-4: oklch(97% 0.012 85);
+    --band: oklch(34% 0.09 156);  --on-band: oklch(99% 0.005 90);  --on-band-soft: oklch(94% 0.025 130);
+    --stage: oklch(34% 0.09 156);  --trail: oklch(88% 0.14 85);
+    --trim: none;  --trim-mask: none;  --trim-size: 0px;
+    --letter-paper: oklch(97% 0.012 85);  --letter-ink: oklch(24% 0.05 160);
+    --scrim: oklch(22% 0.05 160 / 0.6);  --sheet-shadow: oklch(22% 0.05 160 / 0.5);
+    --font-display: "Gabarito", system-ui, sans-serif;  --font-body: "Manrope", system-ui, sans-serif;  --font-ui: var(--font-body);
+    --radius: 16px;  --radius-lg: 24px;  --radius-control: 16px;
+    --stroke: 2px;  --ledge: none;  --ledge-pressed: none;
+    --icon-paper: oklch(34% 0.09 156);  --icon-warm: oklch(88% 0.14 85);  --icon-accent: oklch(83% 0.115 56);  --icon-cool: oklch(78% 0.1 210);  --icon-rose: oklch(72% 0.15 30);
+  }
+}
+
+/* Chillax (Fontshare, ITF Free Font License: free for commercial use), self-hosted like the other faces */
+@font-face { font-family: "Chillax"; src: url("./fonts/chillax-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Chillax"; src: url("./fonts/chillax-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+
+/* unlayered, like the screen stylesheets, so these win on specificity */
+:root[data-theme="vela"] :is(h1, h2, h3) { font-weight: 400; letter-spacing: -0.012em; line-height: 1.05; }
+
+/* Grenze Gotisch closes up under 30px: it sets the screen titles and the wordmark only; smaller heads are Hanken Grotesk.
+   A head opening on a capital I reads as J, so "Iniciar sesión" is set in Hanken too. */
+:root[data-theme="codice"] h1 { font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+:root[data-theme="codice"] :is(h2, h3, .q h1, .celebration h1, .entrar h1, .price .now, .pay-total) { font-family: var(--font-ui); font-weight: 600; line-height: 1.2; }
+:root[data-theme="codice"] :is(.gate-body h1, .gate-title) { font-size: var(--step-3); }
+:root[data-theme="codice"] .topbar-title { font: 600 1.875rem/1 var(--font-display); }
+:root[data-theme="codice"] .topbar { border-bottom: 4px double var(--text); }
+
+:root[data-theme="sol"] body, :root[data-theme="huerto"] body { font-weight: 500; }
+:root[data-theme="sol"] :is(h1, h2, h3) { font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; }
+:root[data-theme="huerto"] :is(h1, h2, h3) { font-weight: 800; letter-spacing: -0.025em; line-height: 1.02; }
