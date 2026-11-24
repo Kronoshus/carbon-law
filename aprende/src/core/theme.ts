@@ -1,11 +1,11 @@
 import { signal } from '@preact/signals';
 
 /** The look of the app. Día de Muertos is the default (no attribute); the others re-point the role tokens (src/ui/themes.css). */
-export const THEMES = ['muertos', 'vela', 'codice'] as const;
+export const THEMES = ['muertos', 'sol', 'huerto', 'vela', 'codice'] as const;
 export type Theme = (typeof THEMES)[number];
 
 const KEY = 'aprende_theme';
-const BAR: Record<Theme, string> = { muertos: '#2A1145', vela: '#0F0A06', codice: '#F3EADA' };   // the browser bar, from each paper
+const BAR: Record<Theme, string> = { muertos: '#2A1145', sol: '#F7F5EC', huerto: '#075930', vela: '#0F0A06', codice: '#F3EADA' };   // the browser bar, from each paper
 
 function stored(): Theme {
   try {

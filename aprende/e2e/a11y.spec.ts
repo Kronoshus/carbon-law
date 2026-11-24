@@ -198,8 +198,8 @@ for (const lang of ['es', 'en'] as const) {
   }
 }
 
-// Memento Mori themes: every state again in Vela and in Códice (by day and by night), still with zero violations
-for (const [theme, scheme] of [['vela', 'dark'], ['codice', 'light'], ['codice', 'dark']] as const) {
+// Memento Mori themes: every state again in Sol, Huerto, Vela and Códice (by day and by night), still with zero violations
+for (const [theme, scheme] of [['sol', 'light'], ['huerto', 'light'], ['vela', 'dark'], ['codice', 'light'], ['codice', 'dark']] as const) {
   for (const s of STATES) {
     test(`axe (${theme}, ${scheme}): ${s.name}`, async ({ page }, info) => {
       await page.setViewportSize({ width: 390, height: 844 });

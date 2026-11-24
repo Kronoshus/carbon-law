@@ -1,10 +1,13 @@
-/* Hallmark · waive 37: six families are declared across three themes; a screen only ever uses its theme's two
- * deal: manual (Memento Mori, by keyword) · themes: vela = spore (head-torch), codice = vellum (parchment; oxblood reversed at night) · scope: app · v2.0.0 */
+/* Hallmark · waive 37: nine families are declared across five themes; a screen only ever uses its theme's two
+ * deal: manual (Memento Mori, by keyword) · themes: vela = spore (head-torch), codice = vellum (parchment; oxblood reversed at night),
+ *   sol = hum (dealt 2/3, seed memento-mori-happy-warm-4fb6), huerto = squeeze · scope: app · v2.0.0 */
 /* Memento Mori themes. Día de Muertos is the default and lives in tokens.css; each theme here re-points the role tokens
    (and fonts, radius, stroke, ledge) on <html data-theme="…">. Components never name a theme.
    Hallmark themes, adapted to app screens (they lend palette, faces, radius and surfaces, never layout):
    vela   = Hallmark "Spore", head-torch colourway: a candle at night, the vanitas still life
-   codice = Hallmark "Vellum", parchment by day and the oxblood reversal by night: the illuminated manuscript */
+   codice = Hallmark "Vellum", parchment by day and the oxblood reversal by night: the illuminated manuscript
+   sol    = Hallmark "Hum": pear-yellow paper, blue-black ink, Chillax, pear for action, mint for growth, coral for a miss
+   huerto = Hallmark "Squeeze": a green orchard page, warm white ink, Gabarito heads over Manrope, juicy peach buttons */
 @layer tokens {
   :root[data-theme="vela"] {
     color-scheme: dark;
@@ -54,7 +57,52 @@
     --radius: 2px;  --radius-lg: 2px;  --radius-control: 2px;  --pill: 2px;
     --stroke: 1px;  --ledge: none;  --ledge-pressed: none;
   }
+
+  :root[data-theme="sol"] {
+    color-scheme: light;
+    --paper: oklch(97% 0.012 95);  --paper-2: oklch(94.5% 0.018 95);  --card: oklch(98.8% 0.007 95);
+    --text: oklch(20% 0.014 255);  --text-soft: oklch(45% 0.014 255);  --outline: oklch(56% 0.02 250);
+    --link: oklch(50% 0.17 250);
+    --accent: oklch(87% 0.175 96);  --accent-ink: oklch(20% 0.014 255);       /* pear */
+    --highlight: oklch(87% 0.175 96);
+    --ok: oklch(82% 0.15 152);  --ok-deep: oklch(48% 0.12 155);  --on-ok: oklch(20% 0.014 255);   /* mint: growth */
+    --wrong: oklch(70% 0.2 22);  --wrong-deep: oklch(50% 0.19 25);  --danger: oklch(50% 0.19 25);  /* coral */
+    --focus: oklch(50% 0.17 250);
+    --pair-1: oklch(87% 0.175 96);  --pair-2: oklch(50% 0.17 250);  --pair-3: oklch(70% 0.2 22);  --pair-4: oklch(82% 0.15 152);
+    --band: oklch(50% 0.17 250);  --on-band: oklch(98.8% 0.007 95);  --on-band-soft: oklch(93% 0.03 250);   /* the blue sugar-paper sheet */
+    --stage: oklch(20% 0.014 255);  --trail: oklch(64% 0.15 150);
+    --trim: linear-gradient(oklch(87% 0.175 96), oklch(87% 0.175 96));  --trim-mask: none;  --trim-size: 6px;
+    --scrim: oklch(20% 0.014 255 / 0.45);  --sheet-shadow: oklch(20% 0.014 255 / 0.22);
+    --font-display: "Chillax", ui-rounded, system-ui, sans-serif;  --font-body: var(--font-display);  --font-ui: var(--font-display);
+    --radius: 16px;  --radius-lg: 24px;  --radius-control: 16px;
+    --stroke: 1px;  --ledge: 0 4px 0 oklch(83% 0.04 88);  --ledge-pressed: 0 1px 0 oklch(83% 0.04 88);
+    font-synthesis: none;                 /* two weights, 500 and 600: a 700 or 800 asks for 600, never a faked bold */
+  }
+  :root[data-theme="huerto"] {
+    color-scheme: dark;
+    --paper: oklch(41% 0.1 154);  --paper-2: oklch(34% 0.09 156);  --card: oklch(47% 0.105 154);
+    --text: oklch(99% 0.005 90);  --text-soft: oklch(94% 0.025 130);  --outline: oklch(84% 0.07 150);
+    --link: oklch(99% 0.005 90);
+    --accent: oklch(83% 0.115 56);  --accent-ink: oklch(30% 0.07 40);         /* peach */
+    --highlight: oklch(22% 0.07 158);                                         /* a chosen tile sinks a green deeper */
+    --ok: oklch(88% 0.14 85);  --ok-deep: oklch(88% 0.14 85);  --on-ok: oklch(30% 0.07 40);
+    --wrong: oklch(62% 0.19 28);  --wrong-deep: oklch(90% 0.08 45);  --danger: oklch(90% 0.08 45);
+    --focus: oklch(88% 0.14 85);
+    --pair-1: oklch(88% 0.14 85);  --pair-2: oklch(83% 0.115 56);  --pair-3: oklch(78% 0.1 210);  --pair-4: oklch(97% 0.012 85);
+    --band: oklch(34% 0.09 156);  --on-band: oklch(99% 0.005 90);  --on-band-soft: oklch(94% 0.025 130);
+    --stage: oklch(34% 0.09 156);  --trail: oklch(88% 0.14 85);
+    --trim: none;  --trim-mask: none;  --trim-size: 0px;
+    --letter-paper: oklch(97% 0.012 85);  --letter-ink: oklch(24% 0.05 160);
+    --scrim: oklch(22% 0.05 160 / 0.6);  --sheet-shadow: oklch(22% 0.05 160 / 0.5);
+    --font-display: "Gabarito", system-ui, sans-serif;  --font-body: "Manrope", system-ui, sans-serif;  --font-ui: var(--font-body);
+    --radius: 16px;  --radius-lg: 24px;  --radius-control: 16px;
+    --stroke: 2px;  --ledge: none;  --ledge-pressed: none;
+  }
 }
+
+/* Chillax (Fontshare, ITF Free Font License: free for commercial use), self-hosted like the other faces */
+@font-face { font-family: "Chillax"; src: url("./fonts/chillax-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Chillax"; src: url("./fonts/chillax-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
 
 /* unlayered, like the screen stylesheets, so these win on specificity */
 :root[data-theme="vela"] :is(h1, h2, h3) { font-weight: 400; letter-spacing: -0.012em; line-height: 1.05; }
@@ -66,3 +114,7 @@
 :root[data-theme="codice"] :is(.gate-body h1, .gate-title) { font-size: var(--step-3); }
 :root[data-theme="codice"] .topbar-title { font: 600 1.875rem/1 var(--font-display); }
 :root[data-theme="codice"] .topbar { border-bottom: 4px double var(--text); }
+
+:root[data-theme="sol"] body, :root[data-theme="huerto"] body { font-weight: 500; }
+:root[data-theme="sol"] :is(h1, h2, h3) { font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; }
+:root[data-theme="huerto"] :is(h1, h2, h3) { font-weight: 800; letter-spacing: -0.025em; line-height: 1.02; }
