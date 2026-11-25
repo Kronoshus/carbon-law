@@ -1,5 +1,25 @@
 (() => {
-  const DISPLAY_NAME = { calavera: "La Calavera", oso: "El Oso", pinata: "Piñata" };
+  const DISPLAY_NAME = {
+    calavera: "La Calavera", oso: "El Oso", pinata: "Piñata",
+    girasol: "Girasol", colibri: "Colibrí", velita: "Velita", tortuga: "Doña Tortuga",
+  };
+  // The theme hosts' device voices, the same table as aprende/src/core/character/voice.ts (keep the two in step).
+  const VOICES = {
+    girasol: { es: ["Dalia", "Paulina", "Paloma", "Google español de Estados Unidos"], en: ["Jenny", "Samantha", "Aria", "Google US English"], pitch: 1.1, rate: 1.03 },
+    colibri: { es: ["Alonso", "Juan", "Jorge", "Raul"], en: ["Guy", "Aaron", "Alex", "David"], pitch: 1.2, rate: 1.12 },
+    velita: { es: ["Paloma", "Paulina", "Sabina", "Dalia"], en: ["Aria", "Samantha", "Zira"], pitch: 1, rate: 0.9 },
+    tortuga: { es: ["Dalia", "Paulina", "Sabina", "Paloma"], en: ["Michelle", "Samantha", "Zira"], pitch: 0.85, rate: 0.84 },
+  };
+  const LOCALES = { es: ["es-US", "es-MX"], en: ["en-US"] };
+
+  function hostVoice(id, lang) {
+    const want = VOICES[id];
+    if (!want) return null;
+    const rank = (v) => { const i = LOCALES[lang].indexOf(v.lang.replace("_", "-")); return i < 0 ? LOCALES[lang].length : i; };
+    const ours = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith(lang)).sort((a, b) => rank(a) - rank(b));
+    for (const name of want[lang]) { const v = ours.find((o) => o.name.includes(name)); if (v) return v; }
+    return ours[0] || null;
+  }
   const UNITS = ["will", "trust", "ahcd", "poa", "final", "bonus", "games", "sensitive", "intake"];
   const UNIT_LABELS = {
     will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud",
@@ -96,10 +116,13 @@
       previewBtn.textContent = "Escuchar voz";
       previewBtn.addEventListener("click", () => {
         const line = phraseInput.value;
-        const lang = langSelect.value === "en" ? "en-US" : "es-MX";
+        const lang = langSelect.value === "en" ? "en" : "es";
         window.speechSynthesis.cancel();
         const utt = new SpeechSynthesisUtterance(line);
-        utt.lang = lang;
+        utt.lang = lang === "en" ? "en-US" : "es-MX";
+        const voice = hostVoice(c.id, lang);
+        if (voice) { utt.voice = voice; utt.lang = voice.lang.replace("_", "-"); }
+        if (VOICES[c.id]) { utt.pitch = VOICES[c.id].pitch; utt.rate = VOICES[c.id].rate; }
         window.speechSynthesis.speak(utt);
       });
       art.appendChild(previewBtn);

@@ -1,6 +1,8 @@
 import { vis, viseme, type ServerAudio } from './visemes';
 import { theme } from '../theme';
 import { backdropUrl } from './backdrop';
+import type { CharacterId } from './cast';
+import { utterance } from './voice';
 
 export const SHAPE_KEYS = ['jawOpen', 'blink', 'mouthRound', 'browUp', 'headYaw', 'headPitch', 'headRoll', 'lookX'] as const;
 
@@ -22,7 +24,7 @@ export function reducedMotion(): boolean {
 type THREE = typeof import('three');
 
 export class CharacterEngine {
-  characterId: string;
+  characterId: CharacterId;
   state: CharacterStateFull = 'idle';
   costume: Costume = null;
 
@@ -48,7 +50,7 @@ export class CharacterEngine {
   overlayTargets: Record<string, number> = {};
   overlayCurrent: Record<string, number> = {};
 
-  constructor(characterId: string) {
+  constructor(characterId: CharacterId) {
     this.characterId = characterId;
     this.reduced = reducedMotion();
   }
@@ -325,9 +327,7 @@ export class CharacterEngine {
     this.setState('talking');
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
     if (!synth) { this.setState('idle'); this.mouth = this.round = 0; return; }
-    const locale = lang === 'es' ? 'es-US' : 'en-US';
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = locale;
+    const u = utterance(text, this.characterId, lang);
     let at = 0; let since = performance.now();
     u.onboundary = (e: SpeechSynthesisEvent) => { at = e.charIndex; since = performance.now(); };
     const lip = setInterval(() => {

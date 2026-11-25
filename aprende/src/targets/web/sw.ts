@@ -69,7 +69,7 @@ self.addEventListener('push', (event: any) => {
   try { data = event.data ? event.data.json() : {}; } catch { data = { title: '', body: event.data?.text?.() }; }
   event.waitUntil((self as any).registration.showNotification(data.title || '', {
     body: data.body || '',
-    icon: 'img/calavera-face.png',
+    icon: 'icons/app-192.png',
     data: { url: data.url || '' },
   }));
 });
