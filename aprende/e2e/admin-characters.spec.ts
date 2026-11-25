@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Request } from '@playwright/test';
 
-// T7-03 acceptance (Opus, t7-tests): web/admin.html#personajes against docs/tickets/T7-03.md; the API is played back.
+// T7-03 acceptance (Opus, t7-tests): web/admin.html#characters against docs/tickets/T7-03.md; the API is played back.
 const ADMIN = `http://127.0.0.1:${process.env.E2E_ADMIN_PORT || '5174'}`;
 const CHARACTERS = [
   { id: 'calavera', name_key: 'character.calavera.name', enabled: true, units: ['will', 'trust', 'intake', 'final'], voice_es: null, voice_en: null },
@@ -24,7 +24,7 @@ async function open(page: Page) {
   await page.route(/\/staff\/characters$/, (r) => r.fulfill({ json: CHARACTERS }));
   const patches: Request[] = [];
   await page.route(/\/characters\/(calavera|oso|pinata)$/, (r) => { patches.push(r.request()); return r.fulfill({ json: {} }); });
-  await page.goto(`${ADMIN}/admin.html#personajes`);
+  await page.goto(`${ADMIN}/admin.html#characters`);
   return { calls, patches };
 }
 
@@ -34,25 +34,25 @@ const card = (page: Page, name: string) => page.locator('#personajes').locator('
 test('the voice preview speaks the line in the browser and calls no server', async ({ page }) => {
   const { calls } = await open(page);
   const oso = card(page, 'El Oso');
-  await expect(oso.getByLabel('Frase para escuchar')).toHaveValue(/El Oso/);
-  await oso.getByLabel('Frase para escuchar').fill('No hay respuestas buenas ni malas.');
+  await expect(oso.getByLabel('Test phrase')).toHaveValue(/El Oso/);
+  await oso.getByLabel('Test phrase').fill('No hay respuestas buenas ni malas.');
   const before = calls.length;
-  await oso.getByRole('button', { name: 'Escuchar voz' }).click();
+  await oso.getByRole('button', { name: 'Play voice' }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: unknown[] }).__spoken.length)).toBe(1);
   const spoken = await page.evaluate(() => (window as unknown as { __spoken: { text: string; lang: string }[] }).__spoken[0]);
   expect(spoken.text).toBe('No hay respuestas buenas ni malas.');
   expect(spoken.lang).toBe('es-MX');
   expect(calls.slice(before).map((r) => r.url())).toEqual([]);                           // no server voice (F-003)
-  await oso.getByLabel('Idioma').selectOption('en');
-  await oso.getByRole('button', { name: 'Escuchar voz' }).click();
+  await oso.getByLabel('Voice language').selectOption('en');
+  await oso.getByRole('button', { name: 'Play voice' }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: { lang: string }[] }).__spoken[1]?.lang)).toBe('en-US');
 });
 
 test('a theme host is previewed in its own voice: Doña Tortuga lower and slower', async ({ page }) => {
   await open(page);
   const tortuga = card(page, 'Doña Tortuga');
-  await expect(tortuga.getByLabel('Frase para escuchar')).toHaveValue(/Doña Tortuga/);
-  await tortuga.getByRole('button', { name: 'Escuchar voz' }).click();
+  await expect(tortuga.getByLabel('Test phrase')).toHaveValue(/Doña Tortuga/);
+  await tortuga.getByRole('button', { name: 'Play voice' }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: unknown[] }).__spoken.length)).toBe(1);
   const spoken = await page.evaluate(() => (window as unknown as { __spoken: { lang: string; pitch: number; rate: number }[] }).__spoken[0]);
   expect(spoken.lang).toMatch(/^es-/);
@@ -62,11 +62,11 @@ test('a theme host is previewed in its own voice: Doña Tortuga lower and slower
 
 test('turning Piñata off and La Calavera cannot be turned off', async ({ page }) => {
   const { patches } = await open(page);
-  await expect(card(page, 'La Calavera').getByLabel('Activo')).toBeDisabled();
-  await expect(card(page, 'La Calavera').getByText('La Calavera no se puede desactivar.')).toBeVisible();
+  await expect(card(page, 'La Calavera').getByLabel('Active')).toBeDisabled();
+  await expect(card(page, 'La Calavera').getByText('La Calavera cannot be turned off.')).toBeVisible();
   const pinata = card(page, 'Piñata');
-  await pinata.getByLabel('Activo').uncheck();
-  await pinata.getByRole('button', { name: 'Guardar' }).click();
+  await pinata.getByLabel('Active').uncheck();
+  await pinata.getByRole('button', { name: 'Save' }).click();
   await expect.poll(() => patches.length).toBe(1);
   expect(patches[0].method()).toBe('PATCH');
   expect(patches[0].url()).toMatch(/\/characters\/pinata$/);
@@ -76,9 +76,9 @@ test('turning Piñata off and La Calavera cannot be turned off', async ({ page }
 test('assigning a unit sends the new list', async ({ page }) => {
   const { patches } = await open(page);
   const oso = card(page, 'El Oso');
-  await expect(oso.getByLabel('La directiva de salud')).toBeChecked();
-  await oso.getByLabel('El poder notarial').check();
-  await oso.getByRole('button', { name: 'Guardar' }).click();
+  await expect(oso.getByLabel('Health care directive')).toBeChecked();
+  await oso.getByLabel('Power of attorney').check();
+  await oso.getByRole('button', { name: 'Save' }).click();
   await expect.poll(() => patches.length).toBe(1);
   expect(patches[0].url()).toMatch(/\/characters\/oso$/);
   const sent = patches[0].postDataJSON();

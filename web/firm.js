@@ -1,6 +1,6 @@
 (() => {
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const DAY_LABELS = { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" };
+  const DAY_LABELS = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
   const $ = (id) => document.getElementById(id);
   let saved = null;
   let holidays = [];
@@ -19,7 +19,7 @@
 
   function holidayLabel(day) {
     const date = new Date(day + "T00:00:00");
-    return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString("es-US", { dateStyle: "long" });
+    return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString("en-US", { dateStyle: "long" });
   }
   function renderHolidays() {
     $("firmHolidayList").replaceChildren(...holidays.map((d) => Object.assign(document.createElement("li"), { textContent: holidayLabel(d) })));
@@ -32,7 +32,7 @@
         const input = Object.assign(document.createElement("input"), { type: "time", value });
         input.dataset.day = day; input.dataset.kind = kind;
         const label = document.createElement("label");
-        label.append(kind === "from" ? "Desde " : "Hasta ", input);
+        label.append(kind === "from" ? "From " : "To ", input);
         return label;
       };
       const tr = document.createElement("tr");
@@ -55,7 +55,7 @@
 
   async function load() {
     let settings;
-    try { settings = await call("/staff/firm-settings"); } catch (_) { say("No se pudieron cargar los ajustes."); return; }
+    try { settings = await call("/staff/firm-settings"); } catch (_) { say("Could not load the firm settings. Reload the page to try again."); return; }
     show(settings);
     holidays = (settings.holidays || []).slice().sort();
     renderHolidays();
@@ -64,7 +64,7 @@
     if (role !== "attorney" && role !== "admin") {
       ["firmVoice", "firmAi", "firmExt", "firmLpd", "firmRetention"].forEach((id) => { $(id).disabled = true; });
       $("firmSave").remove();
-      $("firmReadOnly").textContent = "Solo el abogado o un administrador puede cambiar estos ajustes.";
+      $("firmReadOnly").textContent = "Only the attorney or an admin can change these settings.";
       $("firmReadOnly").hidden = false;
     }
   }
@@ -80,17 +80,17 @@
     if (lessons !== saved.lessons_per_day) changes.lessons_per_day = lessons;
     const days = Number($("firmRetention").value);
     if (days !== saved.retention.unpaid_personal_data_days) changes.retention = { unpaid_personal_data_days: days };
-    if (!Object.keys(changes).length) { say("No hay cambios."); return; }
-    try { show(await call("/staff/firm-settings", "PUT", changes)); say("Ajustes guardados."); }
-    catch (_) { say("No se guardaron los ajustes. Revise los valores: lecciones por día de 1 a 4, y 30 días o más."); }
+    if (!Object.keys(changes).length) { say("Nothing changed."); return; }
+    try { show(await call("/staff/firm-settings", "PUT", changes)); say("Settings saved."); }
+    catch (_) { say("Settings not saved. Check the values: 1 to 4 lessons per day, and 30 days or more."); }
   }
 
   async function addHoliday() {
     const day = $("firmHolidayDate").value;
     if (!day) return;
     const next = [...new Set([...holidays, day])].sort();
-    try { await call("/staff/holidays", "PUT", { dates: next }); holidays = next; renderHolidays(); say("Feriado agregado."); }
-    catch (_) { say("No se pudo agregar el feriado."); }
+    try { await call("/staff/holidays", "PUT", { dates: next }); holidays = next; renderHolidays(); say("Holiday added."); }
+    catch (_) { say("Could not add the holiday."); }
   }
 
   async function saveHours() {
@@ -101,8 +101,8 @@
       hours[day] = from && to ? [[from, to]] : [];
     }
     const slots = (saved && saved.availability && saved.availability.slot_minutes) || { signing: 60, consultation: 30 };
-    try { await call("/staff/availability", "PUT", { hours, slot_minutes: slots }); say("Horario guardado."); }
-    catch (_) { say("No se pudo guardar el horario."); }
+    try { await call("/staff/availability", "PUT", { hours, slot_minutes: slots }); say("Office hours saved."); }
+    catch (_) { say("Could not save the office hours."); }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
