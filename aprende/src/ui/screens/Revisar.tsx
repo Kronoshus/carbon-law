@@ -8,6 +8,7 @@ import { documentName } from '../../core/documents';
 import './datos.css';
 import './revisar.css';
 import { host, nameKey } from '../../core/character/cast';
+import { utterance } from '../../core/character/voice';
 
 type Summary = { article: number; text: string };
 type Doc = { id: string; name: string; version: number; content: string; decision: 'ok' | 'change' | null; summary: Summary[] };
@@ -67,9 +68,7 @@ export function Revisar() {
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
     if (!synth) return;
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang.value === 'en' ? 'en-US' : 'es-US';
-    synth.speak(u);
+    synth.speak(utterance(text, host(), lang.value));
   };
 
   const decideOk = async (id: string) => {

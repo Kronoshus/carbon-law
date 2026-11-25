@@ -6,15 +6,16 @@ const CHARACTERS = [
   { id: 'calavera', name_key: 'character.calavera.name', enabled: true, units: ['will', 'trust', 'intake', 'final'], voice_es: null, voice_en: null },
   { id: 'oso', name_key: 'character.oso.name', enabled: true, units: ['ahcd', 'sensitive'], voice_es: null, voice_en: null },
   { id: 'pinata', name_key: 'character.pinata.name', enabled: true, units: ['games'], voice_es: null, voice_en: null },
+  { id: 'tortuga', name_key: 'character.tortuga.name', enabled: true, units: [], voice_es: null, voice_en: null },
 ];
 
 async function open(page: Page) {
   const user = { id: 'par', role: 'paralegal', name: 'Rosa Paralegal', email: 'p@example.com' };
   await page.addInitScript((u) => {
     localStorage.setItem('carbon_token', 'tok'); localStorage.setItem('carbon_user', JSON.stringify(u));
-    const spoken: { text: string; lang: string }[] = [];
+    const spoken: { text: string; lang: string; pitch: number; rate: number }[] = [];
     (window as unknown as { __spoken: typeof spoken }).__spoken = spoken;
-    window.speechSynthesis.speak = (utt: SpeechSynthesisUtterance) => { spoken.push({ text: utt.text, lang: utt.lang }); };
+    window.speechSynthesis.speak = (utt: SpeechSynthesisUtterance) => { spoken.push({ text: utt.text, lang: utt.lang, pitch: utt.pitch, rate: utt.rate }); };
   }, user);
   const calls: Request[] = [];
   page.on('request', (r) => { if (r.url().startsWith('https://carbon-law.onrender.com')) calls.push(r); });
@@ -45,6 +46,18 @@ test('the voice preview speaks the line in the browser and calls no server', asy
   await oso.getByLabel('Idioma').selectOption('en');
   await oso.getByRole('button', { name: 'Escuchar voz' }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: { lang: string }[] }).__spoken[1]?.lang)).toBe('en-US');
+});
+
+test('a theme host is previewed in its own voice: Doña Tortuga lower and slower', async ({ page }) => {
+  await open(page);
+  const tortuga = card(page, 'Doña Tortuga');
+  await expect(tortuga.getByLabel('Frase para escuchar')).toHaveValue(/Doña Tortuga/);
+  await tortuga.getByRole('button', { name: 'Escuchar voz' }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: unknown[] }).__spoken.length)).toBe(1);
+  const spoken = await page.evaluate(() => (window as unknown as { __spoken: { lang: string; pitch: number; rate: number }[] }).__spoken[0]);
+  expect(spoken.lang).toMatch(/^es-/);
+  expect(spoken.pitch).toBeLessThan(1);
+  expect(spoken.rate).toBeLessThan(1);
 });
 
 test('turning Piñata off and La Calavera cannot be turned off', async ({ page }) => {
