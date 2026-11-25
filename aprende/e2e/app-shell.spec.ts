@@ -28,11 +28,11 @@ test('signup in Spanish lands on the day-1 gate without tabs; the app has tabs w
   await expect(page.locator('nav.tabs a[aria-current="page"]')).toHaveCount(1);
 });
 
-test('rail replaces tabs above 64em', async ({ page }) => {
+test('top bar links replace tabs above 64em', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aprende_token', 'tok'));   // before any page: no public-page redirect
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto('/#/sin-pagina');                                              // a page that makes no API call (T8-03: Perfil reads /progress)
-  await expect(page.locator('nav.rail')).toBeVisible();
+  await expect(page.locator('header nav.topnav')).toBeVisible();
   await expect(page.locator('nav.tabs')).toBeHidden();
 });
 

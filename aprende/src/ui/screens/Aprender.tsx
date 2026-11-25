@@ -104,6 +104,6 @@ export function Aprender() {
     h('h2', { class: 'banner' }, t('map.step.review'), h('small', null, t('map.step.review.day'))),
     h('ol', { class: 'path' }, step(REVIEW)),
     h('h2', { class: 'banner' }, t('map.step.finish'), h('small', null, t('map.step.finish.day'))),
-    h('ol', { class: 'path' }, [step(FINISH[0]), signed ? h('li', { class: 'node', key: 'signing' }, h('a', { class: 'node available', href: '#/firmados' }, h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: 'pluma' })), h('span', { class: 'node-label' }, h('b', null, t('map.node.signing')), h('span', null, t('map.node.signing.day'))))) : step(FINISH[1]), final ? node(final) : null]),
+    h('ol', { class: 'path' }, [step(FINISH[0]), signed ? h('li', { class: 'node-item', key: 'signing' }, h('a', { class: 'node available', href: '#/firmados' }, h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: 'pluma' })), h('span', { class: 'node-label' }, h('b', null, t('map.node.signing')), h('span', null, t('map.node.signing.day'))))) : step(FINISH[1]), final ? node(final) : null]),
     bonus.length ? [h('h2', { class: 'banner', key: 'bonus' }, t('map.bonus'), h('small', null, t('map.bonus.sub'))), h('ol', { class: 'path', key: 'bonusp' }, bonus.map(node))] : null);
 }

@@ -52,7 +52,8 @@ export function Acuerdo() {
     URL.revokeObjectURL(url);
   };
   if (waiting || !letter) {
-    return h('section', { class: 'screen datos-page' }, h('h1', null, t('acuerdo.title')), waiting ? h('p', null, t('acuerdo.wait')) : null);
+    return h('section', { class: 'screen datos-page' }, h('h1', null, t('acuerdo.title')),
+      waiting ? [h('p', { key: 'w' }, t('acuerdo.wait')), h('a', { key: 'a', class: 'btn', href: '#/aprender' }, t('empty.today'))] : null);
   }
   const action = letter.attorney_signed_at
     ? h('div', { class: 'resumen-actions' },

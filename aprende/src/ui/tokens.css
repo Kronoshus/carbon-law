@@ -1,7 +1,8 @@
-/* Hallmark · checked: 2026-11-24 · genre: editorial (inferred) · scope: app
- * floor: fixed 26a, 34, 39a, 48, 49a, 63, 67, 7a, 44b, 44d · waived: 69 on /inicio/consentimiento (the bubble is the subtitle of the spoken question; the heading is the consent record)
- * reworded: the map and plan meta lines, middle dots to commas, and "15 min" to "unos 15 minutos" (63; listed in the PR)
- * structural: 1 printed (42, the desktop rail for four destinations)
+/* Hallmark · checked: 2026-11-25 · genre: editorial (inferred) · scope: app
+ * floor: fixed 26a, 34, 39a, 40 (night values for the default theme), 48, 49a, 63, 67, 69 (the consent heading is visually hidden), 7a, 44b, 44d, F15, F19
+ * reworded: the map and plan meta lines, middle dots to commas, and "15 min" to "unos 15 minutos" (63; listed in the PR);
+ *   the office's English document names shown in Spanish (doc.pourover and friends)
+ * structural: the desktop rail became links in the top bar (42) · open: the welcome page (APP-01)
  * built: the project · redesign: polish · v2.0.0 */
 /* Memento Mori (the Aprende y Planea app) — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
    Every text pair here was checked for WCAG 2.1 AA contrast (see docs/aprende-design.md, "Colour"). */
@@ -20,8 +21,8 @@
     /* the fiesta palette, from calavera_art.py */
     --marigold: #FF8C1A;  --gold: #FFB627;  --rosa: #FF4F9A;  --teal: #2EC4B6;  --purple: #7B2CBF;  --green: #3A9D5D;  --yellow: #FFD23F;
     /* text-safe deep shades for text on paper */
-    --marigold-deep: #C2410C;  --teal-deep: #0B7A70;  --rosa-deep: #B8205F;  --link: light-dark(#7B2CBF, #D6B4FF);
-    --danger: #9B1C31;                                  /* error text on paper */
+    --marigold-deep: #C2410C;  --teal-deep: light-dark(#0B7A70, #5EE0D3);  --rosa-deep: light-dark(#B8205F, #FF8FBF);  --link: light-dark(#7B2CBF, #D6B4FF);
+    --danger: light-dark(#9B1C31, #FF9AA8);             /* error text on paper (night: 9:1 on the night paper) */
     /* ink on the night surfaces (banners, the character label), and the paper of a document shown as a letter */
     --on-night: #FFF9F2;  --on-night-soft: #E9DDF7;  --label-scrim: rgb(28 16 48 / .78);
     --letter-paper: #FFFDF8;  --letter-ink: #1D1424;
@@ -31,7 +32,7 @@
     --highlight: var(--gold);                                    /* the chosen answer, today's step, the price card */
     --ok: var(--teal);  --ok-deep: var(--teal-deep);  --on-ok: var(--plum);
     --wrong: var(--rosa);  --wrong-deep: var(--rosa-deep);
-    --focus: var(--purple);
+    --focus: light-dark(var(--purple), #D6B4FF);
     --pair-1: var(--teal);  --pair-2: var(--rosa);  --pair-3: var(--gold);  --pair-4: var(--purple);
     --band: var(--night);  --on-band: var(--on-night);  --on-band-soft: var(--on-night-soft);   /* the map's section banners */
     --stage: var(--night);                                       /* behind a character */
@@ -41,13 +42,15 @@
     --trim-mask: radial-gradient(circle at 0.75rem 100%, transparent 0.35rem, var(--plum) 0.37rem) 0 0 / 1.5rem 100%;
     --trim-size: 0.6rem;
     /* the icon fills (Icons.tsx): the paper inside a line icon, and its one fiesta colour */
-    --icon-paper: #FFF7E6;  --icon-warm: var(--gold);  --icon-accent: var(--marigold);  --icon-cool: var(--teal);  --icon-rose: var(--rosa);
+    --icon-paper: light-dark(#FFF7E6, #3A2560);  --icon-warm: var(--gold);  --icon-accent: var(--marigold);  --icon-cool: var(--teal);  --icon-rose: var(--rosa);
     /* a theme's material: a texture under the page, and one on the map's banners */
     --paper-texture: none;  --band-texture: none;
     /* type: League Spartan for display, Work Sans for reading (the firm's own pair), self-hosted in the app */
     --font-display: "League Spartan", "Work Sans", system-ui, sans-serif;
     --font-body: "Work Sans", system-ui, sans-serif;
     --font-ui: var(--font-display);     /* buttons, banners, small display type: a theme whose display face is only for big heads changes this */
+    /* weights by role: a theme maps them onto the three its faces carry, so a screen never mixes four or five */
+    --w-regular: 400;  --w-medium: 500;  --w-semibold: 600;  --w-bold: 700;  --w-heavy: 700;
     --step--1: 0.875rem;  --step-0: 1.0625rem;  --step-1: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
     --step-2: clamp(1.5rem, 1.25rem + 1vw, 2rem);  --step-3: clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem);
     /* space, on a 4px rhythm expressed in rem so it grows with the user's text size */
@@ -58,6 +61,7 @@
     --ledge-pressed: 0 1px 0 var(--outline);
     --radius-control: var(--radius);
     --tap: 3rem;                        /* 48px minimum target */
+    --measure: 40rem;                   /* one column width for every signed-in screen, so the title does not jump between tabs */
   }
 }
 
@@ -66,9 +70,10 @@
   html, body { overflow-x: clip; }
   img, svg, canvas, video { max-inline-size: 100%; }
   input, select, textarea { max-inline-size: 100%; }
-  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); line-height: 1.5; color: var(--text);
+  body { margin: 0; overflow-wrap: break-word; font-family: var(--font-body); font-size: var(--step-0); font-weight: var(--w-regular); line-height: 1.5; color: var(--text);
          background: var(--paper-texture), var(--paper); }
-  h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: var(--w-bold); line-height: 1.15; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
+  b, strong { font-weight: var(--w-bold); }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--link); }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
@@ -79,7 +84,7 @@
   /* buttons: the accent primary (marigold with plum text, 6.9:1, in Día de Muertos), paper secondary */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-block-size: var(--tap);
          padding: var(--s3) var(--s4); border: var(--stroke) solid var(--outline); border-radius: var(--radius-control);
-         font: 700 var(--step-0)/1.2 var(--font-ui); letter-spacing: 0.02em; color: var(--accent-ink);
+         font: var(--w-bold) var(--step-0)/1.2 var(--font-ui); letter-spacing: 0.02em; color: var(--accent-ink);
          background: var(--accent); box-shadow: var(--ledge); cursor: pointer; inline-size: 100%; max-inline-size: 100%; text-decoration: none;
          flex-wrap: wrap; text-align: center;
          transition: translate .08s, box-shadow .08s; }
@@ -90,7 +95,7 @@
 
   .card { background: var(--card); border: var(--stroke) solid var(--outline); border-radius: var(--radius-lg); padding: var(--s4); }
   .chip { display: inline-flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s3); border-radius: var(--pill);
-          border: var(--stroke) solid var(--outline); background: var(--card); font: 700 var(--step--1)/1.2 var(--font-body); }
+          border: var(--stroke) solid var(--outline); background: var(--card); font: var(--w-bold) var(--step--1)/1.2 var(--font-body); }
 
   /* speech bubble: what the character says, always on screen (subtitles are never optional) */
   .bubble { position: relative; background: var(--card); color: var(--text); border: var(--stroke) solid var(--outline);
@@ -106,10 +111,19 @@
   /* answer options: whole-row targets, state shown by icon and text as well as colour */
   .option { display: flex; align-items: center; gap: var(--s3); min-block-size: var(--tap); padding: var(--s3) var(--s4);
             border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); box-shadow: var(--ledge);
-            font-weight: 600; }
-  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; accent-color: var(--text); }
+            font-weight: var(--w-semibold); }
+  .option > input { inline-size: 1.4rem; block-size: 1.4rem; flex: none; margin: 0; }
+  /* checkboxes and radios in the theme's palette: the browser's own are grey on a dark theme */
+  input:is([type="checkbox"], [type="radio"]) { appearance: none; display: inline-grid; place-content: center; inline-size: 1.4rem; block-size: 1.4rem;
+    flex: none; margin: 0; border: var(--stroke) solid var(--outline); border-radius: 0.3rem; background: var(--card); cursor: pointer; }
+  input[type="radio"] { border-radius: 50%; }
+  input:is([type="checkbox"], [type="radio"]):checked { background: var(--accent); }
+  input[type="checkbox"]:checked::before { content: ""; inline-size: 0.85rem; block-size: 0.85rem; background: var(--accent-ink);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%); }
+  input[type="radio"]:checked::before { content: ""; inline-size: 0.6rem; block-size: 0.6rem; border-radius: 50%; background: var(--accent-ink); }
+  input:is([type="checkbox"], [type="radio"]):disabled { background: var(--paper-2); border-color: var(--text-soft); cursor: not-allowed; }
   .option .key { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; flex: none; border-radius: 0.5rem;
-                 border: var(--stroke) solid var(--outline); font: 700 var(--step--1) var(--font-ui); }
+                 border: var(--stroke) solid var(--outline); font: var(--w-bold) var(--step--1) var(--font-ui); }
   .option.correct { background: color-mix(in oklab, var(--ok) 35%, var(--card)); }
   .option.correct .key { background: var(--ok); color: var(--on-ok); }
 

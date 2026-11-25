@@ -4,7 +4,6 @@ import '@fontsource/work-sans/latin-400.css';
 import '@fontsource/work-sans/latin-600.css';
 import '@fontsource/work-sans/latin-700.css';
 import '@fontsource/league-spartan/latin-700.css';
-import '@fontsource/league-spartan/latin-800.css';
 import '@fontsource/young-serif/latin-400.css';
 import '@fontsource/instrument-sans/latin-400.css';
 import '@fontsource/instrument-sans/latin-600.css';

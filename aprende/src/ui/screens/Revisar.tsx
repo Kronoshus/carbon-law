@@ -4,6 +4,7 @@ import { t, lang } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
 import { navigate } from '../../core/router';
+import { documentName } from '../../core/documents';
 import './datos.css';
 import './revisar.css';
 
@@ -17,8 +18,8 @@ type CardProps = { d: Doc; editing: string | null; setEditing: (id: string) => v
   sendChange: (id: string) => Promise<void> };
 
 function DocCard({ d, editing, setEditing, changeType, setChangeType, note, setNote, sending, speak, decideOk, sendChange }: CardProps) {
-  return h('section', { key: d.id, class: 'card', 'aria-label': d.name },
-    h('h2', null, d.name),
+  return h('section', { key: d.id, class: 'card', 'aria-label': documentName(d.name) },
+    h('h2', null, documentName(d.name)),
     h('ol', { class: 'parts' }, d.summary.map((s: Summary) => h('li', { key: s.article }, h('strong', null, t('revisar.part', { n: s.article })), ' ', s.text))),
     h('button', { class: 'btn secondary', type: 'button', onClick: () => speak(d.summary.map((s: Summary) => s.text).join(' ')) }, t('revisar.listen')),
     h('details', null,
@@ -88,7 +89,8 @@ export function Revisar() {
   };
 
   if (loading) return h('p', { role: 'status' }, t('leccion.loading'));
-  if (wait) return h('section', { class: 'screen' }, h('h1', null, t('revisar.title')), h('p', null, t('revisar.wait')));
+  if (wait) return h('section', { class: 'screen' }, h('h1', null, t('revisar.title')), h('p', null, t('revisar.wait')),
+    h('a', { class: 'btn', href: '#/aprender' }, t('empty.today')));
 
   const allOk = docs.length > 0 && docs.every((d) => d.decision === 'ok');
 

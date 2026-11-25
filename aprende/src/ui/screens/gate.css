@@ -1,15 +1,15 @@
 /* Day-1 gate screens: full screen, the character above, one primary action */
 .gate { background: var(--paper-texture), var(--paper); padding-block: var(--s2) var(--s6); }
-.gate-body { padding: var(--s3) var(--s4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); align-content: start; max-inline-size: min(36rem, 100%); margin-inline: auto; }
+.gate-body { padding: var(--s3) var(--s4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); align-content: start; max-inline-size: min(var(--measure), 100%); margin-inline: auto; }
 .gate-body h1, .gate-title { font-size: var(--step-2); }
-.gate-title { inline-size: min(100% - 2 * var(--s4), 36rem); margin: var(--s3) auto; }
+.gate-title { inline-size: min(100% - 2 * var(--s4), var(--measure) - 2 * var(--s4)); margin: var(--s3) auto; }
 .gate-body > .btn { inline-size: 100%; }
 .gate-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); gap: var(--s2); }
 .gate-form { display: grid; gap: var(--s3); }
-.gate-form label { display: grid; gap: var(--s1); font-weight: 600; }
+.gate-form label { display: grid; gap: var(--s1); font-weight: var(--w-semibold); }
 .gate-form input { min-block-size: var(--tap); padding-inline: var(--s3); border: var(--stroke) solid var(--outline);
                    border-radius: var(--radius); background: var(--card); font: inherit; color: var(--text); }
 .name-row { display: flex; align-items: end; gap: var(--s2); }
 .name-row label { flex: 1; min-inline-size: 0; }
 .name-row input { inline-size: 100%; }
-.gate-error { color: var(--danger); font-weight: 600; }
+.gate-error { color: var(--danger); font-weight: var(--w-semibold); }

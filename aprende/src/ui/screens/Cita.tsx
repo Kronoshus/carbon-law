@@ -54,7 +54,8 @@ export function Cita() {
   };
 
   const head = [h('h1', { key: 'h' }, t('cita.title')), h('p', { key: 'k', class: 'kind' }, t(`cita.kind.${kind}` as I18nKey))];
-  if (locked && !booking) return h('section', { class: 'screen datos-page' }, head, h('p', null, t(`cita.locked.${kind}` as I18nKey)));
+  if (locked && !booking) return h('section', { class: 'screen datos-page' }, head, h('p', null, t(`cita.locked.${kind}` as I18nKey)),
+    kind === 'signing' ? h('a', { class: 'btn', href: '#/revisar' }, t('revisar.title')) : h('a', { class: 'btn', href: '#/aprender' }, t('empty.today')));
   const late = booking && new Date(booking.start).getTime() - Date.now() < DAY;
   const errors = note ? h('p', { class: 'gate-error', role: 'alert' }, t(note === 'taken' ? 'cita.taken' : 'datos.error')) : null;
   if (booking && !changing) {
