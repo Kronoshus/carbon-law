@@ -2,13 +2,14 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { CharacterEngine } from '../core/character/engine';
 import { backdropUrl } from '../core/character/backdrop';
+import { cast, type CharacterId } from '../core/character/cast';
 import type { CharacterState, Costume } from '../core/character/states';
 import { t } from '../core/i18n';
 import type { I18nKey } from '../core/i18n-keys';
 import './character-stage.css';
 
 export interface CharacterStageProps {
-  character: 'calavera' | 'pinata' | 'oso';
+  character: CharacterId;
   state?: CharacterState;
   costume?: Costume | null;
   onEngine?: (engine: CharacterEngine) => void;
@@ -18,7 +19,8 @@ const BASE = import.meta.env.BASE_URL;
 
 /** A character on its night backdrop (the GLB carries the backdrop). Without WebGL: the still image on the JPEG backdrop.
  *  The label "AI program, not the attorney" is always on the stage. */
-export function CharacterStage({ character, state = 'idle', costume = null, onEngine }: CharacterStageProps) {
+export function CharacterStage({ character: written, state = 'idle', costume = null, onEngine }: CharacterStageProps) {
+  const character = cast(written);
   const [fallback, setFallback] = useState(false);
   const [ready, setReady] = useState(false);          // the 3D character is drawing; until then the still image shows
   const canvasRef = useRef<HTMLCanvasElement>(null);

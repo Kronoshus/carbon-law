@@ -1,11 +1,12 @@
 import { t } from '../../core/i18n';
+import { host, nameKey } from '../../core/character/cast';
 
 export function Bienvenida() {
   return (
     <main class="screen bienvenida">
       <h1>{t('bienvenida.title')}</h1>
-      <section class="host" aria-label={t('bienvenida.host')}>
-        <img src={`${import.meta.env.BASE_URL}img/calavera-face.png`} alt="" width="72" height="72" />
+      <section class="host" aria-label={t('bienvenida.host', { name: t(nameKey(host())) })}>
+        <img src={`${import.meta.env.BASE_URL}img/${host()}-face.png`} alt="" width="72" height="72" />
         <p class="bubble">{t('bienvenida.what.body')}</p>
       </section>
       <div class="actions">

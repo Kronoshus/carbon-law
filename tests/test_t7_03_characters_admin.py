@@ -175,7 +175,9 @@ def test_persona_entries_are_listed_and_need_the_attorney():
     assert r.status_code == 200, r.text
     rows = {e["entry_id"]: e for e in r.json()["entries"]}
     assert set(rows) == {"persona:shared", "persona:modes.learn", "persona:modes.intake",
-                         "persona:characters.calavera", "persona:characters.oso", "persona:characters.pinata"}
+                         "persona:characters.calavera", "persona:characters.oso", "persona:characters.pinata",
+                         "persona:characters.girasol", "persona:characters.colibri", "persona:characters.velita",
+                         "persona:characters.tortuga"}
     assert all(e["legal"] is True and e["live_version"] == 0 for e in rows.values())
     d = c.get("/staff/content/persona:characters.oso", headers=login(PARA)).json()
     assert d["live"]["body"] == {"name": SEED["characters"]["oso"]["name"], "persona": SEED["characters"]["oso"]["persona"]}
