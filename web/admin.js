@@ -7,8 +7,13 @@ function localDateTime(value) { if (!value) return ""; const date=new Date(value
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
   if (!el || !report) return;
-  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${esc(k)}: ${v}</span>`).join(" | ");
-  el.innerHTML = `<div class="card"><strong>Total:</strong> ${report.total||0} &nbsp; <strong>High Risk:</strong> ${(report.high_risk||[]).length} &nbsp; <strong>Urgent:</strong> ${(report.urgent||[]).length} &nbsp; <strong>Attorney Review:</strong> ${(report.attorney_review_queue||[]).length} &nbsp; <strong>Overdue:</strong> ${report.overdue_count||0} &nbsp; <strong>Open tasks:</strong> ${report.open_tasks||0} &nbsp; <strong>Open change requests:</strong> ${report.open_change_requests||0} &nbsp; <strong>Pending appointments:</strong> ${report.appointments_pending||0}</div><p>${stages}</p>`;
+  const figures=[["Total",report.total||0],["High risk",(report.high_risk||[]).length],["Urgent",(report.urgent||[]).length],["Attorney review",(report.attorney_review_queue||[]).length],["Overdue",report.overdue_count||0],["Open tasks",report.open_tasks||0],["Open change requests",report.open_change_requests||0],["Pending appointments",report.appointments_pending||0]];
+  el.innerHTML = reportCard(figures, report.by_stage);
+}
+
+function reportCard(figures, byStage) {
+  const stages = Object.entries(byStage||{});
+  return `<div class="card"><dl class="report-figures">${figures.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>${stages.length?`<table class="report-stages"><caption>Matters by stage</caption><tbody>${stages.map(([stage,count])=>`<tr><td>${esc(stage)}</td><td>${esc(count)}</td></tr>`).join("")}</tbody></table>`:""}</div>`;
 }
 
 const ADMIN_API = "https://carbon-law.onrender.com";
@@ -18,8 +23,8 @@ async function request(path, method="GET", body=null) {
   if (body) opts.body = JSON.stringify(body);
   let res;
   try { res = await fetch(ADMIN_API + path, opts); }
-  catch (_) { throw new Error("Could not reach the Carbon backend. Check your connection and try again."); }
-  if (!res.ok) { const data=await res.json().catch(()=>({})); if(res.status===401)throw new Error("Your session expired. Sign in again.");if(res.status===403)throw new Error("Your account does not have permission to do this.");throw new Error(data.detail||`Request failed (${res.status}).`); }
+  catch (_) { throw serverError("Could not reach the Carbon backend. Check your connection and try again."); }
+  if (!res.ok) { const data=await res.json().catch(()=>({})); if(res.status===401)throw new Error("Your session expired. Sign in again.");if(res.status===403)throw new Error("Your account does not have permission to do this.");if(res.status>=500)throw serverError("The server had a problem.");throw new Error(typeof data.detail==="string"?data.detail:`Request failed (${res.status}).`); }
   return res.json();
 }
 
@@ -29,11 +34,12 @@ async function openWorkflowReview(workflow) {
   q("reviewTitle").textContent=`Review drafts · ${workflow.client_name}`;
   q("reviewStatus").textContent=workflow.staff_review_note ? `Previous reviewer note: ${workflow.staff_review_note}` : "Illustrative working drafts; not signing-ready.";
   const drafts=workflow.drafts||workflow.attorney_demo_drafts||{};
-  q("reviewDocuments").innerHTML=Object.entries(drafts).map(([name,d])=>`<article class="review-document"><h3>${esc(name)} · v${esc(d.version)}</h3><pre class="document-content">${esc(d.content)}</pre></article>`).join("");
+  q("reviewDocuments").replaceChildren(...Object.entries(drafts).map(([name,d])=>{const article=document.createElement("article"),heading=document.createElement("h3"),body=document.createElement("div");article.className="review-document";heading.textContent=`${name} · v${d.version}`;renderDraftContent(body,d.content);article.append(heading,body);return article;}));
   dialog.dataset.workflow=workflow.id;
   q("reviewNote").value="";
-  q("approveDrafts").disabled=Object.values(drafts).some(d=>String(d.content||"").includes("[ATTORNEY TO COMPLETE"));
-  q("reviewStatus").textContent += q("approveDrafts").disabled ? " Complete every [ATTORNEY TO COMPLETE…] placeholder before approval." : "";
+  const open=q("reviewDocuments").querySelectorAll("mark.complete").length;
+  q("approveDrafts").disabled=open>0;
+  q("reviewStatus").textContent += open ? ` Complete the ${open} highlighted [ATTORNEY TO COMPLETE] item${open===1?"":"s"} before approval.` : "";
   dialog.showModal();
 }
 async function submitWorkflowReview(decision) {
@@ -51,7 +57,8 @@ async function loadWorkflows() {
   try {
   const workflows = await request("/my-workflow");
   if (!Array.isArray(workflows)) throw new Error("Staff workflow data is unavailable for this account.");
-  rows.innerHTML = workflows.map(w => {
+  rows.innerHTML = workflows.length ? "" : emptyRow(4,"No intake requests waiting.");
+  rows.innerHTML += workflows.map(w => {
     const assignedAttorney = adminMatters.find(m => m.id === w.matter_id)?.attorney_reviewer;
     const canReview = staffUser?.role === "admin" || (staffUser?.role === "attorney" && assignedAttorney === staffUser.id);
     const hasDraft = Object.keys(w.drafts||{}).length > 0 || Object.keys(w.attorney_demo_drafts||{}).length > 0;
@@ -75,7 +82,7 @@ async function loadWorkflows() {
     try { button.disabled=true; await request(`/workflows/${button.dataset.workflow}/staff-review`, "PATCH", {decision}); showMessage("workflowMessage","Intake review updated."); await Promise.all([loadWorkflows(),loadMatters()]); }
     catch(error) { showError(error,"workflowMessage"); button.disabled=false; }
   }));
-  } catch(error) { showError(error,"workflowMessage"); }
+  } catch(error) { rows.innerHTML=emptyRow(4,"Could not load intake requests."); showError(error,"workflowMessage"); }
 }
 
 let staffUser=null;
@@ -85,7 +92,7 @@ async function load() {
   q("adminMain").hidden=false;
   q("workflowRows").innerHTML='<tr><td colspan="4">Loading…</td></tr>';
   const box=q("userBox"), name=document.createElement("p"),role=document.createElement("p"),link=document.createElement("a");
-  name.textContent=staffUser.name; role.textContent=staffUser.role; link.href="#";link.textContent="Logout";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
+  name.textContent=staffUser.name; role.textContent=staffUser.role; link.href="#";link.textContent="Sign out";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
   try { [stageOptions,staffList]=await Promise.all([request("/stages"),request("/staff")]); } catch(error) { showError(error,"mattersMessage"); }
   setupStaffSelectors();
   await loadSection(loadMatters);
@@ -105,10 +112,10 @@ async function loadMatters() {
     setupMatterSelectors();
     const rows = document.getElementById("adminMatterRows");
     if (rows) {
-      rows.innerHTML = "";
+      rows.innerHTML = matters.length ? "" : emptyRow(9,"No matters yet. Use New matter to open one.");
       matters.forEach(m => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><button class="btn secondary sm" data-history="${esc(m.id)}">${esc(m.id)}</button></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td><select class="attorneySelect" data-id="${esc(m.id)}"><option value="">Unassigned</option>${staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}" ${m.attorney_reviewer===s.id?"selected":""}>${esc(s.name)}</option>`).join("")}</select></td><td>${esc(m.risk_level)}</td><td>${esc(m.priority)}</td><td>${esc(m.due_date?new Date(`${m.due_date}T00:00:00`).toLocaleDateString():"")}</td>
+        tr.innerHTML = `<td><button class="btn secondary sm" data-history="${esc(m.id)}">${esc(m.id)}</button></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td><select class="attorneySelect" data-id="${esc(m.id)}"><option value="">Unassigned</option>${staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}" ${m.attorney_reviewer===s.id?"selected":""}>${esc(s.name)}</option>`).join("")}</select></td><td>${esc(m.risk_level)}</td><td>${esc(m.priority)}</td><td>${esc(formatDate(m.due_date))}</td>
         <td><select data-id="${esc(m.id)}" class="stageSelect">
         ${[...new Set([m.stage,...stageOptions])].map(s=>`<option value="${esc(s)}" ${s===m.stage?"selected":""} ${stageOptions.includes(s)?"":"disabled"}>${esc(s)}</option>`).join("")}
         </select></td>`;
@@ -132,7 +139,7 @@ async function loadChangeRequests() {
     const items = await request("/change-requests");
     const rows = document.getElementById("crRows");
     if (rows) {
-      rows.innerHTML = "";
+      rows.innerHTML = items.length ? "" : emptyRow(6,"No open change requests.");
       items.forEach(c => {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${esc(c.id.slice(0,8))}</td><td>${esc(c.matter_id)}</td><td>${esc(c.change_type)}</td><td>${esc(c.requested_by)}</td><td><select data-cr-status="${esc(c.id)}">${["Open","In Review","Resolved","Rejected"].map(status=>`<option ${c.status===status?"selected":""}>${status}</option>`).join("")}</select></td><td>${esc(c.impact||"")}<br><input data-cr-resolution="${esc(c.id)}" placeholder="Resolution / client-facing update" value="${esc(c.resolution||"")}"><button class="btn secondary sm" data-save-cr="${esc(c.id)}">Save</button></td>`;
@@ -147,7 +154,7 @@ async function loadAppointments() {
     const items = await request("/appointments");
     const rows = document.getElementById("apptRows");
     if (rows) {
-      rows.innerHTML = "";
+      rows.innerHTML = items.length ? "" : emptyRow(6,"No appointments.");
       items.forEach(a => {
         const tr = document.createElement("tr");
         const dt = a.scheduled_at ? new Date(a.scheduled_at) : null; const local = dt && !Number.isNaN(dt.getTime()) ? new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16) : "";
@@ -163,7 +170,7 @@ async function loadDocuments() {
     const items = await request("/documents");
     const rows = document.getElementById("docRows");
     if (rows) {
-      rows.innerHTML = "";
+      rows.innerHTML = items.length ? "" : emptyRow(4,"No documents yet.");
       const latestItems=items.filter(d=>!items.some(other=>other.matter_id===d.matter_id&&other.name===d.name&&other.version>d.version));
       latestItems.forEach(d => {
         const tr = document.createElement("tr");
@@ -226,7 +233,21 @@ let adminMatters = [], stageOptions=[], staffList=[];
 const q = id => document.getElementById(id);
 const query = values => new URLSearchParams(values).toString();
 function showMessage(id, text) { const node=q(id); if(node) node.textContent=text; }
-function showError(error, target="adminStatus") { const node=q(target);if(node){node.textContent=error?.message||String(error);node.classList.add("error-message");} }
+function serverError(message) { const error=new Error(message); error.server=true; return error; }
+// A server or network failure gets one banner with a retry; each section only says that it did not load.
+function showError(error, target="adminStatus") {
+  const node=q(target); if(!node) return;
+  if(error?.server) { showServerBanner(error.message); if(target!=="adminStatus") node.textContent="This section did not load."; }
+  else node.textContent=error?.message||String(error);
+  node.classList.add("error-message");
+}
+function showServerBanner(message) {
+  const status=q("adminStatus"); if(!status||status.querySelector("button")) return;
+  const retry=document.createElement("button"); retry.type="button"; retry.className="btn secondary sm"; retry.textContent="Try again"; retry.onclick=()=>location.reload();
+  status.className="notice"; status.replaceChildren(`${message} Some sections did not load. `, retry);
+}
+function emptyRow(columns, text) { return `<tr class="empty-row"><td colspan="${columns}">${esc(text)}</td></tr>`; }
+function formatDate(value) { if(!value) return ""; const date=new Date(`${String(value).slice(0,10)}T00:00:00`); return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{dateStyle:"long"}); }
 function setupStaffSelectors() {
   q("newOwner").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>["paralegal","attorney","admin"].includes(s.role)).map(s=>`<option value="${esc(s.name)}">${esc(s.name)} · ${esc(s.role)}</option>`).join("");
   q("newAttorney").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
@@ -240,12 +261,12 @@ function setupMatterSelectors() {
 async function loadTasks() {
   try {
     const id=q("taskFilter")?.value; const items=await request("/tasks"+(id?`?matter_id=${encodeURIComponent(id)}`:""));
-    q("taskRows").innerHTML=items.map(t=>`<tr><td>${esc(t.matter_id)}</td><td>${esc(t.title)}</td><td><input data-field="owner" value="${esc(t.owner)}" aria-label="Task owner"></td><td><input data-field="due_date" type="date" value="${esc(t.due_date||"")}" aria-label="Task due date"></td><td><select data-field="status"><option ${t.status==="Open"?"selected":""}>Open</option><option ${t.status==="In Progress"?"selected":""}>In Progress</option><option ${t.status==="Done"?"selected":""}>Done</option><option ${t.status==="Blocked"?"selected":""}>Blocked</option></select></td><td><input data-field="blocker" value="${esc(t.blocker||"None")}" aria-label="Blocker"></td><td><button class="btn secondary sm" data-save-task="${esc(t.id)}">Save</button></td></tr>`).join("");
+    q("taskRows").innerHTML=items.length?"":emptyRow(7,"No open tasks.");q("taskRows").innerHTML+=items.map(t=>`<tr><td>${esc(t.matter_id)}</td><td>${esc(t.title)}</td><td><input data-field="owner" value="${esc(t.owner)}" aria-label="Task owner"></td><td><input data-field="due_date" type="date" value="${esc(t.due_date||"")}" aria-label="Task due date"></td><td><select data-field="status"><option ${t.status==="Open"?"selected":""}>Open</option><option ${t.status==="In Progress"?"selected":""}>In Progress</option><option ${t.status==="Done"?"selected":""}>Done</option><option ${t.status==="Blocked"?"selected":""}>Blocked</option></select></td><td><input data-field="blocker" value="${esc(t.blocker||"None")}" aria-label="Blocker"></td><td><button class="btn secondary sm" data-save-task="${esc(t.id)}">Save</button></td></tr>`).join("");
     q("taskRows").querySelectorAll("[data-save-task]").forEach(button=>button.onclick=async()=>{const row=button.closest("tr"),payload={};row.querySelectorAll("[data-field]").forEach(el=>payload[el.dataset.field]=el.value);button.disabled=true;try{await request(`/tasks/${button.dataset.saveTask}`,"PATCH",payload);showMessage("taskMessage","Task updated.");await loadTasks();await loadAudit()}catch(e){showError(e,"taskMessage")}finally{button.disabled=false}});
   } catch(e){showError(e,"taskMessage")}
 }
 async function loadContacts() {
-  try { const items=await request("/contacts"); q("contactRows").innerHTML=items.map(c=>`<tr><td>${esc(formatAppointmentTime(c.created_at))}</td><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td>${esc(c.phone)}</td><td>${esc(c.service||"")}<br>${esc(c.message||"")}</td><td><select data-contact-status="${esc(c.id)}">${["New","Contacted","Consultation Scheduled","Converted","Closed"].map(s=>`<option ${c.status===s?"selected":""}>${s}</option>`).join("")}</select></td><td><input data-contact-note="${esc(c.id)}" value="${esc(c.note||"")}" maxlength="500"></td><td><button class="btn secondary sm" data-save-contact="${esc(c.id)}">Save</button></td></tr>`).join("");
+  try { const items=await request("/contacts"); q("contactRows").innerHTML=(items.length?"":emptyRow(8,"No contact requests."))+items.map(c=>`<tr><td>${esc(formatAppointmentTime(c.created_at))}</td><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td>${esc(c.phone)}</td><td>${esc(c.service||"")}<br>${esc(c.message||"")}</td><td><select data-contact-status="${esc(c.id)}">${["New","Contacted","Consultation Scheduled","Converted","Closed"].map(s=>`<option ${c.status===s?"selected":""}>${s}</option>`).join("")}</select></td><td><input data-contact-note="${esc(c.id)}" value="${esc(c.note||"")}" maxlength="500"></td><td><button class="btn secondary sm" data-save-contact="${esc(c.id)}">Save</button></td></tr>`).join("");
     q("contactRows").querySelectorAll("[data-save-contact]").forEach(button=>button.onclick=async()=>{const id=button.dataset.saveContact;button.disabled=true;try{await request(`/contacts/${id}`,"PATCH",{status:q("contactRows").querySelector(`[data-contact-status="${CSS.escape(id)}"]`).value,note:q("contactRows").querySelector(`[data-contact-note="${CSS.escape(id)}"]`).value});showMessage("contactMessage","Contact updated.");await loadContacts();await loadAudit()}catch(e){showError(e,"contactMessage")}finally{button.disabled=false}});
   } catch(e){showError(e,"contactMessage")}
 }
@@ -256,11 +277,11 @@ async function loadCommunications() {
 }
 async function loadOperationsReports() {
   const [capacityResult,bottleneckResult]=await Promise.allSettled([request("/reports/capacity"),request("/reports/bottlenecks")]);
-  if(capacityResult.status==="fulfilled") { const capacity=capacityResult.value; q("capacityReport").innerHTML=`<p>Counts by matter owner, not hours or availability.</p><table><thead><tr><th>Owner</th><th>Matters</th><th>High risk</th><th>Urgent</th><th>Overdue</th></tr></thead><tbody>${Object.entries(capacity.by_owner||{}).map(([owner,v])=>`<tr><td>${esc(owner)}</td><td>${v.matters}</td><td>${v.high_risk}</td><td>${v.urgent}</td><td>${v.overdue}</td></tr>`).join("")}</tbody></table>`; } else showError(capacityResult.reason,"capacityMessage");
-  if(bottleneckResult.status==="fulfilled") { const bottlenecks=bottleneckResult.value; q("bottleneckReport").innerHTML=`<p>Waiting on client: <strong>${bottlenecks.waiting_on_client}</strong> · Blocked matters: <strong>${bottlenecks.blocked_matters}</strong> · Open change requests: <strong>${bottlenecks.open_change_requests}</strong></p><ul>${(bottlenecks.top_stages||[]).map(([stage,count])=>`<li>${esc(stage)}: ${count}</li>`).join("")}</ul>`; } else showError(bottleneckResult.reason,"bottleneckMessage");
+  if(capacityResult.status==="fulfilled") { const capacity=capacityResult.value; q("capacityReport").innerHTML=`<p>Counts by matter owner, not hours or availability.</p><table><thead><tr><th>Owner</th><th>Matters</th><th>High risk</th><th>Urgent</th><th>Overdue</th></tr></thead><tbody>${Object.keys(capacity.by_owner||{}).length?"":emptyRow(5,"No matters assigned.")}${Object.entries(capacity.by_owner||{}).map(([owner,v])=>`<tr><td>${esc(owner)}</td><td>${v.matters}</td><td>${v.high_risk}</td><td>${v.urgent}</td><td>${v.overdue}</td></tr>`).join("")}</tbody></table>`; } else showError(capacityResult.reason,"capacityMessage");
+  if(bottleneckResult.status==="fulfilled") { const bottlenecks=bottleneckResult.value; const top=bottlenecks.top_stages||[]; q("bottleneckReport").innerHTML=`<dl class="report-figures"><div><dt>Waiting on client</dt><dd>${esc(bottlenecks.waiting_on_client)}</dd></div><div><dt>Blocked matters</dt><dd>${esc(bottlenecks.blocked_matters)}</dd></div><div><dt>Open change requests</dt><dd>${esc(bottlenecks.open_change_requests)}</dd></div></dl>${top.length?`<table class="report-stages"><caption>Busiest stages</caption><tbody>${top.map(([stage,count])=>`<tr><td>${esc(stage)}</td><td>${esc(count)}</td></tr>`).join("")}</tbody></table>`:""}`; } else showError(bottleneckResult.reason,"bottleneckMessage");
 }
 async function loadAudit() {
-  try { const entity=q("auditEntity")?.value.trim(); const items=await request(`/audit?limit=100${entity?`&entity=${encodeURIComponent(entity)}`:""}`); q("auditRows").innerHTML=items.slice().reverse().map(a=>`<tr><td>${esc(formatAppointmentTime(a.time))}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.detail)}</td></tr>`).join(""); }
+  try { const entity=q("auditEntity")?.value.trim(); const items=await request(`/audit?limit=100${entity?`&entity=${encodeURIComponent(entity)}`:""}`); q("auditRows").innerHTML=(items.length?"":emptyRow(5,"No audit activity."))+items.slice().reverse().map(a=>`<tr><td>${esc(formatAppointmentTime(a.time))}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.detail)}</td></tr>`).join(""); }
   catch(e){showError(e,"auditMessage")}
 }
 async function loadPracticeFiles(kind) {

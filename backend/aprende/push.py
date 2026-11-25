@@ -53,7 +53,7 @@ def _deliver(sub, data):
             subscription_info=info,
             data=data,
             vapid_private_key=private_key,
-            vapid_claims={"sub": "mailto:info@carbonlaw.com"},
+            vapid_claims={"sub": "mailto:kevin@carbonlg.com"},
         )
         return 201
     except WebPushException as exc:

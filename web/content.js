@@ -17,26 +17,57 @@
   let currentDetail = null;
 
   function setStatus(msg){ const el=document.getElementById("contentStatus"); if(el) el.textContent = msg; }
+  const LESSONS = { will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud", poa: "El poder notarial",
+    final: "Cuide sus documentos", bonus: "Lecciones extra", games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos" };
+  // the words staff read beside each field; the code name stays visible and is what the form saves under
+  const FIELD_WORDS = { prompt: "Pregunta", options: "Opción", explain: "Explicación", statement: "Afirmación", text: "Texto",
+    texto: "Texto", answer: "Respuesta", name: "Nombre", persona: "Instrucciones del personaje", pairs: "Pareja" };
+  function fieldWords(label) {
+    const m = label.match(/^(\w+)(?: (\d+)([ab])?)? ?(?:\((es|en)\))?$/);
+    if (!m || !FIELD_WORDS[m[1]]) return label;
+    return [FIELD_WORDS[m[1]], (m[2] || "") + (m[3] || ""), m[4] ? m[4].toUpperCase() : ""].filter(Boolean).join(" ");
+  }
 
   async function loadEntries() {
     const kind = document.getElementById("contentKind").value;
     currentKind = kind;
-    const data = await api(`/staff/content?kind=${kind}`);
     const box = document.getElementById("contentEntries");
     box.replaceChildren();
-    for (const e of data.entries) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn secondary sm";
-      btn.textContent = e.entry_id;
-      btn.addEventListener("click", () => openEntry(e.entry_id));
-      box.appendChild(btn);
+    let data;
+    try { data = await api(`/staff/content?kind=${kind}`); }
+    catch (e) { setStatus("No se pudo cargar el contenido. Intente de nuevo más tarde."); return; }
+    const entries = data.entries || [];
+    setStatus(entries.length ? "" : "No hay contenido de este tipo.");
+    const groups = new Map();
+    for (const e of entries) {
+      const lesson = e.lesson_id || e.entry_id.split(".")[0];
+      if (!groups.has(lesson)) groups.set(lesson, []);
+      groups.get(lesson).push(e);
+    }
+    for (const [lesson, list] of groups) {
+      const group = document.createElement("section");
+      group.className = "content-group";
+      const h = document.createElement("h3");
+      h.textContent = LESSONS[lesson] ? `${LESSONS[lesson]} (${lesson})` : lesson;
+      const row = document.createElement("div");
+      for (const e of list) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn secondary sm";
+        btn.textContent = e.entry_id + (e.pending ? " · pendiente" : "");
+        btn.addEventListener("click", () => openEntry(e.entry_id));
+        row.appendChild(btn);
+      }
+      group.append(h, row);
+      box.appendChild(group);
     }
   }
 
   async function openEntry(id) {
     currentEntry = id;
-    const d = await api(`/staff/content/${id}`);
+    let d;
+    try { d = await api(`/staff/content/${id}`); }
+    catch (e) { handleErr(e); return; }
     currentDetail = d;
     renderDetail(d);
   }
@@ -148,12 +179,13 @@
       }
       // answer/source not editable? spec says body can include answer/source; but UI only fields. Hidden keep.
     }
-    box.appendChild(form);
-
     if (hasErrors) {
+      // above the fields, so the reason the buttons are off is the first thing read
+      const errorsBox = document.createElement("div");
+      errorsBox.className = "content-errors-box";
       const lbl = document.createElement("p");
       lbl.textContent = "Errores del validador:";
-      box.appendChild(lbl);
+      errorsBox.appendChild(lbl);
       const ul = document.createElement("ul");
       ul.className = "content-errors";
       for (const e of shownErrors) {
@@ -161,11 +193,13 @@
         li.textContent = e;
         ul.appendChild(li);
       }
-      box.appendChild(ul);
+      errorsBox.appendChild(ul);
       const warn = document.createElement("p");
       warn.textContent = "No se puede enviar ni publicar mientras haya errores.";
-      box.appendChild(warn);
+      errorsBox.appendChild(warn);
+      box.appendChild(errorsBox);
     }
+    box.appendChild(form);
     // buttons
     const btns = document.createElement("div");
     btns.className = "content-actions";
@@ -210,7 +244,8 @@
   }
   function labelWrap(label, ta) {
     const lab = document.createElement("label");
-    lab.textContent = label;
+    lab.textContent = fieldWords(label);
+    if (lab.textContent !== label) { const code = document.createElement("code"); code.textContent = label; lab.appendChild(code); }
     const wrap = document.createElement("div");
     wrap.appendChild(lab);
     wrap.appendChild(ta);
@@ -348,7 +383,8 @@
   function handleErr(e) {
     let msg = "";
     try { const j = JSON.parse(e.body); if (j.error === "languages") msg = `Faltan los dos idiomas para publicar: ${j.missing.join("/")}.`; } catch(_) {}
-    if (!msg) msg = e.body || e.message;
+    if (!msg && e.status && e.status < 500) { try { const j = JSON.parse(e.body); if (typeof j.detail === "string") msg = j.detail; } catch(_) {} }
+    if (!msg) msg = e.status >= 500 ? "El servidor tuvo un problema. Intente de nuevo en un minuto." : (e.body || e.message);
     setStatus(msg);
   }
 

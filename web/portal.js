@@ -4,8 +4,12 @@ function formatAppointmentTime(value) { if (!value) return ""; const date = new 
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
   if (!el || !report) return;
-  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${esc(k)}: ${v}</span>`).join(" | ");
-  el.innerHTML = `<div class="card"><strong>Total:</strong> ${report.total||0} &nbsp; <strong>High Risk:</strong> ${(report.high_risk||[]).length} &nbsp; <strong>Urgent:</strong> ${(report.urgent||[]).length} &nbsp; <strong>Review Queue:</strong> ${(report.attorney_review_queue||[]).length}</div><p>${stages}</p>`;
+  el.innerHTML = reportCard([["Total",report.total||0],["High risk",(report.high_risk||[]).length],["Urgent",(report.urgent||[]).length],["Attorney review",(report.attorney_review_queue||[]).length]], report.by_stage);
+}
+
+function reportCard(figures, byStage) {
+  const stages = Object.entries(byStage||{});
+  return `<div class="card"><dl class="report-figures">${figures.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>${stages.length?`<table class="report-stages"><caption>Matters by stage</caption><tbody>${stages.map(([stage,count])=>`<tr><td>${esc(stage)}</td><td>${esc(count)}</td></tr>`).join("")}</tbody></table>`:""}</div>`;
 }
 
 const PORTAL_API = "https://carbon-law.onrender.com";
@@ -14,10 +18,18 @@ function authHeaders() { const t = getToken(); const h = {"Content-Type":"applic
 async function request(path, method="GET", body=null) {
   const opts = { method, headers: authHeaders() };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(PORTAL_API + path, opts);
-  if (!res.ok) throw new Error(await res.text());
+  let res;
+  try { res = await fetch(PORTAL_API + path, opts); }
+  catch (_) { throw new Error("We can’t reach the service right now."); }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (res.status < 500 && typeof data.detail === "string") throw new Error(data.detail);
+    throw new Error("The service had a problem.");
+  }
   return res.json();
 }
+const TRY_LATER = "Please try again later, or call Carbon Law Group at (323) 543-4453.";
+function isPast(value) { const date = new Date(value); return !Number.isNaN(date.getTime()) && date < new Date(); }
 function formatAppointmentTime(value) {
   if (!value || value === "Not requested") return value || "Not requested";
   const date = new Date(value);
@@ -34,7 +46,7 @@ const currentUser = getUser();
 async function load() {
   const token = getToken();
   if (!token) { window.location.href = "login.html"; return; }
-  try { matters = await request("/my-matters"); } catch(e){ matters=[]; if (el("matterDetail")) el("matterDetail").textContent = "Could not load matters: " + e.message; showToast("Backend unavailable"); }
+  try { matters = await request("/my-matters"); } catch(e){ matters=[]; }
   renderMatterSelects();
   await loadPlanningRequest();
   await loadWorkflowAppointments();
@@ -60,8 +72,9 @@ async function loadPlanningRequest() {
         const status = appointment?.status === "requested" ? " <span class=\"badge\">Pending approval</span>" : appointment?.status === "scheduled" ? " <span class=\"badge\">Approved</span>" : appointment?.status === "cancelled" ? " <span class=\"badge\">Cancelled</span>" : "";
         return `<p><strong>${kind === "consultation" ? "Consultation" : "Signing"}:</strong> ${esc(formatAppointmentTime(value))}${status}</p>`;
       };
-      const cancel = ["consultation", "signing"].filter(kind => workflow.appointments?.[kind] && !["cancelled", "Cancelled"].includes(workflow.appointments[kind].status)).map(kind => `<button class="btn secondary" data-cancel-appointment="${esc(workflow.id)}:${kind}">Cancel ${kind}</button>`).join(" ");
-      return `<article class="planning-request"><h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p>${appointmentLine("consultation")}${appointmentLine("signing")}${cancel}<p><button class="btn" data-edit-workflow="${esc(workflow.id)}">Modify planning request</button></p></article>`;
+      // a past appointment cannot be cancelled any more
+      const cancel = ["consultation", "signing"].filter(kind => { const a = workflow.appointments?.[kind]; return a && !["cancelled", "Cancelled"].includes(a.status) && !isPast(a.scheduled_at || a.requested_at); }).map(kind => `<button class="btn secondary sm" data-cancel-appointment="${esc(workflow.id)}:${kind}">Cancel ${kind}</button>`).join(" ");
+      return `<article class="planning-request"><h3>${esc(workflow.client_name)}’s estate plan</h3><p><strong>Matter:</strong> ${esc(workflow.matter_id || "Pending")}</p><p><strong>Status:</strong> ${esc(workflow.stage.replaceAll("_", " "))}</p><p><strong>Documents:</strong> ${esc(docs)}</p>${appointmentLine("consultation")}${appointmentLine("signing")}<p class="planning-actions"><button class="btn" data-edit-workflow="${esc(workflow.id)}">Modify planning request</button> ${cancel}</p></article>`;
     }).join('<hr>');
     box.querySelectorAll("[data-cancel-appointment]").forEach(button => button.onclick = async () => {
       const [workflowId, kind] = button.dataset.cancelAppointment.split(":");
@@ -72,7 +85,7 @@ async function loadPlanningRequest() {
       try { await request(`/workflows/${button.dataset.editWorkflow}/reopen-section`, "POST", {part:2}); location.href = `intake.html?workflow=${encodeURIComponent(button.dataset.editWorkflow)}&part=2`; }
       catch (error) { showToast("Could not edit request: " + error.message); }
     });
-  } catch (error) { box.textContent = "Could not load your planning requests: " + error.message; }
+  } catch (error) { box.textContent = `Your planning request did not load. ${error.message} ${TRY_LATER}`; }
 }
 
 async function loadWorkflowAppointments() {
@@ -81,12 +94,12 @@ async function loadWorkflowAppointments() {
   try {
     const items = await request("/appointments");
     const pending = items.filter(item => item.workflow_id && item.status === "Requested");
-    box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(formatAppointmentTime(item.scheduled_at))} <span class="badge">Pending approval</span> <button class="btn secondary" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
+    box.innerHTML = pending.length ? pending.map(item => `<p><strong>${esc(item.kind)}:</strong> ${esc(formatAppointmentTime(item.scheduled_at))} <span class="badge">Pending approval</span> <button class="btn secondary sm" data-cancel-appt="${esc(item.id)}">Cancel request</button></p>`).join("") : "No pending appointment requests.";
     box.querySelectorAll("[data-cancel-appt]").forEach(button => button.onclick = async () => {
       try { await request(`/appointments/${button.dataset.cancelAppt}`, "PATCH", {status:"Cancelled"}); await loadWorkflowAppointments(); await loadPlanningRequest(); }
       catch (error) { showToast("Could not cancel appointment: " + error.message); }
     });
-  } catch (error) { box.textContent = "Could not load appointment requests: " + error.message; }
+  } catch (error) { box.textContent = `Your appointment requests did not load. ${error.message} ${TRY_LATER}`; }
 }
 
 function showNewWillMatter(workflow) {
@@ -104,27 +117,27 @@ function renderMatterSelects() {
 }
 async function loadChangeRequests() {
   const box=el("changeRequestStatus"); if(!box)return;
-  try {const items=await request("/change-requests");box.innerHTML=items.length?items.map(c=>`<article><p><strong>${esc(c.change_type)}</strong> · ${esc(c.status)}</p><p>Matter: ${esc(c.matter_id)} · Documents: ${esc(c.affected_documents||"Not specified")}</p><p>${esc(c.resolution||c.impact||"The firm will update this request as it is reviewed.")}</p></article>`).join("<hr>"):"No change requests yet."}catch(e){box.textContent="Could not load your change requests: "+e.message}
+  try {const items=await request("/change-requests");box.innerHTML=items.length?items.map(c=>`<article><p><strong>${esc(c.change_type)}</strong> · ${esc(c.status)}</p><p>Matter: ${esc(c.matter_id)} · Documents: ${esc(c.affected_documents||"Not specified")}</p><p>${esc(c.resolution||c.impact||"The firm will update this request as it is reviewed.")}</p></article>`).join("<hr>"):"No change requests yet."}catch(e){box.textContent=`Your change requests did not load. ${e.message} ${TRY_LATER}`}
 }
 async function loadDocs() {
   try {
     const docs = await request("/documents");
     const rows = el("docRows");
     if (!rows) return;
-    rows.innerHTML = "";
+    rows.innerHTML = docs.length ? "" : `<tr class="empty-row"><td colspan="4">No documents yet. Drafts appear here when the firm shares them.</td></tr>`;
     docs.forEach(d => {
       const tr = document.createElement("tr");
       const review = d.content ? `<details><summary>View review draft</summary><pre>${esc(d.content)}</pre></details>` : "";
       tr.innerHTML = `<td>${esc(d.matter_id)}</td><td>${esc(d.name)}${review}</td><td>${d.version}</td><td>${esc(d.status)}</td>`;
       rows.appendChild(tr);
     });
-  } catch(e){}
+  } catch(e){ if (el("docRows")) el("docRows").innerHTML = `<tr class="empty-row"><td colspan="4">Your documents did not load. ${esc(e.message)} ${esc(TRY_LATER)}</td></tr>`; }
 }
 async function loadReport() {
   try {
     const report = await request("/reports/friday");
     renderReportSummary(report);
-  } catch(e){ if (el("report")) el("report").textContent = "Backend unavailable."; }
+  } catch(e){ if (el("report")) el("report").textContent = "The report did not load. " + e.message; }
 }
 document.addEventListener("DOMContentLoaded", () => {
   load();
