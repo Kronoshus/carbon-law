@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { execSync } from 'node:child_process';
+import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
@@ -21,12 +20,8 @@ function initial(dir: string, entry: (k: string, c: Chunk) => boolean) {
   return { files, bytes, manifest };
 }
 
+// dist/web and dist/extension are built once for all test files in tests/build-once.ts
 describe('T8-05 initial JS budget', () => {
-  beforeAll(() => {
-    execSync('npm run build:web', { stdio: 'ignore' });
-    execSync('npm run build:ext', { stdio: 'ignore' });
-  }, 240000);
-
   it('the web app: initial JS is at most 170 KB gzip and holds no three.js', () => {
     const { files, bytes } = initial('dist/web', (k, c) => !!c.isEntry && k.endsWith('index.html'));
     expect(bytes, files.join(', ')).toBeLessThanOrEqual(BUDGET);
