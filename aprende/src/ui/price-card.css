@@ -3,14 +3,14 @@
 .price-item { display: grid; gap: var(--s2); }
 .price .row { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
 .price .row.between { justify-content: space-between; align-items: center; }
-.price h2 { font: 700 var(--step-0) var(--font-display); margin-inline-end: auto; }
-.price .now { font: 800 var(--step-2)/1 var(--font-display); }
-.price s { color: var(--text-soft); font-weight: 600; }
+.price h2 { font: var(--w-bold) var(--step-0) var(--font-display); margin-inline-end: auto; }
+.price .now { font: var(--w-heavy) var(--step-2)/1 var(--font-display); }
+.price s { color: var(--text-soft); font-weight: var(--w-semibold); }
 .price .small { font-size: var(--step--1); color: var(--text-soft); }
 .seals { display: flex; gap: var(--s1); }
 .seal { color: var(--ok-deep); display: inline-flex; }
 .seal.empty { color: var(--text-soft); }
 .seal .icon { inline-size: 1.6rem; block-size: 1.6rem; }
 /* a placeholder price is marked in words, sentence case: "ejemplo" */
-.example { justify-self: start; font: 600 var(--step--1)/1.2 var(--font-body); color: var(--wrong-deep);
+.example { justify-self: start; font: var(--w-semibold) var(--step--1)/1.2 var(--font-body); color: var(--wrong-deep);
            border: 1.5px dashed var(--wrong-deep); border-radius: var(--pill); padding: var(--s1) var(--s2); }

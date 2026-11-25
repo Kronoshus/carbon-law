@@ -34,7 +34,7 @@ export function Pago() {
       h('p', { key: 'n' }, t('pago.note')),
       failed ? h('p', { key: 'e', class: 'gate-error', role: 'alert' }, t('pago.error')) : null,
       h('button', { key: 'b', class: 'btn', type: 'button', disabled: busy, onClick: () => void pay() }, t('pago.button'))]
-      : h('p', null, t('pago.locked')));
+      : [h('p', { key: 'l' }, t('pago.locked')), h('a', { key: 'a', class: 'btn', href: '#/acuerdo' }, t('pago.toAgreement'))]);
 }
 
 /** Back from Stripe: only the webhook records a payment, so this page waits for it (up to a minute). */

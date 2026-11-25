@@ -430,10 +430,10 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await moveTo(c, day(plan.client_review.day));
     await c.go('/revisar');
     await expect(page.getByRole('heading', { name: 'Revise sus documentos' })).toBeVisible();
-    const trust = page.getByRole('region', { name: 'Revocable living trust' });
+    const trust = page.getByRole('region', { name: 'Fideicomiso en vida' });
     await trust.getByRole('button', { name: 'Está bien' }).click();
     await expect(trust.getByText('Usted dijo que está bien.')).toBeVisible();
-    const will = page.getByRole('region', { name: 'Pour-over will' });
+    const will = page.getByRole('region', { name: 'Testamento complementario' });
     await will.getByRole('button', { name: 'Quiero un cambio' }).click();
     await will.getByLabel('¿Qué quiere cambiar?').selectOption({ label: 'Quién está a cargo (albacea, fiduciario, agente)' });
     await will.getByLabel('Cuéntenos el cambio con sus palabras').fill('Quiero que mi hija Sofía sea la albacea suplente.');
@@ -457,7 +457,7 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
   await test.step(`Day ${plan.changes?.day ?? 14}: Ana reads the revised will and says it is fine`, async () => {
     await moveTo(c, day(plan.changes.day));
     await c.go('/revisar');
-    const will = page.getByRole('region', { name: 'Pour-over will' });
+    const will = page.getByRole('region', { name: 'Testamento complementario' });
     await will.getByText('Ver el documento completo').click();
     await expect(will.getByText('Alternate executor: Sofía Torres.', { exact: false })).toBeVisible();
     await will.getByRole('button', { name: 'Está bien' }).click();
@@ -488,7 +488,7 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await c.go('/firmados');
     await expect(page.getByRole('heading', { name: 'Sus documentos firmados' })).toBeVisible();
     const dl = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Descargar Pour-over will' }).click();
+    await page.getByRole('button', { name: 'Descargar Testamento complementario' }).click();
     expect((await dl).suggestedFilename()).toMatch(/\.pdf$/);
     await landsOnItsDay(c, 'signing', plan);
   });

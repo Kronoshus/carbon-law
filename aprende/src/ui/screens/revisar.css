@@ -1,6 +1,6 @@
 .document-text { white-space: pre-wrap; max-block-size: 50vh; overflow: auto; background: var(--letter-paper); color: var(--letter-ink); padding: var(--s3);
-                 border-radius: var(--radius); font: 400 var(--step--1)/1.5 var(--font-body); }
-.revisar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+                 border-radius: var(--radius); font: var(--w-regular) var(--step--1)/1.5 var(--font-body); }
+.revisar-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--s2); }   /* stacked on phones */
 .revisar-actions form { grid-column: 1 / -1; }
 .parts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .parts strong { color: var(--text-soft); }

@@ -61,7 +61,7 @@ export function InicioConsentimiento() {
     setAskedAgain(true); setText('');
   };
   return h(Gate, { say: askedAgain ? t('gate.consent.again') : t('gate.consent.title') },
-    h('h1', null, t('gate.consent.title')),
+    h('h1', { class: 'visually-hidden' }, t('gate.consent.title')),   // the bubble above asks it (and La Calavera says it); the heading names the screen
     h('p', null, t('gate.consent.body')),
     h('div', { class: 'gate-choice' },
       h('button', { class: 'btn secondary', type: 'button', disabled: busy, onClick: () => answer('yes') }, t('gate.consent.yes')),
