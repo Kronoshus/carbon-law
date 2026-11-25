@@ -58,6 +58,12 @@ test('installable: a manifest with a stable id, standalone display and 192/512 i
     expect(icon, size).toBeTruthy();
     expect((await request.get(new URL(icon!.src, res.url()).href)).headers()['content-type']).toContain('image/png');
   }
+  const maskable = (m.icons as { src: string; purpose?: string }[]).find((i) => i.purpose === 'maskable');
+  expect((await request.get(new URL(maskable!.src, res.url()).href)).headers()['content-type']).toContain('image/png');
+  for (const rel of ['icon', 'apple-touch-icon']) {
+    const src = await page.locator(`link[rel="${rel}"]`).getAttribute('href');
+    expect((await request.get(new URL(src!, page.url()).href)).headers()['content-type'], rel).toContain('image/png');
+  }
   await expect(page.locator('meta[name="theme-color"]')).toHaveCount(1);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
@@ -90,7 +96,7 @@ test('the service worker keeps the shell and the lesson, never journey, datos or
   await context.setOffline(false);
 });
 
-test('a push message shows La Calavera\'s notification and opens the app where it points', async ({ page, context, baseURL }) => {
+test('a push message shows the notification with the app icon and opens the app where it points', async ({ page, context, baseURL }) => {
   await context.grantPermissions(['notifications'], { origin: baseURL });
   await page.goto('/#/bienvenida');
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -104,7 +110,7 @@ test('a push message shows La Calavera\'s notification and opens the app where i
   await cdp.send('ServiceWorker.deliverPushMessage', { origin: new URL(baseURL!).origin, registrationId,
     data: JSON.stringify({ title: 'La Calavera', body: 'Su lección de hoy le espera.', url: '#/aprender' }) });
   await expect.poll(() => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications())
-    .map((n) => `${n.title}|${n.body}|${(n.data as { url?: string } | null)?.url}`))).toContain('La Calavera|Su lección de hoy le espera.|#/aprender');
+    .map((n) => `${n.title}|${n.body}|${(n.data as { url?: string } | null)?.url}|${n.icon}`))).toContain(`La Calavera|Su lección de hoy le espera.|#/aprender|${baseURL}/icons/app-192.png`);
 });
 
 test('Perfil: the daily reminder asks for push only when she turns it on, and lets go when she turns it off', async ({ page }) => {

@@ -20,7 +20,7 @@
       "type": "image/png"
     },
     {
-      "src": "icons/app-512.png",
+      "src": "icons/app-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
