@@ -13,7 +13,7 @@ vi.mock('three', () => {
       async compileAsync() {} initTexture() {} render() {} getContext() { return {}; }
       dispose() { disposed(); }
     },
-    Scene: class { add() {} },
+    Scene: class { add() {} traverse() {} },
     PerspectiveCamera: class { position = { set() {} }; },
     Group,
     MeshBasicMaterial: class {},
