@@ -5,6 +5,7 @@ import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
 import { Icon, type IconName } from '../Icons';
 import { PriceCard } from '../PriceCard';
+import { LoadFailed, problemOf, type LoadProblem } from '../LoadFailed';
 import { cast, host as hostId, nameKey, type CharacterId } from '../../core/character/cast';
 import './map.css';
 
@@ -22,12 +23,13 @@ const CORE = ['will', 'trust', 'ahcd', 'poa'];
 const PAY = { key: 'map.node.pay', sub: 'map.node.pay.day', icon: 'pluma' } as const;
 const REVIEW = { key: 'map.node.review', sub: 'map.node.review.day', icon: 'lupa' } as const;
 const FINISH = [{ key: 'map.node.documents', sub: 'map.node.documents.day', icon: 'plan' }, { key: 'map.node.signing', sub: 'map.node.signing.day', icon: 'pluma' }] as const;
-const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }) => {
+/** `done`: the journey has passed this step, so it shows the seal, not the padlock. */
+const step = (s: { key: I18nKey; sub: I18nKey; icon: IconName }, done: boolean) => {
   const isReview = s.key === 'map.node.review';
-  const inner = [h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: 'candado' }))),
+  const inner = [h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: s.icon }), h('span', { class: 'badge' }, h(Icon, { name: done ? 'sello' : 'candado' }))),
     h('span', { class: 'node-label' }, h('b', null, t(s.key)), h('span', null, t(s.sub)))];
-  if (isReview) return h('li', { class: 'node-item', key: s.key }, h('a', { class: 'node available', href: '#/revisar' }, ...inner));
-  return h('li', { class: 'node locked', key: s.key }, ...inner);
+  if (isReview) return h('li', { class: 'node-item', key: s.key }, h('a', { class: `node ${done ? 'done' : 'available'}`, href: '#/revisar' }, ...inner));
+  return h('li', { class: `node ${done ? 'done' : 'locked'}`, key: s.key }, ...inner);
 };
 
 export function Aprender() {
@@ -35,21 +37,23 @@ export function Aprender() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [day, setDay] = useState<number | null>(null);
   const [tentative, setTentative] = useState<string[] | null>(null);
-  const [signed, setSigned] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [facts, setFacts] = useState<Record<string, unknown>>({});
+  const [problem, setProblem] = useState<LoadProblem | null>(null);
   const l = lang.value;
 
-  useEffect(() => {
-    (async () => {
-      const [m, p, j] = await Promise.all([apiFetch('/learn/map'), apiFetch('/progress'), apiFetch('/journey')]);
-      if (!m.ok) { setFailed(true); return; }
-      setMap((await m.json()) as MapData);
-      if (p.ok) setProgress((await p.json()) as Progress);
-      if (j.ok) { const jd = await j.json() as { day: number; documents?: { tentative?: string[] }; facts?: Record<string, unknown> }; setDay(jd.day); setTentative(jd.documents?.tentative ?? []); setSigned(!!jd.facts?.signed); }
-    })();
-  }, []);
+  const load = async () => {
+    setProblem(null);
+    const [m, p, j] = await Promise.all(['/learn/map', '/progress', '/journey'].map((path) => apiFetch(path).catch(() => null)));
+    if (!m?.ok) { setProblem(problemOf(m)); return; }
+    const [md, pd, jd] = await Promise.all([m.json(), p?.ok ? p.json() : null, j?.ok ? j.json() : null]) as
+      [MapData, Progress | null, { day: number; documents?: { tentative?: string[] }; facts?: Record<string, unknown> } | null];
+    if (pd) setProgress(pd);
+    if (jd) { setDay(jd.day); setTentative(jd.documents?.tentative ?? []); setFacts(jd.facts ?? {}); }
+    setMap(md);
+  };
+  useEffect(() => { void load(); }, []);
 
-  if (failed) return h('p', { role: 'alert' }, t('map.error'));
+  if (problem) return h(LoadFailed, { title: 'nav.aprender', problem, retry: () => void load() });
   if (!map) return h('p', { role: 'status' }, t('leccion.loading'));
 
   const lessons = map.units.flatMap((u) => u.lessons.map((ls) => ({ ...ls, unit: u.id })));
@@ -95,16 +99,16 @@ export function Aprender() {
     host ? h('section', { class: 'host', 'aria-label': t(nameKey(hostId())) },
       h('img', { src: `${BASE}img/${hostId()}-face.png`, alt: '', width: 96, height: 96 }),
       h('p', { class: 'bubble' }, current ? t('map.hostToday', { name: nameOf(current.character), title: title(current) }) : t('map.hostDone'))) : null,
-    h(PriceCard, { codes: ['will'] }),
+    facts.paid ? null : h(PriceCard, { codes: ['will'] }),
     (tentative !== null && (tentative.length === 0) && core.some((ls) => ls.unit === 'trust' && ls.status === 'done'))
       ? h('a', { class: 'card docs-card', href: '#/documentos' }, h('strong', null, t('docs.title')), h('span', null, t('docs.body'))) : null,
     h('h2', { class: 'banner' }, t('map.learn'), h('small', null, t('map.learn.sub'))),
     h('ol', { class: 'path' }, core.map(node)),
     h('h2', { class: 'banner' }, t('map.step.pay'), h('small', null, t('map.step.pay.day'))),
-    h('ol', { class: 'path' }, step(PAY)),
+    h('ol', { class: 'path' }, step(PAY, !!facts.paid)),
     h('h2', { class: 'banner' }, t('map.step.review'), h('small', null, t('map.step.review.day'))),
-    h('ol', { class: 'path' }, step(REVIEW)),
+    h('ol', { class: 'path' }, step(REVIEW, !!facts.attorney_approved)),
     h('h2', { class: 'banner' }, t('map.step.finish'), h('small', null, t('map.step.finish.day'))),
-    h('ol', { class: 'path' }, [step(FINISH[0]), signed ? h('li', { class: 'node-item', key: 'signing' }, h('a', { class: 'node available', href: '#/firmados' }, h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: 'pluma' })), h('span', { class: 'node-label' }, h('b', null, t('map.node.signing')), h('span', null, t('map.node.signing.day'))))) : step(FINISH[1]), final ? node(final) : null]),
+    h('ol', { class: 'path' }, [step(FINISH[0], !!facts.client_confirmed), facts.signed ? h('li', { class: 'node-item', key: 'signing' }, h('a', { class: 'node done', href: '#/firmados' }, h('span', { class: 'disc', 'aria-hidden': 'true' }, h(Icon, { name: 'pluma' }), h('span', { class: 'badge' }, h(Icon, { name: 'sello' }))), h('span', { class: 'node-label' }, h('b', null, t('map.node.signing')), h('span', null, t('map.node.signing.day'))))) : step(FINISH[1], false), final ? node(final) : null]),
     bonus.length ? [h('h2', { class: 'banner', key: 'bonus' }, t('map.bonus'), h('small', null, t('map.bonus.sub'))), h('ol', { class: 'path', key: 'bonusp' }, bonus.map(node))] : null);
 }

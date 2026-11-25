@@ -19,7 +19,7 @@ export function Entrar() {
         method: 'POST',
         json: { email, password },
       });
-      if (!res.ok) { setError(t(res.status >= 500 ? 'error.network' : 'error.invalid')); return; }
+      if (!res.ok) { setError(t(res.status >= 500 ? 'error.server' : 'error.invalid')); return; }
       const data = await res.json();
       await setToken(data.token as string);
       // decide landing via journey

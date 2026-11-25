@@ -130,6 +130,38 @@ const STATES: State[] = [
     await page.route('**/booking/slots**', (r) => r.fulfill({ status: 409, json: { error: 'gate', missing: ['may_book_signing'] } }));
     await page.route(/\/booking$/, (r) => r.fulfill({ json: [] }));
   } },
+  { name: 'payment: paid', path: '/pago', prep: async (page) => {
+    await cleared(page);
+    await playJourney(page, (j) => { j.gates.may_pay = true; j.documents.confirmed = ['will']; j.facts.paid = true; });
+  } },
+  { name: 'appointment: booked, asked to cancel', path: '/cita?kind=consultation', prep: async (page) => {
+    await cleared(page);
+    await page.route('**/booking/slots**', (r) => r.fulfill({ json: { slots: SLOTS } }));
+    await page.route(/\/booking$/, (r) => r.fulfill({ json: [{ id: 'b1', kind: 'consultation', start: '2099-03-16T17:00:00Z' }] }));
+  }, act: async (page, lang) => {
+    await btn(page, 'Cancelar la cita', 'Cancel the appointment', lang).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+  } },
+  { name: 'client review: change request', path: '/revisar', prep: async (page) => {
+    await cleared(page);
+    await page.route('**/review/documents?*', (r) => r.fulfill({ json: { documents: [REVIEW_DOC('d1', 'Last will and testament')] } }));
+  }, act: async (page, lang) => {
+    await btn(page, 'Quiero un cambio', 'I want a change', lang).click();
+    await expect(page.locator('form.composer')).toBeVisible();
+  } },
+  { name: 'map: after the signing', path: '/aprender', prep: async (page) => {
+    await cleared(page);
+    await playJourney(page, (j) => { Object.assign(j.facts, { paid: true, attorney_approved: true, client_confirmed: true, signed: true }); });
+    await page.route('**/learn/map', async (r) => {
+      const m = await (await r.fetch()).json();
+      for (const u of m.units) for (const l of u.lessons) l.status = u.id === 'final' ? 'available' : 'done';
+      await r.fulfill({ json: m });
+    });
+  } },
+  { name: 'a screen that cannot load (offline)', path: '/pago', prep: async (page) => {
+    await cleared(page);
+    await page.route(/\/(journey|payments\/\w+)(\?.*)?$/, (r) => r.abort('internetdisconnected'));
+  } },
   { name: 'signed documents', path: '/firmados', prep: async (page) => {
     await cleared(page);
     await page.route('**/signed-documents', (r) => r.fulfill({ json: [{ id: 'Qx7k2pL9aa', name: 'Pour-over will', filename: 'will-signed.pdf', url: '/signed-documents/Qx7k2pL9aa' }] }));

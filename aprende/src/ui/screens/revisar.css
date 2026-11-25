@@ -5,4 +5,5 @@
 .parts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .parts strong { color: var(--text-soft); }
 .revisar-actions select { min-block-size: var(--tap); padding-inline: var(--s2); border: var(--stroke) solid var(--outline);
-                          border-radius: var(--radius); background: var(--card); font: inherit; color: var(--text); inline-size: 100%; }
+                          border-radius: var(--radius); background: var(--card); font: var(--w-regular) var(--step-0) var(--font-body); color: var(--text); inline-size: 100%; }
+.revisar-actions textarea { font-weight: var(--w-regular); }   /* what she types is not a label */

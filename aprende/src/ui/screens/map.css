@@ -5,6 +5,8 @@
 .map-chips .chip .icon { inline-size: 1.4rem; block-size: 1.4rem; }
 .map-day { margin: 0; font: var(--w-heavy) var(--step-0)/1 var(--font-ui); }
 .map .host { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: var(--s3); align-items: center; }
+.docs-card { display: grid; gap: var(--s1); color: var(--text); text-decoration: none; box-shadow: var(--ledge); }
+.docs-card strong { color: var(--link); text-decoration: underline; }
 .map .host img { inline-size: 4rem; block-size: 4rem; border-radius: 50%; border: var(--stroke) solid var(--outline); }
 .banner { position: relative; margin: 0; padding: calc(var(--s3) + var(--trim-size)) var(--s4) var(--s4); color: var(--on-band); background: var(--band-texture), var(--band);
           border-radius: var(--radius); border: var(--stroke) solid var(--outline); font: var(--w-bold) var(--step-1)/1.1 var(--font-ui); overflow: clip; }
