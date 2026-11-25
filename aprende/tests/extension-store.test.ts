@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, existsSync, rmSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -40,9 +40,13 @@ function check(target: string) {
   return { code: r.status, out: `${r.stdout}\n${r.stderr}` };
 }
 
-/** A copy of the packaged extension in a folder, with one defect planted by `plant`. */
+/** A copy of the packaged extension in a folder, with one defect planted by `plant`. Each copy is about 12 MB:
+ *  the folders are deleted after the tests (they once filled the /tmp tmpfs). */
+const plantedDirs: string[] = [];
+afterAll(() => { for (const dir of plantedDirs) rmSync(dir, { recursive: true, force: true }); });
 function planted(plant: (dir: string) => void): string {
   const dir = mkdtempSync(join(tmpdir(), 'cl-t8-02-'));
+  plantedDirs.push(dir);
   for (const [name, data] of unzip(ZIP)) {
     mkdirSync(dirname(join(dir, name)), { recursive: true });
     writeFileSync(join(dir, name), data);
