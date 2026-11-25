@@ -51,8 +51,8 @@ test('the voice preview speaks the line in the browser and calls no server', asy
 test('a theme host is previewed in its own voice: Doña Tortuga lower and slower', async ({ page }) => {
   await open(page);
   const tortuga = card(page, 'Doña Tortuga');
-  await expect(tortuga.getByLabel('Frase para escuchar')).toHaveValue(/Doña Tortuga/);
-  await tortuga.getByRole('button', { name: 'Escuchar voz' }).click();
+  await expect(tortuga.getByLabel('Test phrase')).toHaveValue(/Doña Tortuga/);
+  await tortuga.getByRole('button', { name: 'Play voice' }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: unknown[] }).__spoken.length)).toBe(1);
   const spoken = await page.evaluate(() => (window as unknown as { __spoken: { lang: string; pitch: number; rate: number }[] }).__spoken[0]);
   expect(spoken.lang).toMatch(/^es-/);
