@@ -9,7 +9,7 @@
 .stage-wrap { inline-size: min(100% - 2 * var(--s4), 48rem, 90dvh); margin-inline: auto; }
 .lesson-player main { max-inline-size: 48rem; margin-inline: auto; }
 .stage-wrap .character-stage { aspect-ratio: 16 / 8; max-inline-size: none; }
-.stage-wrap .character-canvas, .stage-wrap .character-still { position: absolute; inset-inline: 0; inset-block-start: -40%;
+.stage-wrap .character-canvas, .stage-wrap .character-still { position: absolute; inset-inline: 0; inset-block-start: -28%;
                                                             block-size: auto; aspect-ratio: 1; }      /* a head-and-shoulders crop */
 .talk { padding: var(--s3) var(--s4) 0; }
 .talk .bubble { display: flex; align-items: center; gap: var(--s2); padding-block: var(--s2); }
@@ -17,7 +17,7 @@
 .q { padding: var(--s3) var(--s4); display: grid; gap: var(--s3); align-content: start; }
 .q h1 { font-size: var(--step-1); }
 .q .story { font-style: italic; color: var(--text-soft); }
-.lesson-player .kind { font: 600 var(--step--1)/1.2 var(--font-body); color: var(--text-soft); }
+.lesson-player .kind { font: var(--w-semibold) var(--step--1)/1.2 var(--font-body); color: var(--text-soft); }
 .q fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--s2); }
 /* answer rows: the whole row is the control, so the native radio is hidden here (and only here) */
 .lesson-player .option { position: relative; cursor: pointer; }
@@ -31,7 +31,7 @@
 .feedback h2 { display: flex; align-items: center; gap: var(--s2); font-size: var(--step-1); }
 .feedback h2 .icon { inline-size: 1.8rem; block-size: 1.8rem; }
 .feedback-actions { display: flex; gap: var(--s3); align-items: center; }
-.gain { display: inline-flex; align-items: center; gap: var(--s1); font-weight: 700; flex: none; }
+.gain { display: inline-flex; align-items: center; gap: var(--s1); font-weight: var(--w-bold); flex: none; }
 .gain .icon { inline-size: 1.3rem; block-size: 1.3rem; }
 .celebration { margin: var(--s4); display: grid; gap: var(--s4); text-align: center; }
 .celebration h1 { font-size: var(--step-2); }
@@ -42,20 +42,20 @@
 .match-col { display: grid; gap: var(--s2); align-content: start; }
 .tile { display: flex; align-items: center; gap: var(--s2); min-block-size: var(--tap); padding: var(--s2) var(--s3); text-align: start;
         border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card); color: var(--text);
-        box-shadow: var(--ledge); font: 600 var(--step-0)/1.25 var(--font-body); cursor: pointer; }
+        box-shadow: var(--ledge); font: var(--w-semibold) var(--step-0)/1.25 var(--font-body); cursor: pointer; }
 .tile[aria-pressed="true"] { background: color-mix(in oklab, var(--highlight) 30%, var(--card)); }
 .tile[data-pair="1"] { background: color-mix(in oklab, var(--pair-1) 30%, var(--card)); }
 .tile[data-pair="2"] { background: color-mix(in oklab, var(--pair-2) 22%, var(--card)); }
 .tile[data-pair="3"] { background: color-mix(in oklab, var(--pair-3) 40%, var(--card)); }
 .tile[data-pair="4"] { background: color-mix(in oklab, var(--pair-4) 18%, var(--card)); }
 .pair-no { display: grid; place-items: center; inline-size: 1.6rem; block-size: 1.6rem; flex: none; border-radius: 50%;
-           background: var(--text); color: var(--paper); font: 800 var(--step--1)/1 var(--font-ui); }
+           background: var(--text); color: var(--paper); font: var(--w-heavy) var(--step--1)/1 var(--font-ui); }
 /* order: rows with up/down buttons */
 .order { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .order-row { display: flex; align-items: center; gap: var(--s2); padding: var(--s1) var(--s1) var(--s1) var(--s3); background: var(--card);
              border: var(--stroke) solid var(--outline); border-radius: var(--radius); box-shadow: var(--ledge); }
-.order-no { font: 800 var(--step-0)/1 var(--font-ui); color: var(--text-soft); }
-.order-text { flex: 1; font-weight: 600; }
+.order-no { font: var(--w-heavy) var(--step-0)/1 var(--font-ui); color: var(--text-soft); }
+.order-text { flex: 1; font-weight: var(--w-semibold); }
 .order-row .icon-btn { font-size: var(--step-1); }
 .order-row .icon-btn:disabled { opacity: .35; color: var(--text-soft); cursor: not-allowed; }
 .listen-actions { display: flex; gap: var(--s2); flex-wrap: wrap; }

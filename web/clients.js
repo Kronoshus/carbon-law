@@ -31,9 +31,16 @@ async function loadClients() {
   let list = [];
   try {
     me = await staffFetch("/auth/me").then((r) => r.json());
-    list = await staffFetch("/staff/journeys").then((r) => (r.ok ? r.json() : []));
+    const res = await staffFetch("/staff/journeys");
+    if (!res.ok) throw new Error(String(res.status));
+    list = await res.json();
   } catch (_) {
-    say("No se pudo cargar la lista de clientes.");
+    say("No se pudo cargar la lista de clientes. Intente de nuevo más tarde.");
+    return;
+  }
+  if (!list.length) {
+    rows.replaceChildren(el("tr", { className: "empty-row" }, el("td", { colSpan: 9, textContent: "Todavía no hay clientes." })));
+    return;
   }
   rows.replaceChildren(...list.map((r) => {
     const open = el("button", { type: "button", className: "btn secondary sm", textContent: r.client_name });
@@ -56,10 +63,10 @@ async function loadClients() {
 
 function questionItem(q, canAnswer) {
   const item = el("li", { className: "client-question" }, el("p", { textContent: q.question }));
-  if (q.answer) {
-    item.append(el("p", null, el("strong", { textContent: "Respuesta del abogado: " }), q.answer));
+  if (!canAnswer) {
+    if (q.answer) item.append(el("p", null, el("strong", { textContent: "Respuesta del abogado: " }), q.answer));
+    return item;
   }
-  if (!canAnswer) return item;
   const box = el("textarea", { id: "respuesta-" + q.id, value: q.answer || "" });
   const send = el("button", { type: "button", className: "btn sm", textContent: q.answer ? "Cambiar respuesta" : "Enviar respuesta" });
   send.addEventListener("click", async () => {

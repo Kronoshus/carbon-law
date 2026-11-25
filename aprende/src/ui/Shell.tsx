@@ -34,22 +34,23 @@ export function Shell({ children, bare = false }: { children?: ComponentChildren
           <button type="button" class="topbar-signout" onClick={() => void signOut()}>
             {t('top.signout')}
           </button>
-        ) : null}
+        ) : (
+          <nav class="topnav" aria-label={t('top.title')}>
+            {TABS.map((tab) => (
+              <a
+                key={tab.path}
+                href={'#' + tab.path}
+                class="topnav-link"
+                aria-current={isActive(tab.path) ? 'page' : undefined}
+              >
+                <Icon name={tab.icon} />{t(tab.key)}
+              </a>
+            ))}
+          </nav>
+        )}
       </header>
       {bare ? <main class="shell-main">{children}</main> : <>
       <div class="shell-body">
-        <nav class="rail" aria-label={t('top.title')}>
-          {TABS.map((tab) => (
-            <a
-              key={tab.path}
-              href={'#' + tab.path}
-              class="rail-link"
-              aria-current={isActive(tab.path) ? 'page' : undefined}
-            >
-              <Icon name={tab.icon} />{t(tab.key)}
-            </a>
-          ))}
-        </nav>
         <main class="shell-main">{children}</main>
       </div>
       <nav class="tabs" aria-label={t('top.title')}>

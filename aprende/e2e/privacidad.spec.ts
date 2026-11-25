@@ -16,7 +16,7 @@ test('the privacy policy opens from the welcome page without signing in, in Span
   await expect(page.getByText('Borrador: el abogado debe aprobar este texto antes de publicarlo.')).toBeVisible();
   await expect(page.getByText('No le preguntamos sobre su situación migratoria.', { exact: false })).toBeVisible();
   await expect(page.getByText('La extensión guarda solo su sesión', { exact: false })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'info@carbonlaw.com' })).toHaveAttribute('href', 'mailto:info@carbonlaw.com');
+  await expect(page.getByRole('link', { name: 'kevin@carbonlg.com' })).toHaveAttribute('href', 'mailto:kevin@carbonlg.com');
   await axeClean(page);
   await page.reload();
   await expect(page).toHaveURL(/#\/privacidad$/);                               // a public page: no redirect to bienvenida

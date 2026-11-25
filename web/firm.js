@@ -17,8 +17,12 @@
     return res.json();
   }
 
+  function holidayLabel(day) {
+    const date = new Date(day + "T00:00:00");
+    return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString("es-US", { dateStyle: "long" });
+  }
   function renderHolidays() {
-    $("firmHolidayList").replaceChildren(...holidays.map((d) => Object.assign(document.createElement("li"), { textContent: d })));
+    $("firmHolidayList").replaceChildren(...holidays.map((d) => Object.assign(document.createElement("li"), { textContent: holidayLabel(d) })));
   }
 
   function renderHours(hours) {

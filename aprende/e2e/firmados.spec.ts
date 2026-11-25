@@ -26,12 +26,12 @@ test('signed documents and the trust checklist download with the client\'s token
   const axe = await new AxeBuilder({ page }).exclude('canvas').analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
   const one = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Descargar Pour-over will' }).click();
+  await page.getByRole('button', { name: 'Descargar Testamento complementario' }).click();   // the office's English name, in Spanish
   expect((await one).suggestedFilename()).toMatch(/\.pdf$/);
   const two = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Descargar la lista para el fideicomiso' }).click();
+  await page.getByRole('button', { name: 'Descargar la lista' }).click();
   expect((await two).suggestedFilename()).toMatch(/\.md$/);
-  await expect(page.getByRole('link', { name: 'Tomar la lección final: cuide sus documentos' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Tomar la lección final' })).toBeVisible();
 });
 
 test('before the signing the page says when they will appear', async ({ page }) => {
@@ -40,4 +40,5 @@ test('before the signing the page says when they will appear', async ({ page }) 
   await page.route('**/funding-checklist', (r) => r.fulfill({ status: 409, json: { error: 'not_signed' } }));
   await page.goto('/#/firmados');
   await expect(page.getByText('Sus documentos aparecerán aquí después de la firma.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Siga con la lección de hoy' })).toHaveAttribute('href', '#/aprender');
 });

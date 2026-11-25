@@ -20,7 +20,7 @@ export function Preguntas() {
     questions === null
       ? null
       : questions.length === 0
-        ? h('p', null, t('preguntas.none'))
+        ? [h('p', { key: 'n' }, t('preguntas.none')), h('a', { key: 'a', class: 'btn', href: '#/aprender' }, t('empty.today'))]
         : h('ul', { class: 'preguntas-list' }, questions.map((q) =>
             h('li', { key: q.id, class: 'card' },
               h('p', { class: 'pregunta' }, q.question),

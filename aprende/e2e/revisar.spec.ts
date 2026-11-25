@@ -40,7 +40,7 @@ test('the client reads the summary, approves one document and asks a change on t
   await will.getByRole('button', { name: 'Está bien' }).click();
   await expect(will.getByText('Usted dijo que está bien.')).toBeVisible();
 
-  const ahcd = page.getByRole('region', { name: 'Advance health care directive' });
+  const ahcd = page.getByRole('region', { name: 'Directiva de atención médica' });   // the office's English name, in Spanish
   await ahcd.getByRole('button', { name: 'Quiero un cambio' }).click();
   await ahcd.getByLabel('¿Qué quiere cambiar?').selectOption({ label: 'Quién está a cargo (albacea, fiduciario, agente)' });
   await ahcd.getByLabel('Cuéntenos el cambio con sus palabras').fill('Quiero que mi hija sea la agente.');

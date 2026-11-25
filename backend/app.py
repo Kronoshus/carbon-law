@@ -430,7 +430,7 @@ def send_email(to_email, subject, body):
         try:
             import urllib.request, urllib.error, json as _j
             payload = _j.dumps({"to":to_email,"subject":subject,"body":body,
-                "from": os.environ.get("SMTP_FROM", "info@carbonlaw.com"),
+                "from": os.environ.get("SMTP_FROM", "kevin@carbonlg.com"),
                 "secret": os.environ.get("EMAIL_WEBHOOK_SECRET", "")}).encode()
             req = urllib.request.Request(webhook, data=payload, headers={"Content-Type":"application/json"})
             with urllib.request.urlopen(req, timeout=20) as resp:
@@ -446,7 +446,7 @@ def send_email(to_email, subject, body):
         print("EMAIL: no SMTP credentials"); return False
     if os.environ.get("RENDER") and not os.environ.get("EMAIL_WEBHOOK_URL"):
         print("EMAIL: running on Render without webhook; skipping"); return False
-    from_addr = os.environ.get("SMTP_FROM", "info@carbonlaw.com")
+    from_addr = os.environ.get("SMTP_FROM", "kevin@carbonlg.com")
     msg = None
     try:
         import smtplib as _s
@@ -1385,7 +1385,7 @@ def initial_staff_setup(req: SignupRequest, authorization: Optional[str]=Header(
     supplied = authorization.replace("Bearer ", "").strip() if authorization else ""
     if not expected or not hmac.compare_digest(supplied, expected):
         raise HTTPException(404, "not found")
-    if req.email.strip().lower() != "kmohr@prompt.law":
+    if req.email.strip().lower() != "kevin@carbonlg.com":
         raise HTTPException(400, "setup is restricted to the authorized email")
     if any(entry.get("action") == "initial_staff_setup" for entry in audit):
         raise HTTPException(404, "not found")
