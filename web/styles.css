@@ -330,7 +330,7 @@ dialog::backdrop { background: rgba(0,0,0,.6); }
 .content-where { color: var(--text-muted); font-size: 14px; }
 .content-id { font-size: 13px; margin-bottom: 10px; }
 #contentDetail > p { margin-bottom: 4px; }
-.content-form { margin-top: 8px; }
+.content-form { margin: 8px 0 16px; }
 .field-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
 .content-field label { display: block; margin: 14px 0 4px; }
 #contentDetail textarea { min-height: 48px; max-height: 360px; field-sizing: content; }
