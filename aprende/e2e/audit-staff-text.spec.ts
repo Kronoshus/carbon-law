@@ -42,9 +42,11 @@ test('no client or staff text runs as markup on the staff pages', async ({ page 
   await expect(page.locator('#reviewQueueRows')).toContainText('queue_client<img');
   await page.locator('#reviewQueueRows button').first().click();
   await expect(page.locator('#reviewDetail')).toContainText('draft_line<img');
+  await page.getByRole('link', { name: 'Matters', exact: true }).click();
   await page.locator('[data-history]').first().click();
   await expect(page.locator('#historyContent')).toContainText('hist_comm<img');
   await page.keyboard.press('Escape');
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
   await page.locator('[data-review]').first().click();
   await expect(page.locator('#reviewDocuments')).toContainText('draft_content<img');
   await expect(page.locator('#contactRows')).toContainText('message<img');

@@ -1,11 +1,11 @@
 import { test, expect, type Page, type Request } from '@playwright/test';
 
-// T7-02 acceptance (Opus, t7-tests): validator errors in web/admin.html#contenido (docs/tickets/T7-02.md).
+// T7-02 acceptance (Opus, t7-tests): validator errors in web/admin.html#content (docs/tickets/T7-02.md).
 // The API is played back, like admin-content.spec.ts; pytest proves the server refuses invalid versions.
 const ADMIN = `http://127.0.0.1:${process.env.E2E_ADMIN_PORT || '5174'}`;
 const PARALEGAL = { id: 'par', role: 'paralegal', name: 'Rosa Paralegal', email: 'p@example.com' };
 const ATTORNEY = { id: 'att', role: 'attorney', name: 'Pankaj Raval', email: 'a@example.com' };
-const REASON = 'No se puede enviar ni publicar mientras haya errores.';
+const REASON = /to fix\. You cannot send this for review or publish it until/;
 
 const choice = (answer: number) => ({ answer, source: 'pc-6110',
   es: { prompt: '¿Cuántos testigos?', options: ['Ninguno', 'Uno', 'Dos'], explain: 'Dos testigos.' },
@@ -24,24 +24,28 @@ async function open(page: Page, user: typeof PARALEGAL, id: string, legal: boole
   await page.route(new RegExp(`/staff/content/${esc}$`), (r) => r.fulfill({ json: detail }));
   const calls: Request[] = [];
   await page.route(new RegExp(`/staff/content/${esc}/(submit|approve|publish)$`), (r) => { calls.push(r.request()); return r.fulfill({ json: {} }); });
-  await page.goto(`${ADMIN}/admin.html#contenido`);
-  await page.getByRole('button', { name: new RegExp('^' + esc) }).click();
+  await page.goto(`${ADMIN}/admin.html#content`);
+  await page.locator(`#contentEntries button[title="${id}"]`).click();
   return calls;
 }
 
 const ERR = ['will.1.2: answer out of range 5', 'will.1.2: unknown source nope'];
 
-test("the validator's errors appear beside the item and sending is disabled with the reason", async ({ page }) => {
+test("the validator's errors appear in plain English beside their fields and sending is disabled with the reason", async ({ page }) => {
   const detail = { entry_id: 'will.1.2', kind: 'item', legal: true, live: { version: 1, body: choice(2) },
     versions: [version(2, 'draft', { ...choice(5), source: 'nope' }, ERR), version(1, 'published', choice(2), [])] };
   const calls = await open(page, PARALEGAL, 'will.1.2', true, { version: 2, state: 'draft' }, detail);
-  const list = page.locator('#contentDetail ul.content-errors');
-  await expect(page.locator('#contentDetail').getByText('Errores del validador:')).toBeVisible();
-  await expect(list.locator('li')).toHaveText(ERR);
+  await expect(page.locator('#contentDetail').getByText('2 problems to fix.', { exact: false })).toBeVisible();
+  const answer = page.getByLabel('Correct answer');
+  await expect(answer).toHaveAttribute('aria-invalid', 'true');
+  await expect(answer).toHaveAccessibleDescription('The correct answer is set to answer 6, but there are only 3 answers. Choose one of them.');
+  const source = page.getByLabel('Source (law section)');
+  await expect(source).toHaveValue('nope');
+  await expect(source).toHaveAccessibleDescription(/"nope" is not one of the checked law sections/);
   await expect(page.getByText(REASON)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Enviar a revisión' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Guardar borrador' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Enviar a revisión' }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Send for review' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Send for review' }).click({ force: true });
   expect(calls).toEqual([]);
 });
 
@@ -49,9 +53,9 @@ test('the attorney cannot approve an invalid version', async ({ page }) => {
   const detail = { entry_id: 'will.1.2', kind: 'item', legal: true, live: { version: 1, body: choice(2) },
     versions: [version(2, 'review', choice(5), [ERR[0]]), version(1, 'published', choice(2), [])] };
   await open(page, ATTORNEY, 'will.1.2', true, { version: 2, state: 'review' }, detail);
-  await expect(page.getByRole('button', { name: 'Aprobar versión 2' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Approve version 2' })).toBeDisabled();
   await expect(page.getByText(REASON)).toBeVisible();
-  await expect(page.locator('#contentDetail ul.content-errors li')).toHaveText([ERR[0]]);
+  await expect(page.locator('#contentDetail .field-error')).toHaveText(['The correct answer is set to answer 6, but there are only 3 answers. Choose one of them.']);
 });
 
 test('a non-legal item with errors cannot be published', async ({ page }) => {
@@ -60,17 +64,18 @@ test('a non-legal item with errors cannot be published', async ({ page }) => {
   const detail = { entry_id: 'will.1.3', kind: 'item', legal: false, live: { version: 1, body: tf(false) },
     versions: [version(2, 'draft', tf(1), ['will.1.3: truefalse needs a bool']), version(1, 'published', tf(false), [])] };
   await open(page, PARALEGAL, 'will.1.3', false, { version: 2, state: 'draft' }, detail);
-  await expect(page.getByRole('button', { name: 'Publicar versión 2' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Publish version 2' })).toBeDisabled();
   await expect(page.getByText(REASON)).toBeVisible();
+  await expect(page.getByLabel('Correct answer')).toHaveAccessibleDescription('The correct answer must be True or False.');
 });
 
 test('a valid version shows no errors and its buttons work', async ({ page }) => {
   const detail = { entry_id: 'will.1.2', kind: 'item', legal: true, live: { version: 1, body: choice(2) },
     versions: [version(2, 'review', choice(1), []), version(1, 'published', choice(2), [])] };
   const calls = await open(page, ATTORNEY, 'will.1.2', true, { version: 2, state: 'review' }, detail);
-  await expect(page.locator('#contentDetail ul.content-errors')).toHaveCount(0);
+  await expect(page.locator('#contentDetail .field-error, #contentDetail .content-errors-box')).toHaveCount(0);
   await expect(page.getByText(REASON)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Aprobar versión 2' }).click();
+  await page.getByRole('button', { name: 'Approve version 2' }).click();
   await expect.poll(() => calls.length).toBe(1);
   expect(calls[0].postDataJSON()).toEqual({ version: 2 });
 });

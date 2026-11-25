@@ -1,107 +1,60 @@
 (() => {
-  const LESSON_TITLES = {
-    will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud", poa: "El poder notarial",
-    final: "Cuide sus documentos", bonus: "Lecciones extra", games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos",
-  };
-  const lessonName = (id) => (LESSON_TITLES[id] ? `${LESSON_TITLES[id]} (${id})` : id);
+  const lessonName = (id) => CONTENT_TITLES.lessons[id] || id;
+  function itemName(id) {
+    const item = CONTENT_TITLES.items[id];
+    if (!item) return id;
+    const step = CONTENT_TITLES.steps[id.split(".").slice(0, 2).join(".")];
+    return step ? `${step}: ${item[1]}` : item[1];
+  }
+  const percent = (rate) => (rate == null ? "—" : Math.round(rate * 100) + "%");
+
+  function table(heads, rows) {
+    const card = document.createElement("div");
+    card.className = "card flush table-wrap";
+    const t = document.createElement("table");
+    t.className = "cards";
+    const head = t.createTHead().insertRow();
+    for (const h of heads) head.appendChild(Object.assign(document.createElement("th"), { textContent: h }));
+    const body = t.createTBody();
+    for (const cells of rows) {
+      const tr = body.insertRow();
+      cells.forEach((c, i) => Object.assign(tr.insertCell(), { textContent: String(c) }).dataset.label = heads[i]);
+    }
+    card.appendChild(t);
+    return card;
+  }
+  function figure(label, value, detail) {
+    const box = document.createElement("div");
+    box.append(Object.assign(document.createElement("dt"), { textContent: label }),
+      Object.assign(document.createElement("dd"), { textContent: value }));
+    if (detail) box.appendChild(Object.assign(document.createElement("dd"), { className: "figure-detail", textContent: detail }));
+    return box;
+  }
+
   async function loadAnalytics() {
-    const section = document.getElementById("analitica");
-    if (!section) return;
+    const body = document.getElementById("analyticsBody");
+    if (!body) return;
     let data;
     try {
-      const res = await fetch(CARBON_API_BASE + "/staff/analytics", {
-        headers: { Authorization: authHeader() || "" },
-      });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch(CARBON_API_BASE + "/staff/analytics", { headers: { Authorization: authHeader() || "" } });
+      if (!res.ok) throw new Error(String(res.status));
       data = await res.json();
     } catch (e) {
-      const msg = document.createElement("p");
-      msg.setAttribute("role", "status");
-      msg.textContent = "No se pudo cargar la analítica.";
-      section.appendChild(msg);
+      body.replaceChildren(Object.assign(document.createElement("p"), { className: "error-message", textContent: "Could not load the analytics. Reload the page to try again." }));
       return;
     }
-
-    const wrap = document.createElement("div");
-    const totals = document.createElement("div");
-    totals.className = "analytics-totals";
-    wrap.appendChild(totals);
-
-    const lessonCard = document.createElement("div");
-    lessonCard.className = "card table-wrap";
-    const lessonTable = document.createElement("table");
-    const lh = document.createElement("thead");
-    const lhr = document.createElement("tr");
-    for (const h of ["Lección", "Empezaron", "Terminaron", "% terminaron", "Dejaron antes de empezar"]) {
-      const th = document.createElement("th");
-      th.textContent = h;
-      lhr.appendChild(th);
-    }
-    lh.appendChild(lhr);
-    lessonTable.appendChild(lh);
-    const lb = document.createElement("tbody");
-    for (const l of data.lessons || []) {
-      const tr = document.createElement("tr");
-      const cells = [lessonName(l.lesson_id), l.started, l.completed,
-        l.completion_rate == null ? "—" : Math.round(l.completion_rate * 100) + "%",
-        l.dropped_before_first_item];
-      for (const c of cells) {
-        const td = document.createElement("td");
-        td.textContent = String(c);
-        tr.appendChild(td);
-      }
-      lb.appendChild(tr);
-    }
-    lessonTable.appendChild(lb);
-    lessonCard.appendChild(lessonTable);
-    wrap.appendChild(lessonCard);
-
-    const itemCard = document.createElement("div");
-    itemCard.className = "card table-wrap";
-    const itemTable = document.createElement("table");
-    const ih = document.createElement("thead");
-    const ihr = document.createElement("tr");
-    for (const h of ["Pregunta", "Respondieron", "Acertaron a la primera", "% acierto", "Dejaron aquí"]) {
-      const th = document.createElement("th");
-      th.textContent = h;
-      ihr.appendChild(th);
-    }
-    ih.appendChild(ihr);
-    itemTable.appendChild(ih);
-    const ib = document.createElement("tbody");
-    for (const it of data.items || []) {
-      const tr = document.createElement("tr");
-      const cells = [LESSON_TITLES[it.lesson_id] ? `${LESSON_TITLES[it.lesson_id]} · ${it.item_id}` : it.item_id, it.answered, it.first_try_correct,
-        it.accuracy == null ? "—" : Math.round(it.accuracy * 100) + "%",
-        it.drop_off];
-      for (const c of cells) {
-        const td = document.createElement("td");
-        td.textContent = String(c);
-        tr.appendChild(td);
-      }
-      ib.appendChild(tr);
-    }
-    itemTable.appendChild(ib);
-    itemCard.appendChild(itemTable);
-    wrap.appendChild(itemCard);
-
     const conv = data.conversion || {};
     const ot = data.on_time || {};
-    const p1 = document.createElement("p");
-    const r1 = conv.rate == null ? "—" : Math.round(conv.rate * 100);
-    p1.textContent = `Pagaron: ${conv.paid} de ${conv.journeys} (${r1} %)`;
-    totals.appendChild(p1);
-    const p2 = document.createElement("p");
-    const r2 = ot.rate == null ? "—" : Math.round(ot.rate * 100);
-    p2.textContent = `Terminaron a tiempo: ${ot.on_time} de ${ot.finished} (${r2} %)`;
-    totals.appendChild(p2);
-
-    const heading = section.querySelector("h2");
-    const note = section.querySelector("p.analitica-note");
-    section.replaceChildren();
-    if (heading) section.appendChild(heading);
-    if (note) section.appendChild(note);
-    section.appendChild(wrap);
+    const totals = document.createElement("dl");
+    totals.className = "report-figures analytics-totals";
+    totals.append(figure("Paid", `${conv.paid} of ${conv.journeys}`, percent(conv.rate)),
+      figure("Finished on time", `${ot.on_time} of ${ot.finished}`, percent(ot.rate)));
+    const lessons = table(["Lesson", "Started", "Finished", "% finished", "Left before starting"],
+      (data.lessons || []).map((l) => [lessonName(l.lesson_id), l.started, l.completed, percent(l.completion_rate), l.dropped_before_first_item]));
+    const items = table(["Question", "Answered", "Right first time", "% right", "Left here"],
+      (data.items || []).map((it) => [itemName(it.item_id), it.answered, it.first_try_correct, percent(it.accuracy), it.drop_off]));
+    const h2 = (text) => Object.assign(document.createElement("h2"), { textContent: text });
+    body.replaceChildren(totals, h2("Lessons"), lessons, h2("Questions"), items);
   }
 
   document.addEventListener("DOMContentLoaded", loadAnalytics);

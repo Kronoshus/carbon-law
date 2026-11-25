@@ -6,17 +6,17 @@ async function reviewFetch(path, method="GET", body=null) {
   if (body) opts.body = JSON.stringify(body);
   let res;
   try { res = await fetch(REVIEW_API + path, opts); }
-  catch (_) { throw new Error("No se pudo conectar con el servidor. Intente de nuevo."); }
+  catch (_) { throw new Error("Could not reach the server. Try again."); }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     if (res.status < 500 && typeof data.detail === "string") throw new Error(data.detail);
-    throw new Error("El servidor tuvo un problema. Intente de nuevo en un minuto.");
+    throw new Error("The server had a problem. Try again in a minute.");
   }
   return res;
 }
 function formatReviewDate(value) {
   const date = new Date(String(value || "").slice(0, 10) + "T00:00:00");
-  return Number.isNaN(date.getTime()) ? String(value || "") : date.toLocaleDateString("es-US", { dateStyle: "long" });
+  return Number.isNaN(date.getTime()) ? String(value || "") : date.toLocaleDateString("en-US", { dateStyle: "long" });
 }
 function appendInline(el, text) {
   // **bold** is the only inline markup a draft uses
@@ -69,7 +69,7 @@ async function loadReviewQueue() {
     const data = await res.json();
     if (!data.length) {
       const tr = document.createElement("tr"); tr.className = "empty-row";
-      const td = document.createElement("td"); td.colSpan = 2; td.textContent = "No hay borradores esperando revisión.";
+      const td = document.createElement("td"); td.colSpan = 2; td.textContent = "No drafts are waiting for review.";
       tr.appendChild(td); rows.appendChild(tr);
     }
     for (const item of data) {
@@ -84,7 +84,7 @@ async function loadReviewQueue() {
       if (item.late) {
         const span = document.createElement("span");
         span.className = "late-label";
-        span.textContent = "Atrasado";
+        span.textContent = "Late";
         td.appendChild(span);
       }
       tr.appendChild(td);
@@ -95,7 +95,7 @@ async function loadReviewQueue() {
     }
   } catch (e) {
     const msg = document.getElementById("reviewMessage");
-    if (msg) { msg.className = "error-message"; msg.textContent = "No se pudo cargar la cola de revisión. " + e.message; }
+    if (msg) { msg.className = "error-message"; msg.textContent = "Could not load the review queue. " + e.message; }
   }
 }
 
@@ -125,7 +125,7 @@ async function openReview(item) {
       const tools = document.createElement("div");
       tools.className = "draft-tools";
       const dl = document.createElement("button");
-      dl.type = "button"; dl.className = "btn secondary sm"; dl.textContent = "Descargar .docx";
+      dl.type = "button"; dl.className = "btn secondary sm"; dl.textContent = "Download .docx";
       dl.addEventListener("click", async () => {
         const r = await reviewFetch("/staff/drafts/" + doc.id + "/docx");
         const blob = await r.blob();
@@ -138,20 +138,20 @@ async function openReview(item) {
       card.appendChild(tools);
       // upload
       const taLabel = document.createElement("label");
-      taLabel.htmlFor = "draft-" + doc.id; taLabel.textContent = "Texto corregido";
+      taLabel.htmlFor = "draft-" + doc.id; taLabel.textContent = "Corrected text";
       card.appendChild(taLabel);
       const ta = document.createElement("textarea");
       ta.id = "draft-" + doc.id;
       ta.value = d.content;
       card.appendChild(ta);
       const saveBtn = document.createElement("button");
-      saveBtn.type = "button"; saveBtn.className = "btn sm"; saveBtn.textContent = "Subir versión corregida";
+      saveBtn.type = "button"; saveBtn.className = "btn sm"; saveBtn.textContent = "Upload corrected version";
       saveBtn.addEventListener("click", async () => {
         await reviewFetch("/staff/drafts/" + doc.id + "/versions", "POST", { content: ta.value });
         await openReview(item);
       });
       card.appendChild(saveBtn);
-    } catch (e) { draftWrap.className = "error-message"; draftWrap.textContent = "No se pudo abrir este borrador. " + e.message; }
+    } catch (e) { draftWrap.className = "error-message"; draftWrap.textContent = "Could not open this draft. " + e.message; }
     detail.appendChild(card);
   }
   // approve / changes controls
@@ -160,17 +160,17 @@ async function openReview(item) {
   const actions = document.createElement("div");
   actions.className = "review-actions";
   const noteLabel = document.createElement("label");
-  noteLabel.htmlFor = "reviewDraftNote"; noteLabel.textContent = "Nota para pedir cambios";
+  noteLabel.htmlFor = "reviewDraftNote"; noteLabel.textContent = "Note when requesting changes";
   const note = document.createElement("textarea");
   note.id = "reviewDraftNote";
   const reqBtn = document.createElement("button");
-  reqBtn.type = "button"; reqBtn.className = "btn secondary"; reqBtn.textContent = "Pedir cambios";
+  reqBtn.type = "button"; reqBtn.className = "btn secondary"; reqBtn.textContent = "Request changes";
   reqBtn.addEventListener("click", async () => {
     await reviewFetch("/staff/journeys/" + item.journey_id + "/review", "POST", { decision: "changes", note: note.value });
     await loadReviewQueue();
   });
   const apprBtn = document.createElement("button");
-  apprBtn.type = "button"; apprBtn.className = "btn"; apprBtn.textContent = "Aprobar";
+  apprBtn.type = "button"; apprBtn.className = "btn"; apprBtn.textContent = "Approve";
 
   apprBtn.addEventListener("click", async () => {
     const msg = document.getElementById("reviewMessage");
@@ -193,7 +193,7 @@ async function openReview(item) {
   apprBtn.disabled = open > 0;
   if (open) {
     const why = document.createElement("p");
-    why.textContent = `Complete ${open === 1 ? "el punto amarillo" : `los ${open} puntos amarillos`} [ATTORNEY TO COMPLETE] para aprobar.`;
+    why.textContent = `Complete the ${open === 1 ? "yellow [ATTORNEY TO COMPLETE] item" : `${open} yellow [ATTORNEY TO COMPLETE] items`} to approve.`;
     actions.appendChild(why);
   }
   controls.appendChild(actions);
