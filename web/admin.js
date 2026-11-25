@@ -2,7 +2,7 @@ function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&"
 
 const WORKFLOW_LABELS={conflict_review:"Conflict review",conflict_hold:"Conflict hold",document_selection:"Document selection",intake:"Client information",draft_ready:"Draft ready",client_review:"Client review",attorney_review:"Attorney review",consultation:"Consultation",signing:"Signing",complete:"Complete"};
 function workflowLabel(value){return WORKFLOW_LABELS[value]||value||"—"}
-function formatAppointmentTime(value) { if (!value) return ""; const timestamp=typeof value==="string"&&!/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)?value+"Z":value; const date = new Date(timestamp); return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {dateStyle:"long",timeStyle:"short"}); }
+function formatAppointmentTime(value) { if (!value) return ""; const timestamp=typeof value==="string"&&!/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)?value+"Z":value; const date = new Date(timestamp); return Number.isNaN(date.getTime()) ? value : date.toLocaleString("en-US", {dateStyle:"long",timeStyle:"short"}); }
 function localDateTime(value) { if (!value) return ""; const date=new Date(value); return Number.isNaN(date.getTime())?"":new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16); }
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
@@ -247,7 +247,7 @@ function showServerBanner(message) {
   status.className="notice"; status.replaceChildren(`${message} Some sections did not load. `, retry);
 }
 function emptyRow(columns, text) { return `<tr class="empty-row"><td colspan="${columns}">${esc(text)}</td></tr>`; }
-function formatDate(value) { if(!value) return ""; const date=new Date(`${String(value).slice(0,10)}T00:00:00`); return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{dateStyle:"long"}); }
+function formatDate(value) { if(!value) return ""; const date=new Date(`${String(value).slice(0,10)}T00:00:00`); return Number.isNaN(date.getTime())?value:date.toLocaleDateString("en-US",{dateStyle:"long"}); }
 function setupStaffSelectors() {
   q("newOwner").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>["paralegal","attorney","admin"].includes(s.role)).map(s=>`<option value="${esc(s.name)}">${esc(s.name)} · ${esc(s.role)}</option>`).join("");
   q("newAttorney").innerHTML=`<option value="">Unassigned</option>`+staffList.filter(s=>s.role==="attorney").map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");

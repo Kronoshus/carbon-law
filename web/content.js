@@ -12,54 +12,75 @@
     return res.json();
   }
 
-  let currentKind = "item";
   let currentEntry = null;
   let currentDetail = null;
 
   function setStatus(msg){ const el=document.getElementById("contentStatus"); if(el) el.textContent = msg; }
-  const LESSONS = { will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud", poa: "El poder notarial",
-    final: "Cuide sus documentos", bonus: "Lecciones extra", games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos" };
-  // the words staff read beside each field; the code name stays visible and is what the form saves under
-  const FIELD_WORDS = { prompt: "Pregunta", options: "Opción", explain: "Explicación", statement: "Afirmación", text: "Texto",
-    texto: "Texto", answer: "Respuesta", name: "Nombre", persona: "Instrucciones del personaje", pairs: "Pareja" };
-  function fieldWords(label) {
-    const m = label.match(/^(\w+)(?: (\d+)([ab])?)? ?(?:\((es|en)\))?$/);
-    if (!m || !FIELD_WORDS[m[1]]) return label;
-    return [FIELD_WORDS[m[1]], (m[2] || "") + (m[3] || ""), m[4] ? m[4].toUpperCase() : ""].filter(Boolean).join(" ");
+  function make(tag, props, ...children) {
+    const node = Object.assign(document.createElement(tag), props || {});
+    node.append(...children);
+    return node;
+  }
+
+  // --- the entry list: human names from content-titles.js, the code id only as a tooltip ---
+  const KIND_WORDS = { explain: "Explanation", choice: "Question", truefalse: "True or false", order: "Put in order",
+    match: "Match pairs", scenario: "Story question" };
+  const PERSONA_NAMES = { shared: "Instructions every character follows", "modes.learn": "During lessons", "modes.intake": "During \"Your details\" questions" };
+  const CHARACTER_NAMES = { calavera: "La Calavera", oso: "El Oso", pinata: "Piñata", girasol: "Girasol", colibri: "Colibrí", velita: "Velita", tortuga: "Doña Tortuga" };
+
+  // [group, subgroup, kind word, line] for one entry
+  function describe(e) {
+    const id = e.entry_id;
+    if (e.kind === "datos") return ["\"Your details\" questions", "", "", CONTENT_TITLES.datos[id.slice(6)] || id];
+    if (e.kind === "summary") {
+      const [doc, article] = id.slice(8).split(".");
+      return [CONTENT_TITLES.lessons[doc] || doc, "", `Article ${article}`, CONTENT_TITLES.summaries[`${doc}.${article}`] || ""];
+    }
+    if (e.kind === "persona") {
+      const key = id.slice(8);
+      if (key.startsWith("characters.")) { const c = key.slice(11); return ["Each character", "", "", CHARACTER_NAMES[c] || c]; }
+      return ["For all characters", "", "", PERSONA_NAMES[key] || key];
+    }
+    const lesson = e.lesson_id || id.split(".")[0];
+    const item = CONTENT_TITLES.items[id];
+    const step = CONTENT_TITLES.steps[id.split(".").slice(0, 2).join(".")];
+    return [CONTENT_TITLES.lessons[lesson] || lesson, step || "", item ? KIND_WORDS[item[0]] || item[0] : "", item ? item[1] : id];
   }
 
   async function loadEntries() {
     const kind = document.getElementById("contentKind").value;
-    currentKind = kind;
     const box = document.getElementById("contentEntries");
     box.replaceChildren();
     let data;
     try { data = await api(`/staff/content?kind=${kind}`); }
-    catch (e) { setStatus("No se pudo cargar el contenido. Intente de nuevo más tarde."); return; }
+    catch (e) { setStatus("Could not load the content. Try again later."); return; }
     const entries = data.entries || [];
-    setStatus(entries.length ? "" : "No hay contenido de este tipo.");
+    setStatus(entries.length ? "" : "There is no content of this type.");
     const groups = new Map();
     for (const e of entries) {
-      const lesson = e.lesson_id || e.entry_id.split(".")[0];
-      if (!groups.has(lesson)) groups.set(lesson, []);
-      groups.get(lesson).push(e);
+      const [group, sub, kindWord, line] = describe(e);
+      if (!groups.has(group)) groups.set(group, new Map());
+      const subs = groups.get(group);
+      if (!subs.has(sub)) subs.set(sub, []);
+      subs.get(sub).push({ e, kindWord, line });
     }
-    for (const [lesson, list] of groups) {
-      const group = document.createElement("section");
-      group.className = "content-group";
-      const h = document.createElement("h3");
-      h.textContent = LESSONS[lesson] ? `${LESSONS[lesson]} (${lesson})` : lesson;
-      const row = document.createElement("div");
-      for (const e of list) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn secondary sm";
-        btn.textContent = e.entry_id + (e.pending ? " · pendiente" : "");
-        btn.addEventListener("click", () => openEntry(e.entry_id));
-        row.appendChild(btn);
+    for (const [group, subs] of groups) {
+      const section = make("section", { className: "content-group" }, make("h3", { textContent: group }));
+      for (const [sub, list] of subs) {
+        if (sub) section.appendChild(make("h4", { textContent: sub }));
+        const ul = make("ul");
+        for (const { e, kindWord, line } of list) {
+          const btn = make("button", { type: "button", className: "content-entry", title: e.entry_id });
+          btn.dataset.entry = e.entry_id;
+          if (kindWord) btn.appendChild(make("span", { className: "entry-kind", textContent: kindWord }));
+          btn.appendChild(make("span", { className: "entry-line", textContent: line }));
+          if (e.pending) btn.appendChild(make("span", { className: "badge", textContent: "Pending" }));
+          btn.addEventListener("click", () => openEntry(e.entry_id));
+          ul.appendChild(make("li", null, btn));
+        }
+        section.appendChild(ul);
       }
-      group.append(h, row);
-      box.appendChild(group);
+      box.appendChild(section);
     }
   }
 
@@ -69,322 +90,272 @@
     try { d = await api(`/staff/content/${id}`); }
     catch (e) { handleErr(e); return; }
     currentDetail = d;
+    for (const b of document.querySelectorAll("#contentEntries .content-entry")) {
+      if (b.dataset.entry === id) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+    }
     renderDetail(d);
+    if (window.matchMedia("(max-width: 1099px)").matches) document.getElementById("contentDetail").scrollIntoView();
+  }
+
+  // --- the editor: plain-English labels; each field's path in the saved body rides on the field ---
+  const FIELD_WORDS = { prompt: "Question", statement: "Statement", text: "Text", explain: "Explanation", story: "Story",
+    options: "Answer", steps: "Step", pairs: "Pair" };
+  const LANG = { es: "Spanish", en: "English" };
+
+  function pendingVersion(d) {
+    const pend = d.versions.length ? d.versions[0] : null;
+    return pend && (pend.state === "draft" || pend.state === "review") ? pend : null;
+  }
+
+  function field(label, path, value, multiline = true) {
+    const input = multiline ? make("textarea") : make("input", { type: "text" });
+    input.value = value;
+    input.dataset.path = JSON.stringify(path);
+    input.id = "cf-" + path.join("-");
+    const wrap = make("div", { className: "content-field" }, make("label", { htmlFor: input.id, textContent: label }), input);
+    return wrap;
+  }
+  // the Spanish and the English version of one field, side by side
+  function pair(word, pathOf, valueOf) {
+    return make("div", { className: "field-pair" }, ...["es", "en"].map((lang) => field(`${word} (${LANG[lang]})`, pathOf(lang), valueOf(lang))));
+  }
+
+  function itemFields(body) {
+    const es = body.es || {}, en = body.en || {};
+    const names = Object.keys(es);
+    for (const k of Object.keys(en)) if (!names.includes(k)) names.push(k);
+    const out = [];
+    for (const name of names) {
+      const word = FIELD_WORDS[name] || name;
+      const ev = es[name], nv = en[name];
+      if (Array.isArray(ev) || Array.isArray(nv)) {
+        const arrE = Array.isArray(ev) ? ev : [], arrN = Array.isArray(nv) ? nv : [];
+        const len = Math.max(arrE.length, arrN.length);
+        const isPairs = len > 0 && (Array.isArray(arrE[0]) || Array.isArray(arrN[0]));
+        for (let i = 0; i < len; i++) {
+          if (isPairs) {
+            for (const side of [0, 1]) {
+              const sideWord = `${word} ${i + 1}, ${side ? "right" : "left"}`;
+              out.push(pair(sideWord, (lang) => [lang, name, i, side], (lang) => ((lang === "es" ? arrE : arrN)[i] || [])[side] || ""));
+            }
+          } else {
+            out.push(pair(`${word} ${i + 1}`, (lang) => [lang, name, i], (lang) => (lang === "es" ? arrE : arrN)[i] || ""));
+          }
+        }
+      } else {
+        out.push(pair(word, (lang) => [lang, name], (lang) => (lang === "es" ? ev : nv) ?? ""));
+      }
+    }
+    return out;
+  }
+
+  // the correct answer, for the kinds that have one; a value the validator rejects stays selected until changed
+  function answerField(body) {
+    const options = (body.es || {}).options;
+    const isChoice = Array.isArray(options);
+    const isTrueFalse = (body.es || {}).statement !== undefined;
+    if (!isChoice && !isTrueFalse) return null;
+    const select = make("select", { id: "cf-answer" });
+    const choices = isChoice ? options.map((_, i) => [String(i), `Answer ${i + 1}`]) : [["true", "True"], ["false", "False"]];
+    const has = "answer" in body;
+    const current = String(body.answer);
+    const valid = has && typeof body.answer === (isChoice ? "number" : "boolean") && choices.some(([v]) => v === current);
+    if (!has) select.appendChild(make("option", { value: "", textContent: "Choose the correct answer" }));
+    else if (!valid) {
+      const shown = isChoice && Number.isInteger(body.answer) ? `Answer ${body.answer + 1} (does not exist)` : `${current} (not valid)`;
+      select.appendChild(make("option", { value: "keep", textContent: shown }));
+    }
+    for (const [value, text] of choices) select.appendChild(make("option", { value, textContent: text }));
+    select.value = valid ? current : has ? "keep" : "";
+    return make("div", { className: "content-field" }, make("label", { htmlFor: select.id, textContent: "Correct answer" }), select);
+  }
+
+  function sourceField(body, legal) {
+    if (!legal && body.source === undefined) return null;
+    const wrap = field("Source (law section)", ["source"], body.source ?? "", false);
+    wrap.querySelector("input").placeholder = "e.g. pc-6110";
+    wrap.querySelector("input").id = "cf-source";
+    wrap.querySelector("label").htmlFor = "cf-source";
+    return wrap;
+  }
+
+  // the validator speaks code ("will.1.2: answer out of range 5"); staff read which field is wrong and why
+  function explainError(raw, body) {
+    const text = raw.replace(/^[^:\s]+: /, "");
+    const options = ((body.es || {}).options || []).length;
+    let m;
+    if ((m = text.match(/^answer out of range (-?\d+)$/))) return ["answer", `The correct answer is set to answer ${Number(m[1]) + 1}, but there ${options === 1 ? "is only 1 answer" : `are only ${options} answers`}. Choose one of them.`];
+    if (text === "answer must be int") return ["answer", "The correct answer must be one of the answers. Choose one."];
+    if (text === "missing answer") return ["answer", "Choose the correct answer."];
+    if (text === "truefalse needs a bool") return ["answer", "The correct answer must be True or False."];
+    if ((m = text.match(/^unknown source (.+)$/))) return ["source", `"${m[1]}" is not one of the checked law sections. Use a source id from the list the attorney checked.`];
+    if (text === "legal item missing source") return ["source", "A legal item needs a source: the law section it is based on."];
+    if (text === "missing es/en") return ["", "The Spanish or the English version is missing."];
+    if (text === "es/en fields differ") return ["", "The Spanish and the English versions do not have the same fields."];
+    if (text === "list lengths differ") return ["", "The Spanish and the English versions have a different number of answers, steps or pairs."];
+    if ((m = text.match(/^(\w+) has no answer$/))) return ["", `This kind of item (${KIND_WORDS[m[1]] || m[1]}) cannot have a correct answer.`];
+    if ((m = text.match(/^unknown kind (.+)$/))) return ["", `"${m[1]}" is not a kind of item the app knows.`];
+    return ["", text];
   }
 
   function renderDetail(d) {
     const box = document.getElementById("contentDetail");
+    document.getElementById("contentHint").hidden = true;
     box.hidden = false;
-    // clear
     box.replaceChildren();
-    const h = document.createElement("h3");
-    h.textContent = d.entry_id;
-    box.appendChild(h);
+    const [group, sub, kindWord, line] = describe({ entry_id: d.entry_id, kind: d.kind, lesson_id: d.entry_id.split(".")[0] });
+    box.appendChild(make("p", { className: "content-where", textContent: [group, sub, kindWord].filter(Boolean).join(" · ") }));
+    box.appendChild(make("h2", { textContent: line }));
+    box.appendChild(make("p", { className: "muted content-id", textContent: `Entry id: ${d.entry_id}` }));
     const liveV = d.live ? d.live.version : null;
-    const p = document.createElement("p");
-    p.textContent = `Publicada: versión ${liveV === null ? "—" : liveV}`;
-    box.appendChild(p);
-    const pending = d.versions.find(v => v.state === "draft" || v.state === "review");
-    // newest pending
-    const pend = d.versions.length ? d.versions[0] : null;
-    const isPending = pend && (pend.state === "draft" || pend.state === "review");
-    if (isPending) {
-      const p2 = document.createElement("p");
-      p2.textContent = `Pendiente: versión ${pend.version} (${pend.state === "draft" ? "borrador" : "en revisión"})`;
-      box.appendChild(p2);
-    }
-    const shownVer = isPending ? pend : (d.live ? d.versions.find(v => v && v.version === d.live.version) : (d.versions.length ? d.versions[0] : null));
+    box.appendChild(make("p", { textContent: liveV === null ? "Not live yet." : `Live: version ${liveV}` }));
+    const pend = pendingVersion(d);
+    if (pend) box.appendChild(make("p", { textContent: `Waiting: version ${pend.version} (${pend.state === "draft" ? "draft" : "in review"})` }));
+    const shownVer = pend || (d.live ? d.versions.find(v => v && v.version === d.live.version) : d.versions[0] || null);
     const shownErrors = shownVer ? (shownVer.errors || []) : [];
     const hasErrors = shownErrors.length > 0;
-    // choose body to edit: pending version body else live body
-    let body = null;
-    if (isPending) body = pend.body;
-    else if (d.live) body = d.live.body;
-    else body = (d.versions[0] ? d.versions[0].body : {});
-    if (!body) body = {};
+    const body = (pend ? pend.body : d.live ? d.live.body : d.versions[0] ? d.versions[0].body : null) || {};
 
-    const form = document.createElement("div");
-    // render textareas
-    if (body && body.text !== undefined && body.es === undefined) {
-      const ta = makeTa("text", body.text || "");
-      form.appendChild(labelWrap("text", ta));
-      form.dataset.fields = JSON.stringify(["text"]);
-    } else if (body && (body.name !== undefined || body.persona !== undefined)) {
+    const form = make("div", { className: "content-form" });
+    if (body.text !== undefined && body.es === undefined) {
+      form.appendChild(field("Text", ["text"], body.text || ""));
+    } else if (body.name !== undefined || body.persona !== undefined) {
       const n = body.name || {};
-      const taEs = makeTa("name (es)", n.es || "");
-      const taEn = makeTa("name (en)", n.en || "");
-      const taP = makeTa("persona", body.persona || "");
-      form.appendChild(labelWrap("name (es)", taEs));
-      form.appendChild(labelWrap("name (en)", taEn));
-      form.appendChild(labelWrap("persona", taP));
+      form.appendChild(pair("Name", (lang) => ["name", lang], (lang) => n[lang] || ""));
+      form.appendChild(field("Instructions", ["persona"], body.persona || ""));
     } else if (typeof body.es === "string") {
-      // datos/summary
-      const esTa = makeTa("texto (es)", body.es || "");
-      const enTa = makeTa("texto (en)", body.en || "");
-      esTa.id = "field_texto_es"; enTa.id = "field_texto_en";
-      form.appendChild(labelWrap("texto (es)", esTa));
-      form.appendChild(labelWrap("texto (en)", enTa));
-      // store field map
-      form.dataset.fields = JSON.stringify(["texto"]);
+      form.appendChild(pair("Text", (lang) => [lang], (lang) => body[lang] || ""));
     } else {
-      // item: fields in es
-      const esObj = body.es || {};
-      const enObj = body.en || {};
-      const fields = Object.keys(esObj);
-      // ensure en fields
-      for (const k of Object.keys(enObj)) if (!fields.includes(k)) fields.push(k);
-      for (const field of fields) {
-        const ev = esObj[field];
-        const nv = enObj[field];
-        if (Array.isArray(ev) || Array.isArray(nv)) {
-          const arrE = Array.isArray(ev) ? ev : [];
-          const arrN = Array.isArray(nv) ? nv : [];
-          const len = Math.max(arrE.length, arrN.length);
-          // detect pairs: elements are arrays of 2
-          const isPairs = len > 0 && (Array.isArray(arrE[0]) || Array.isArray(arrN[0]));
-          if (isPairs) {
-            for (let i=0;i<len;i++) {
-              const aE = (arrE[i] && arrE[i][0]) || "";
-              const bE = (arrE[i] && arrE[i][1]) || "";
-              const aN = (arrN[i] && arrN[i][0]) || "";
-              const bN = (arrN[i] && arrN[i][1]) || "";
-              const ta = makeTa(`pairs ${i+1}a (es)`, aE); ta.dataset.field=`pairs.${i}.0`; ta.dataset.lang="es";
-              const tb = makeTa(`pairs ${i+1}b (es)`, bE); tb.dataset.field=`pairs.${i}.1`; tb.dataset.lang="es";
-              const ta2 = makeTa(`pairs ${i+1}a (en)`, aN); ta2.dataset.field=`pairs.${i}.0`; ta2.dataset.lang="en";
-              const tb2 = makeTa(`pairs ${i+1}b (en)`, bN); tb2.dataset.field=`pairs.${i}.1`; tb2.dataset.lang="en";
-              // simple: just es/en textareas labeled
-              form.appendChild(labelWrap(`pairs ${i+1}a (es)`, ta));
-              form.appendChild(labelWrap(`pairs ${i+1}b (es)`, tb));
-              form.appendChild(labelWrap(`pairs ${i+1}a (en)`, ta2));
-              form.appendChild(labelWrap(`pairs ${i+1}b (en)`, tb2));
-            }
-          } else {
-            for (let i=0;i<len;i++) {
-              const ta = makeTa(`${field} ${i+1} (es)`, arrE[i] || "");
-              const tb = makeTa(`${field} ${i+1} (en)`, arrN[i] || "");
-              ta.dataset.field = field; ta.dataset.index = i; ta.dataset.lang="es";
-              tb.dataset.field = field; tb.dataset.index = i; tb.dataset.lang="en";
-              form.appendChild(labelWrap(`${field} ${i+1} (es)`, ta));
-              form.appendChild(labelWrap(`${field} ${i+1} (en)`, tb));
-            }
-          }
-        } else {
-          const ta = makeTa(`${field} (es)`, (ev===undefined?"":ev));
-          const tb = makeTa(`${field} (en)`, (nv===undefined?"":nv));
-          ta.dataset.field = field; ta.dataset.lang="es";
-          tb.dataset.field = field; tb.dataset.lang="en";
-          form.appendChild(labelWrap(`${field} (es)`, ta));
-          form.appendChild(labelWrap(`${field} (en)`, tb));
-        }
-      }
-      // answer/source not editable? spec says body can include answer/source; but UI only fields. Hidden keep.
+      form.append(...itemFields(body));
+      const answer = answerField(body), source = sourceField(body, d.legal);
+      const extra = make("div", { className: "field-pair" }, ...[answer, source].filter(Boolean));
+      if (extra.children.length) form.appendChild(extra);
     }
+
     if (hasErrors) {
-      // above the fields, so the reason the buttons are off is the first thing read
-      const errorsBox = document.createElement("div");
-      errorsBox.className = "content-errors-box";
-      const lbl = document.createElement("p");
-      lbl.textContent = "Errores del validador:";
-      errorsBox.appendChild(lbl);
-      const ul = document.createElement("ul");
-      ul.className = "content-errors";
-      for (const e of shownErrors) {
-        const li = document.createElement("li");
-        li.textContent = e;
-        ul.appendChild(li);
-      }
-      errorsBox.appendChild(ul);
-      const warn = document.createElement("p");
-      warn.textContent = "No se puede enviar ni publicar mientras haya errores.";
-      errorsBox.appendChild(warn);
-      box.appendChild(errorsBox);
+      const general = [];
+      shownErrors.forEach((raw, i) => {
+        const [where, message] = explainError(raw, body);
+        const control = where && form.querySelector(where === "answer" ? "#cf-answer" : "#cf-source");
+        if (!control) { general.push(message); return; }
+        const note = make("p", { className: "field-error", id: `cf-error-${i}`, textContent: message });
+        control.after(note);
+        control.setAttribute("aria-invalid", "true");
+        control.setAttribute("aria-describedby", [control.getAttribute("aria-describedby"), note.id].filter(Boolean).join(" "));
+      });
+      const count = shownErrors.length;
+      const summary = make("div", { className: "content-errors-box", role: "alert" },
+        make("p", { textContent: `${count === 1 ? "1 problem" : `${count} problems`} to fix. You cannot send this for review or publish it until ${count === 1 ? "it is" : "they are"} fixed.` }));
+      if (general.length) summary.appendChild(make("ul", { className: "content-errors" }, ...general.map((m) => make("li", { textContent: m }))));
+      else summary.appendChild(make("p", { className: "content-errors-where", textContent: "Each problem is shown in red under its field." }));
+      box.appendChild(summary);
     }
     box.appendChild(form);
-    // buttons
-    const btns = document.createElement("div");
-    btns.className = "content-actions";
-    const saveBtn = document.createElement("button"); saveBtn.type="button"; saveBtn.className="btn secondary sm"; saveBtn.textContent="Guardar borrador";
-    const submitBtn = document.createElement("button"); submitBtn.type="button"; submitBtn.className="btn sm"; submitBtn.textContent="Enviar a revisión";
-    submitBtn.disabled = hasErrors;
-    const previewBtn = document.createElement("button"); previewBtn.type="button"; previewBtn.className="btn secondary sm"; previewBtn.textContent="Vista previa";
-    btns.appendChild(saveBtn); btns.appendChild(submitBtn); btns.appendChild(previewBtn);
 
-    const isLegal = d.legal;
+    const btns = make("div", { className: "content-actions" });
+    const saveBtn = make("button", { type: "button", className: "btn secondary sm", textContent: "Save draft" });
+    const submitBtn = make("button", { type: "button", className: "btn sm", textContent: "Send for review", disabled: hasErrors });
+    const previewBtn = make("button", { type: "button", className: "btn secondary sm", textContent: "Preview" });
+    btns.append(saveBtn, submitBtn, previewBtn);
     const isAttorney = user() && user().role === "attorney";
-    if (isLegal) {
-      if (isAttorney && isPending) {
-        const ab = document.createElement("button"); ab.type="button"; ab.className="btn sm"; ab.textContent = `Aprobar versión ${pend.version}`;
-        ab.disabled = hasErrors;
+    if (d.legal) {
+      if (isAttorney && pend) {
+        const ab = make("button", { type: "button", className: "btn sm", textContent: `Approve version ${pend.version}`, disabled: hasErrors });
         ab.addEventListener("click", () => approveVersion(pend.version));
         btns.appendChild(ab);
       } else {
-        const txt = document.createElement("p"); txt.textContent = "Solo el abogado puede aprobar y publicar este contenido.";
-        box.appendChild(txt);
+        box.appendChild(make("p", { className: "muted", textContent: "Only the attorney can approve and publish this content." }));
       }
-    } else {
-      if (isPending) {
-        const pb = document.createElement("button"); pb.type="button"; pb.className="btn sm"; pb.textContent = `Publicar versión ${pend.version}`;
-        pb.disabled = hasErrors;
-        pb.addEventListener("click", () => publishVersion(pend.version));
-        btns.appendChild(pb);
-      }
+    } else if (pend) {
+      const pb = make("button", { type: "button", className: "btn sm", textContent: `Publish version ${pend.version}`, disabled: hasErrors });
+      pb.addEventListener("click", () => publishVersion(pend.version));
+      btns.appendChild(pb);
     }
     box.appendChild(btns);
 
-    saveBtn.addEventListener("click", () => saveDraft(body));
+    saveBtn.addEventListener("click", saveDraft);
     submitBtn.addEventListener("click", submitEntry);
-    previewBtn.addEventListener("click", () => previewEntry(isPending ? pend.version : (d.live?d.live.version:0)));
+    previewBtn.addEventListener("click", () => previewEntry(pend ? pend.version : (d.live ? d.live.version : 0)));
   }
 
-  function makeTa(label, value) {
-    const ta = document.createElement("textarea");
-    ta.setAttribute("aria-label", label);
-    ta.value = value;
-    return ta;
-  }
-  function labelWrap(label, ta) {
-    const lab = document.createElement("label");
-    lab.textContent = fieldWords(label);
-    if (lab.textContent !== label) { const code = document.createElement("code"); code.textContent = label; lab.appendChild(code); }
-    const wrap = document.createElement("div");
-    wrap.appendChild(lab);
-    wrap.appendChild(ta);
-    return wrap;
+  function setPath(target, path, value) {
+    let node = target;
+    path.forEach((key, i) => {
+      if (i === path.length - 1) { node[key] = value; return; }
+      if (node[key] === undefined) node[key] = typeof path[i + 1] === "number" ? [] : {};
+      node = node[key];
+    });
   }
 
+  // the same body the editor always saved: { es, en, answer?, source? } for an item, the kind's own shape otherwise
   function collectBody() {
     const box = document.getElementById("contentDetail");
-    const textTa = box.querySelector('textarea[aria-label="text"]');
-    if (textTa) {
-      return { text: textTa.value };
+    const pend = pendingVersion(currentDetail);
+    const orig = (pend ? pend.body : currentDetail.live ? currentDetail.live.body : null) || {};
+    const body = {};
+    for (const input of box.querySelectorAll("[data-path]")) {
+      const path = JSON.parse(input.dataset.path);
+      if (path[0] === "source") { if (input.value.trim()) body.source = input.value.trim(); continue; }
+      setPath(body, path, input.value);
     }
-    const nameEs = box.querySelector('textarea[aria-label="name (es)"]');
-    if (nameEs) {
-      const nameEn = box.querySelector('textarea[aria-label="name (en)"]').value;
-      const persona = box.querySelector('textarea[aria-label="persona"]').value;
-      return { name: { es: nameEs.value, en: nameEn }, persona };
-    }
-    const tas = box.querySelectorAll("textarea");
-    // detect datos/summary: textareas with aria-label texto (es)
-    const textoEs = box.querySelector('textarea[aria-label="texto (es)"]');
-    if (textoEs) {
-      const es = box.querySelector('textarea[aria-label="texto (es)"]').value;
-      const en = box.querySelector('textarea[aria-label="texto (en)"]').value;
-      return { es, en };
-    }
-    // item
-    const esObj = {};
-    const enObj = {};
-    // simple fields
-    for (const ta of tas) {
-      const lab = ta.getAttribute("aria-label");
-      // parse field name
-    }
-    // We'll reconstruct by labels
-    // Group by aria-label
-    const map = {};
-    for (const ta of tas) {
-      const lab = ta.getAttribute("aria-label");
-      map[lab] = ta.value;
-    }
-    // Now build esObj/enObj by iterating original? Simpler: for each textarea label ending (es)/(en)
-    // We'll just put all non-list fields
-    // Re-scan labels
-    const esFields = new Set();
-    const enFields = new Set();
-    for (const lab of Object.keys(map)) {
-      const m = lab.match(/^(.*) \((es|en)\)$/);
-      if (!m) continue;
-      const field = m[1].trim();
-      const lang = m[2];
-      // handle list index
-      const mi = field.match(/^(.*) (\d+)$/);
-      if (mi) {
-        const f = mi[1];
-        const idx = parseInt(mi[2])-1;
-        if (!esObj[f]) esObj[f]=[]; if (!enObj[f]) enObj[f]=[];
-        if (lang==="es") esObj[f][idx]=map[lab]; else enObj[f][idx]=map[lab];
-      } else if (field.startsWith("pairs ")) {
-        // pairs 1a
-        const mp = field.match(/^pairs (\d+)(a|b)$/);
-        if (mp) {
-          const i = parseInt(mp[1])-1;
-          const ab = mp[2];
-          const j = ab==="a"?0:1;
-          if (!esObj.pairs) esObj.pairs=[]; if (!enObj.pairs) enObj.pairs=[];
-          if (!esObj.pairs[i]) esObj.pairs[i]=["",""];
-          if (!enObj.pairs[i]) enObj.pairs[i]=["",""];
-          if (lang==="es") esObj.pairs[i][j]=map[lab]; else enObj.pairs[i][j]=map[lab];
-        }
-      } else {
-        if (lang==="es") esObj[field]=map[lab]; else enObj[field]=map[lab];
-      }
-    }
-    const body = { es: esObj, en: enObj };
-    // answer/source not in UI; preserve from current detail? For draft, test expects source included. The original draft body from detail has source. But our collected body lacks source. Need add source from current body if present.
-    // Find current pending/live body
-    let orig = null;
-    const d = currentDetail;
-    const pend = d.versions[0];
-    if (pend && (pend.state==="draft"||pend.state==="review")) orig = pend.body;
-    else if (d.live) orig = d.live.body;
-    if (orig && orig.source !== undefined) body.source = orig.source;
-    if (orig && orig.answer !== undefined) body.answer = orig.answer;
+    if (orig.source !== undefined && !box.querySelector("#cf-source")) body.source = orig.source;
+    const answer = box.querySelector("#cf-answer");
+    if (answer) {
+      if (answer.value === "keep") body.answer = orig.answer;
+      else if (answer.value === "true" || answer.value === "false") body.answer = answer.value === "true";
+      else if (answer.value !== "") body.answer = Number(answer.value);
+    } else if (orig.answer !== undefined) body.answer = orig.answer;
     return body;
   }
 
-  async function saveDraft(origBody) {
-    const body = collectBody();
+  async function saveDraft() {
     try {
-      const res = await api(`/staff/content/${currentEntry}/draft`, "PUT", { body });
-      setStatus("");
+      await api(`/staff/content/${currentEntry}/draft`, "PUT", { body: collectBody() });
+      setStatus("Draft saved.");
       await openEntry(currentEntry);
-    } catch (e) {
-      handleErr(e);
-    }
+    } catch (e) { handleErr(e); }
   }
   async function submitEntry() {
-    try {
-      await api(`/staff/content/${currentEntry}/submit`, "POST");
-      await openEntry(currentEntry);
-    } catch (e) {
-      handleErr(e);
-    }
+    try { await api(`/staff/content/${currentEntry}/submit`, "POST"); setStatus("Sent for review."); await openEntry(currentEntry); }
+    catch (e) { handleErr(e); }
   }
   async function approveVersion(v) {
-    try {
-      await api(`/staff/content/${currentEntry}/approve`, "POST", { version: v });
-      await openEntry(currentEntry);
-    } catch (e) { handleErr(e); }
+    try { await api(`/staff/content/${currentEntry}/approve`, "POST", { version: v }); setStatus(`Version ${v} approved and live.`); await openEntry(currentEntry); }
+    catch (e) { handleErr(e); }
   }
   async function publishVersion(v) {
-    try {
-      await api(`/staff/content/${currentEntry}/publish`, "POST", { version: v });
-      await openEntry(currentEntry);
-    } catch (e) { handleErr(e); }
+    try { await api(`/staff/content/${currentEntry}/publish`, "POST", { version: v }); setStatus(`Version ${v} is live.`); await openEntry(currentEntry); }
+    catch (e) { handleErr(e); }
   }
+  // the preview shows the client's text as the app shows it: in Spanish
   async function previewEntry(v) {
-    const lang = "es";
-    const data = await api(`/staff/content/${currentEntry}/preview?version=${v}&lang=${lang}`);
     const box = document.querySelector(".content-preview");
-    if (data.text !== undefined) {
-      box.textContent = data.text;
-    } else {
-      // item
+    let data;
+    try { data = await api(`/staff/content/${currentEntry}/preview?version=${v}&lang=es`); }
+    catch (e) { handleErr(e); return; }
+    let txt = "";
+    if (data.text !== undefined) txt = data.text;
+    else {
       const item = data.item || {};
-      let txt = "";
-      for (const k of Object.keys(item)) {
-        txt += `${k}: ${item[k]}\n`;
-      }
+      for (const k of Object.keys(item)) txt += `${k}: ${item[k]}\n`;
       if (data.explain) txt += `explain: ${data.explain}`;
-      box.textContent = txt;
     }
+    box.replaceChildren(make("h3", { textContent: "Preview (as the client sees it, in Spanish)" }), make("pre", { textContent: txt }));
   }
   function handleErr(e) {
+    let j = null;
+    try { j = JSON.parse(e.body); } catch (_) { /* not JSON */ }
+    const missing = (list) => list.map((l) => LANG[l] || l).join(" and ");
     let msg = "";
-    try { const j = JSON.parse(e.body); if (j.error === "languages") msg = `Faltan los dos idiomas para publicar: ${j.missing.join("/")}.`; } catch(_) {}
-    if (!msg && e.status && e.status < 500) { try { const j = JSON.parse(e.body); if (typeof j.detail === "string") msg = j.detail; } catch(_) {} }
-    if (!msg) msg = e.status >= 500 ? "El servidor tuvo un problema. Intente de nuevo en un minuto." : (e.body || e.message);
+    if (j && j.error === "languages") msg = `Both languages are needed. Missing: ${missing(j.missing)}.`;
+    else if (j && j.error === "placeholders") msg = `The instructions must keep these placeholders: ${j.missing.join(", ")}.`;
+    else if (j && j.error === "invalid") msg = "This version has problems. Fix the fields marked in red first.";
+    else if (j && j.error === "no_draft") msg = "There is no draft to send. Save a draft first.";
+    else if (j && j.error === "bad_shape") msg = "This content does not have the shape the app expects. Nothing was saved.";
+    else if (e.status === 403) msg = "Your account cannot do this.";
+    else if (e.status === 404) msg = "This entry no longer exists. Reload the list.";
+    else if (e.status && e.status < 500 && j && typeof j.detail === "string") msg = j.detail;
+    if (!msg) msg = e.status >= 500 || !e.status ? "The server had a problem. Try again in a minute." : "That did not work. Try again.";
     setStatus(msg);
   }
 

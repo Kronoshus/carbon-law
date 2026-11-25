@@ -55,25 +55,25 @@ async function admin(page: Page, role: 'attorney' | 'paralegal') {
   });
   const holidays: Request[] = [];
   await page.route(/\/staff\/holidays$/, (r) => { holidays.push(r.request()); return r.fulfill({ json: { holidays: [] } }); });
-  await page.goto(`${ADMIN}/admin.html#firma`);
+  await page.goto(`${ADMIN}/admin.html#firm`);
   return { puts, holidays };
 }
 
 test('the admin turns AI chat off and adds a holiday through its own route', async ({ page }) => {
   const { puts, holidays } = await admin(page, 'attorney');
-  const ai = page.getByLabel('Charla con IA');
+  const ai = page.getByLabel('AI chat');
   await expect(ai).toBeChecked();
-  await expect(page.getByLabel('Lecciones por día')).toHaveValue('1');
-  await expect(page.getByLabel('Borrar datos de quien no pagó después de (días)')).toHaveValue('365');
+  await expect(page.getByLabel('Lessons per day')).toHaveValue('1');
+  await expect(page.getByLabel("Delete unpaid clients' data after (days)")).toHaveValue('365');
   await ai.uncheck();
-  await page.getByRole('button', { name: 'Guardar ajustes' }).click();
+  await page.getByRole('button', { name: 'Save settings' }).click();
   await expect.poll(() => puts.length).toBe(1);
   const sent = puts[0].postDataJSON();
   expect(puts[0].method()).toBe('PUT');
   expect(sent.switches.ai_chat).toBe(false);
   expect(Object.keys(sent).sort()).toEqual(['switches']);                               // only what changed
-  await page.getByLabel('Día feriado').fill('2026-12-24');
-  await page.getByRole('button', { name: 'Agregar feriado' }).click();
+  await page.getByLabel('Holiday', { exact: true }).fill('2026-12-24');
+  await page.getByRole('button', { name: 'Add holiday' }).click();
   await expect.poll(() => holidays.length).toBe(1);
   expect(holidays[0].method()).toBe('PUT');
   expect([...holidays[0].postDataJSON().dates].sort()).toEqual(['2026-12-24', '2026-12-25']);
@@ -82,10 +82,10 @@ test('the admin turns AI chat off and adds a holiday through its own route', asy
 
 test('a paralegal sees the firm settings but cannot change them', async ({ page }) => {
   await admin(page, 'paralegal');
-  await expect(page.getByLabel('Charla con IA')).toBeDisabled();
-  await expect(page.getByLabel('Extensión de Chrome')).toBeDisabled();
-  await expect(page.getByLabel('Lecciones por día')).toBeDisabled();
-  await expect(page.getByText('Solo el abogado o un administrador puede cambiar estos ajustes.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Guardar ajustes' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Agregar feriado' })).toBeEnabled();     // holidays stay editable, as today
+  await expect(page.getByLabel('AI chat')).toBeDisabled();
+  await expect(page.getByLabel('Chrome extension')).toBeDisabled();
+  await expect(page.getByLabel('Lessons per day')).toBeDisabled();
+  await expect(page.getByText('Only the attorney or an admin can change these settings.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save settings' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add holiday' })).toBeEnabled();     // holidays stay editable, as today
 });

@@ -1,20 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Carbon Law Group staff console: matters, reviews and firm settings."><meta name="robots" content="noindex"><title>Staff dashboard | Carbon Law Group</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="img/carbon-law-group-mark.png"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Carbon Law Group staff dashboard: matters, reviews, clients, lesson content and firm settings."><meta name="robots" content="noindex"><title>Staff dashboard | Carbon Law Group</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="img/carbon-law-group-mark.png"></head>
 <body>
 <div class="app-shell">
-  <aside class="sidebar">
-    <a class="brand" href="index.html"><img src="img/carbon-law-group-logo-white.png" srcset="img/carbon-law-group-logo-white.png 1x, img/carbon-law-group-logo-white@2x.png 2x" width="116" height="32" alt="Carbon Law Group"></a>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="dashboard.html">Matter dashboard</a>
-      <a href="admin.html" class="active" aria-current="page">Staff dashboard</a>
-      <a href="portal.html">Client portal</a>
-      <a href="prompts.html">Prompt library</a>
-      <span class="nav-label">On this page</span>
-      <a href="#workQueue">Work queue</a><a href="#contacts">Client contacts</a><a href="#communications">Communications</a><a href="#reportsRecords">Reports &amp; records</a>
-    </nav>
-    <div class="user-box" id="userBox"></div>
+  <aside class="sidebar console-sidebar" id="consoleSidebar">
+    <div class="console-bar">
+      <a class="brand" href="index.html"><img src="img/carbon-law-group-logo-white.png" srcset="img/carbon-law-group-logo-white.png 1x, img/carbon-law-group-logo-white@2x.png 2x" width="116" height="32" alt="Carbon Law Group"></a>
+      <button type="button" class="menu-button" id="menuButton" aria-expanded="false" aria-controls="consoleMenu">Menu</button>
+    </div>
+    <div class="console-menu" id="consoleMenu">
+      <nav id="consoleNav" aria-label="Staff dashboard">
+        <p class="nav-label">Work</p>
+        <a href="#queue">Today</a>
+        <a href="#review">Review drafts</a>
+        <a href="#matters">Matters</a>
+        <a href="#appointments">Appointments &amp; changes</a>
+        <p class="nav-label">Clients</p>
+        <a href="#clients">Clients</a>
+        <a href="#contacts">Contacts &amp; messages</a>
+        <p class="nav-label">Content</p>
+        <a href="#content">Lesson content</a>
+        <a href="#characters">Characters</a>
+        <a href="#library">Practice library</a>
+        <p class="nav-label">Firm</p>
+        <a href="#firm">Firm settings</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#reports">Reports</a>
+        <p class="nav-label">Other pages</p>
+        <a href="dashboard.html">Matter dashboard</a>
+        <a href="portal.html">Client portal</a>
+        <a href="prompts.html">Prompt library</a>
+        <a href="index.html">Public site</a>
+      </nav>
+      <div class="user-box" id="userBox"></div>
+    </div>
   </aside>
   <main class="main-content" id="adminMain" hidden>
     <p id="adminStatus" role="status" aria-live="polite"></p>
@@ -26,12 +45,6 @@
     </dialog>
     <datalist id="matterOptions"></datalist>
     <dialog id="historyDialog" aria-labelledby="historyTitle"><h2 id="historyTitle">Matter history</h2><div id="historyContent"></div><button class="btn secondary" id="closeHistory">Close</button></dialog>
-    <div class="topbar"><h1>Staff dashboard</h1>
-      <div class="actions">
-        <button class="btn sm" onclick="openModal('matterModal')">New matter</button>
-      </div>
-    </div>
-
     <dialog class="matter-dialog" id="matterModal" aria-labelledby="matterModalTitle">
       <div class="modal">
         <h2 id="matterModalTitle">Create matter</h2>
@@ -57,157 +70,180 @@
       </div>
     </dialog>
 
-    <div class="section">
-      <h2>Client intake workflow</h2><p id="workflowMessage" role="status"></p>
-      <div class="card table-wrap"><table><thead><tr><th>Client</th><th>Stage</th><th>Requested documents</th><th>Staff action</th></tr></thead><tbody id="workflowRows"></tbody></table></div>
-    </div>
-    <div class="section">
-      <h2>Matters</h2><p id="mattersMessage" role="status"></p>
-      <div class="card flush">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Attorney reviewer</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update Stage</th></tr></thead>
+    <section class="screen" data-screen="queue" aria-labelledby="screenQueue" hidden>
+      <div class="topbar"><h1 id="screenQueue" tabindex="-1">Today</h1><div class="actions"><button class="btn sm" type="button" onclick="openModal('matterModal')">New matter</button></div></div>
+      <div class="section">
+        <h2>Client intake</h2><p id="workflowMessage" role="status"></p>
+        <div class="card flush table-wrap"><table class="cards"><thead><tr><th>Client</th><th>Stage</th><th>Requested documents</th><th>Staff action</th></tr></thead><tbody id="workflowRows"></tbody></table></div>
+      </div>
+      <div class="section">
+        <h2>Tasks</h2>
+        <div class="stack">
+          <div class="card"><h3>Active tasks</h3><label>Filter by matter <select id="taskFilter"><option value="">All matters</option></select></label><div class="table-wrap"><table class="cards"><thead><tr><th>Matter</th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Blocker</th><th>Action</th></tr></thead><tbody id="taskRows"></tbody></table></div><p id="taskMessage" role="status"></p></div>
+          <div class="card"><h3>Create task</h3><form id="taskForm"><div class="form-row"><label>Matter<select id="taskMatter" required></select></label><label>Owner<select id="taskOwner" required><option value="">Select owner</option></select></label></div><label>Task<input id="taskTitle" maxlength="200" required></label><div class="form-row"><label>Due date<input id="taskDue" type="date"></label><label>Blocker<input id="taskBlocker" value="None" maxlength="300"></label></div><button class="btn sm">Add task</button></form></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="review" id="reviewSection" aria-labelledby="screenReview" hidden>
+      <div class="topbar"><h1 id="screenReview" tabindex="-1">Review drafts</h1></div>
+      <p id="reviewMessage" role="status"></p>
+      <div class="card flush table-wrap"><table class="cards"><thead><tr><th>Client</th><th>Due</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
+      <div id="reviewDetail" hidden></div>
+    </section>
+
+    <section class="screen" data-screen="matters" aria-labelledby="screenMatters" hidden>
+      <div class="topbar"><h1 id="screenMatters" tabindex="-1">Matters</h1><div class="actions"><button class="btn sm" type="button" onclick="openModal('matterModal')">New matter</button></div></div>
+      <div class="section">
+        <p id="mattersMessage" role="status"></p>
+        <div class="card flush table-wrap">
+          <table class="cards">
+            <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Attorney reviewer</th><th>Risk</th><th>Priority</th><th>Due</th><th>Update stage</th></tr></thead>
             <tbody id="adminMatterRows"></tbody>
           </table>
         </div>
       </div>
-    </div>
-
-    <div class="section">
-        <h2>Change request queue</h2><p id="changeRequestsMessage" role="status"></p>
-        <div class="card flush">
-          <div class="table-wrap"><table>
-            <thead><tr><th>ID</th><th>Matter</th><th>Type</th><th>By</th><th>Status</th><th>Impact</th></tr></thead>
-            <tbody id="crRows"></tbody>
-          </table></div>
-        </div>
-      </div>
-    <div class="section">
-        <h2>Appointments</h2><p id="appointmentMessage" role="status"></p>
-        <div class="card flush">
-          <div class="table-wrap"><table>
-            <thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead>
-            <tbody id="apptRows"></tbody>
-          </table></div>
-        </div>
-      </div>
-
-    <div class="section">
-      <h2>Documents</h2><p id="documentsMessage" role="status"></p>
-      <div class="card flush">
-        <div class="table-wrap"><table>
+      <div class="section">
+        <h2>Documents</h2><p id="documentsMessage" role="status"></p>
+        <div class="card flush table-wrap"><table class="cards">
           <thead><tr><th>Matter</th><th>Document</th><th>Version</th><th>Status</th></tr></thead>
           <tbody id="docRows"></tbody>
         </table></div>
       </div>
-    </div>
+    </section>
 
-    <div class="section">
-      <h2 id="workQueue">Work queue</h2>
-      <div class="stack">
-        <div class="card"><h3>Create task</h3><form id="taskForm"><div class="form-row"><label>Matter<select id="taskMatter" required></select></label><label>Owner<select id="taskOwner" required><option value="">Select owner</option></select></label></div><label>Task<input id="taskTitle" maxlength="200" required></label><div class="form-row"><label>Due date<input id="taskDue" type="date"></label><label>Blocker<input id="taskBlocker" value="None" maxlength="300"></label></div><button class="btn sm">Add task</button></form><p id="taskMessage" role="status"></p></div>
-        <div class="card"><h3>Active tasks</h3><label>Filter by matter <select id="taskFilter"><option value="">All matters</option></select></label><div class="table-wrap"><table><thead><tr><th>Matter</th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Blocker</th><th>Action</th></tr></thead><tbody id="taskRows"></tbody></table></div></div>
+    <section class="screen" data-screen="appointments" aria-labelledby="screenAppointments" hidden>
+      <div class="topbar"><h1 id="screenAppointments" tabindex="-1">Appointments &amp; changes</h1></div>
+      <div class="section">
+        <h2>Appointments</h2><p id="appointmentMessage" role="status"></p>
+        <div class="card flush table-wrap"><table class="cards">
+          <thead><tr><th>ID</th><th>Matter</th><th>Kind</th><th>Scheduled</th><th>Status</th><th>Note</th></tr></thead>
+          <tbody id="apptRows"></tbody>
+        </table></div>
       </div>
-    </div>
-    <div class="section">
-      <h2 id="contacts">Client contacts</h2><div class="card table-wrap"><table><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Phone</th><th>Request</th><th>Status</th><th>Staff note</th><th>Save</th></tr></thead><tbody id="contactRows"></tbody></table></div><p id="contactMessage" role="status"></p>
-    </div>
-    <div class="section">
-      <h2 id="communications">Matter communications</h2><div class="card"><div class="form-row"><label>Matter<select id="commMatter" required></select></label><label>Channel<select id="commChannel"><option>email</option><option>phone</option><option>portal</option><option>meeting</option></select></label><label>Direction<select id="commDirection"><option value="outbound">Outbound</option><option value="inbound">Inbound</option></select></label></div><label>Summary<textarea id="commSummary" maxlength="2000" required></textarea></label><label>Visibility<select id="commVisibility"><option value="internal">Staff only</option><option value="client">Show in client portal</option></select></label><button class="btn sm" id="saveComm">Log communication</button><p id="commMessage" role="status"></p><div id="commRows"></div></div>
-    </div>
-    <div class="section">
-      <h2 id="reportsRecords">Reports &amp; records</h2><div class="grid2"><div class="card"><h3>Capacity by owner</h3><p id="capacityMessage" role="status"></p><div id="capacityReport"></div></div><div class="card"><h3>Workflow bottlenecks</h3><p id="bottleneckMessage" role="status"></p><div id="bottleneckReport"></div></div></div>
-      <div class="card"><h3>Recent audit activity</h3><label>Entity filter <input id="auditEntity" placeholder="e.g. matter, task"></label><button class="btn secondary sm" id="refreshAudit">Refresh</button><div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody id="auditRows"></tbody></table></div><p id="auditMessage" role="status"></p></div>
-      <p><a class="btn secondary" href="https://carbon-law.onrender.com/export/matters.csv" id="exportMatters">Export matters (CSV)</a></p>
-    </div>
-    <div class="section">
-      <h2>Friday report</h2><p id="reportMessage" role="status"></p>
-      <p>Current portfolio snapshot; counts are not limited to a specific week.</p>
-      <button class="btn" id="genReport">Refresh report</button>
-      <div id="report"></div>
-    </div>
-    <div class="section">
-      <h2 id="practiceLibrary">Practice library</h2><p>Read-only prompt and template reference for staff.</p><div class="grid2"><div class="card"><h3>Prompts</h3><p id="promptMessage" role="status"></p><select id="promptSelect"><option value="">Select a prompt</option></select><pre id="promptContent"></pre></div><div class="card"><h3>Templates</h3><p id="templateMessage" role="status"></p><select id="templateSelect"><option value="">Select a template</option></select><pre id="templateContent"></pre></div></div>
-    </div>
-
-
-    <div class="section" id="reviewSection">
-      <h2 id="review">Revisión de borradores</h2>
-      <p id="reviewMessage" role="status"></p>
-      <div class="card table-wrap"><table><thead><tr><th>Cliente</th><th>Vence</th></tr></thead><tbody id="reviewQueueRows"></tbody></table></div>
-      <div id="reviewDetail" hidden></div>
-    </div>
-  
-    <div class="section" id="firma">
-      <h2>Firma</h2>
-      <p id="firmaMessage" role="status"></p>
-      <div class="grid2">
-        <div class="card firm-settings">
-          <h3>Ajustes</h3>
-          <label><input type="checkbox" id="firmVoice"> Grabación de voz</label>
-          <label><input type="checkbox" id="firmAi"> Charla con IA</label>
-          <label><input type="checkbox" id="firmExt"> Extensión de Chrome</label>
-          <label>Lecciones por día <input type="number" id="firmLpd" min="1" max="4"></label>
-          <label>Borrar datos de quien no pagó después de (días) <input type="number" id="firmRetention" min="30"></label>
-          <p id="firmReadOnly" hidden></p>
-          <button class="btn sm" id="firmSave" type="button">Guardar ajustes</button>
-        </div>
-        <div class="card firm-settings">
-          <h3>Feriados</h3>
-          <label>Día feriado <input type="date" id="firmHolidayDate"></label>
-          <button class="btn sm secondary" id="firmAddHoliday" type="button">Agregar feriado</button>
-          <ul id="firmHolidayList"></ul>
-        </div>
+      <div class="section">
+        <h2>Change requests</h2><p id="changeRequestsMessage" role="status"></p>
+        <div class="card flush table-wrap"><table class="cards">
+          <thead><tr><th>ID</th><th>Matter</th><th>Type</th><th>By</th><th>Status</th><th>Impact</th></tr></thead>
+          <tbody id="crRows"></tbody>
+        </table></div>
       </div>
-      <div class="card">
-        <h3>Horario de oficina</h3>
-        <table><tbody id="firmHoursRows"></tbody></table>
-        <button class="btn sm secondary" id="firmSaveHours" type="button">Guardar horario</button>
-      </div>
-    </div>
+    </section>
 
-    <div class="section" id="clientes">
-      <h2>Clientes</h2>
+    <section class="screen" data-screen="clients" id="clientes" aria-labelledby="screenClients" hidden>
+      <div class="topbar"><h1 id="screenClients" tabindex="-1">Clients</h1></div>
       <p id="clientesMessage" role="status"></p>
-      <div class="card table-wrap">
-        <table>
-          <thead><tr><th>Cliente</th><th>Día</th><th>Atrasos</th><th>Conflicto</th><th>Datos</th><th>Pago</th><th>Borradores</th><th>Citas</th><th>Preguntas</th></tr></thead>
+      <div class="card flush table-wrap">
+        <table class="cards">
+          <thead><tr><th>Client</th><th>Day</th><th>Late</th><th>Conflict check</th><th>Details</th><th>Payment</th><th>Drafts</th><th>Appointments</th><th>Questions</th></tr></thead>
           <tbody id="clientesRows"></tbody>
         </table>
       </div>
       <div id="clienteDetail" class="card" hidden></div>
-    </div>
+    </section>
 
+    <section class="screen" data-screen="contacts" aria-labelledby="screenContacts" hidden>
+      <div class="topbar"><h1 id="screenContacts" tabindex="-1">Contacts &amp; messages</h1></div>
+      <div class="section">
+        <h2>Contact requests</h2><p id="contactMessage" role="status"></p>
+        <div class="card flush table-wrap"><table class="cards"><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Phone</th><th>Request</th><th>Status</th><th>Staff note</th><th>Save</th></tr></thead><tbody id="contactRows"></tbody></table></div>
+      </div>
+      <div class="section">
+        <h2>Matter communications</h2><div class="card"><div class="form-row"><label>Matter<select id="commMatter" required></select></label><label>Channel<select id="commChannel"><option value="email">Email</option><option value="phone">Phone</option><option value="portal">Portal</option><option value="meeting">Meeting</option></select></label></div><div class="form-row"><label>Direction<select id="commDirection"><option value="outbound">Outbound</option><option value="inbound">Inbound</option></select></label><label>Visibility<select id="commVisibility"><option value="internal">Staff only</option><option value="client">Show in client portal</option></select></label></div><label>Summary<textarea id="commSummary" maxlength="2000" required></textarea></label><button class="btn sm" id="saveComm">Log communication</button><p id="commMessage" role="status"></p><div id="commRows"></div></div>
+      </div>
+    </section>
 
-    <div class="section" id="personajes">
-      <h2>Personajes</h2>
+    <section class="screen" data-screen="content" id="contenido" aria-labelledby="screenContent" hidden>
+      <div class="topbar"><h1 id="screenContent" tabindex="-1">Lesson content</h1></div>
+      <p id="contentStatus" role="status" aria-live="polite"></p>
+      <div class="content-layout">
+        <div class="content-list">
+          <label for="contentKind">Show</label>
+          <select id="contentKind">
+            <option value="item">Lessons</option>
+            <option value="datos">"Your details" questions</option>
+            <option value="summary">Document summaries</option>
+            <option value="persona">Character instructions</option>
+          </select>
+          <div id="contentEntries" class="card content-entries"></div>
+        </div>
+        <div class="content-editor">
+          <p class="content-hint" id="contentHint">Choose an entry to read or edit it.</p>
+          <div id="contentDetail" class="card" hidden></div>
+          <div class="content-preview" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="characters" id="personajes" aria-labelledby="screenCharacters" hidden>
+      <div class="topbar"><h1 id="screenCharacters" tabindex="-1">Characters</h1></div>
       <p id="charactersStatus" role="status" aria-live="polite"></p>
       <div id="charactersList"></div>
-    </div>
+    </section>
 
-    <div class="section" id="analitica">
-      <h2>Analítica</h2>
-      <p class="analitica-note">Muestra solo conteos: sin nombres ni respuestas de clientes.</p>
-    </div>
+    <section class="screen" data-screen="library" aria-labelledby="screenLibrary" hidden>
+      <div class="topbar"><h1 id="screenLibrary" tabindex="-1">Practice library</h1></div>
+      <p class="screen-lede">Read-only prompt and template reference for staff.</p>
+      <div class="grid2"><div class="card"><h3>Prompts</h3><p id="promptMessage" role="status"></p><select id="promptSelect" aria-label="Prompt"><option value="">Select a prompt</option></select><pre id="promptContent"></pre></div><div class="card"><h3>Templates</h3><p id="templateMessage" role="status"></p><select id="templateSelect" aria-label="Template"><option value="">Select a template</option></select><pre id="templateContent"></pre></div></div>
+    </section>
 
-    <div class="section" id="contenido">
-      <h2 id="contenidoHeading">Contenido</h2>
-      <p id="contentStatus" role="status" aria-live="polite"></p>
-      <label for="contentKind">Tipo</label>
-      <select id="contentKind">
-        <option value="item">Lecciones</option>
-        <option value="datos">Tus datos</option>
-        <option value="summary">Resúmenes</option>
-        <option value="persona">Personajes (instrucciones)</option>
-      </select>
-      <div id="contentEntries" class="card content-entries"></div>
-      <div id="contentDetail" class="card" hidden></div>
-      <div class="content-preview"></div>
-    </div>
+    <section class="screen" data-screen="firm" id="firma" aria-labelledby="screenFirm" hidden>
+      <div class="topbar"><h1 id="screenFirm" tabindex="-1">Firm settings</h1></div>
+      <p id="firmaMessage" role="status"></p>
+      <div class="grid2">
+        <div class="card firm-settings">
+          <h3>App settings</h3>
+          <label><input type="checkbox" id="firmVoice"> Voice recording</label>
+          <label><input type="checkbox" id="firmAi"> AI chat</label>
+          <label><input type="checkbox" id="firmExt"> Chrome extension</label>
+          <label>Lessons per day <input type="number" id="firmLpd" min="1" max="4"></label>
+          <label>Delete unpaid clients' data after (days) <input type="number" id="firmRetention" min="30"></label>
+          <p id="firmReadOnly" hidden></p>
+          <button class="btn sm" id="firmSave" type="button">Save settings</button>
+        </div>
+        <div class="card firm-settings">
+          <h3>Holidays</h3>
+          <label>Holiday <input type="date" id="firmHolidayDate"></label>
+          <button class="btn sm secondary" id="firmAddHoliday" type="button">Add holiday</button>
+          <ul id="firmHolidayList"></ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Office hours</h3>
+        <table class="office-hours"><tbody id="firmHoursRows"></tbody></table>
+        <button class="btn sm secondary" id="firmSaveHours" type="button">Save hours</button>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="analytics" id="analitica" aria-labelledby="screenAnalytics" hidden>
+      <div class="topbar"><h1 id="screenAnalytics" tabindex="-1">Analytics</h1></div>
+      <p class="screen-lede">Counts only: no client names or answers.</p>
+      <div id="analyticsBody"></div>
+    </section>
+
+    <section class="screen" data-screen="reports" aria-labelledby="screenReports" hidden>
+      <div class="topbar"><h1 id="screenReports" tabindex="-1">Reports</h1><div class="actions"><a class="btn secondary sm" href="https://carbon-law.onrender.com/export/matters.csv" id="exportMatters">Export matters (CSV)</a></div></div>
+      <div class="section">
+        <h2>Friday report</h2><p id="reportMessage" role="status"></p>
+        <p class="muted">Current portfolio snapshot; counts are not limited to a specific week.</p>
+        <div id="report"></div>
+        <button class="btn secondary sm report-refresh" id="genReport">Refresh report</button>
+      </div>
+      <div class="section">
+        <h2>Workload</h2>
+        <div class="grid2"><div class="card"><h3>Capacity by owner</h3><p id="capacityMessage" role="status"></p><div id="capacityReport"></div></div><div class="card"><h3>Workflow bottlenecks</h3><p id="bottleneckMessage" role="status"></p><div id="bottleneckReport"></div></div></div>
+      </div>
+      <div class="section">
+        <h2>Audit activity</h2>
+        <div class="card"><div class="audit-filter"><label>Entity filter <input id="auditEntity" placeholder="e.g. matter, task"></label><button class="btn secondary sm" id="refreshAudit">Refresh</button></div><div class="table-wrap"><table class="cards"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody id="auditRows"></tbody></table></div><p id="auditMessage" role="status"></p></div>
+      </div>
+    </section>
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="api.js"></script>
+<script src="content-titles.js"></script>
+<script src="console.js"></script>
 <script src="admin.js"></script>
 <script src="content.js"></script>
 <script src="characters.js"></script>

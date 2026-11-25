@@ -19,7 +19,7 @@ test('the attorney reads a draft with its marks, and no script in a draft runs',
   await page.getByRole('button', { name: /Ana Torres/ }).click();
   await expect(page.locator('mark.complete')).toHaveText("[ATTORNEY TO COMPLETE - executor's address]");
   await expect(page.locator('mark.confirm')).toHaveText('[ATTORNEY TO CONFIRM - bond waived]');
-  await expect(page.getByRole('button', { name: 'Aprobar' })).toBeDisabled();             // something is left to complete
+  await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeDisabled();             // something is left to complete
   expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
   await expect(page.locator('.draft script, .draft img')).toHaveCount(0);
 });
@@ -36,5 +36,5 @@ test('a draft whose only "[ATTORNEY TO COMPLETE]" is the notice can be approved'
   await page.goto(`${ADMIN}/admin.html#review`);
   await page.getByRole('button', { name: /Ana Torres/ }).click();
   await expect(page.locator('mark.complete')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Aprobar' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeEnabled();
 });

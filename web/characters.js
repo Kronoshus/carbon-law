@@ -22,9 +22,9 @@
   }
   const UNITS = ["will", "trust", "ahcd", "poa", "final", "bonus", "games", "sensitive", "intake"];
   const UNIT_LABELS = {
-    will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud",
-    poa: "El poder notarial", final: "Cuide sus documentos", bonus: "Lecciones extra",
-    games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos",
+    will: "The will", trust: "The living trust", ahcd: "Health care directive",
+    poa: "Power of attorney", final: "Take care of your documents", bonus: "Extra lessons",
+    games: "Games", sensitive: "Hard topics", intake: "Your details questions",
   };
 
   async function call(path, method, body) {
@@ -47,8 +47,8 @@
     if (!box) return;
     box.replaceChildren();
     let data;
-    try { data = await call("/staff/characters"); } catch (e) { status("No se pudieron cargar los personajes. Intente de nuevo más tarde."); return; }
-    if (!data.length) { status("No hay personajes configurados."); return; }
+    try { data = await call("/staff/characters"); } catch (e) { status("Could not load the characters. Try again later."); return; }
+    if (!data.length) { status("No characters are set up."); return; }
     for (const c of data) {
       const art = document.createElement("article");
       const h = document.createElement("h2");
@@ -60,20 +60,25 @@
       const activeWrap = document.createElement("div");
       const activeCb = document.createElement("input");
       activeCb.type = "checkbox";
-      activeCb.setAttribute("aria-label", "Activo");
+      activeCb.setAttribute("aria-label", "Active");
       activeCb.checked = !!c.enabled;
       if (c.id === "calavera") activeCb.disabled = true;
       const activeLabel = document.createElement("label");
       activeLabel.appendChild(activeCb);
-      activeLabel.append(" Activo");
+      activeLabel.append(" Active");
       activeWrap.appendChild(activeLabel);
       art.appendChild(activeWrap);
       if (c.id === "calavera") {
         const note = document.createElement("span");
-        note.textContent = "La Calavera no se puede desactivar.";
+        note.textContent = "La Calavera cannot be turned off.";
         art.appendChild(note);
       }
 
+      const unitsBox = document.createElement("fieldset");
+      unitsBox.className = "unit-list";
+      const legend = document.createElement("legend");
+      legend.textContent = "Lessons this character hosts";
+      unitsBox.appendChild(legend);
       for (const u of UNITS) {
         const cb = document.createElement("input");
         cb.type = "checkbox";
@@ -83,15 +88,16 @@
         const lab = document.createElement("label");
         lab.appendChild(cb);
         lab.append(" " + UNIT_LABELS[u]);
-        art.appendChild(lab);
+        unitsBox.appendChild(lab);
       }
+      art.appendChild(unitsBox);
 
       const phraseWrap = document.createElement("div");
       const phraseLabel = document.createElement("label");
-      phraseLabel.textContent = "Frase para escuchar";
+      phraseLabel.textContent = "Test phrase";
       const phraseInput = document.createElement("input");
       phraseInput.type = "text";
-      phraseInput.setAttribute("aria-label", "Frase para escuchar");
+      phraseInput.setAttribute("aria-label", "Test phrase");
       phraseInput.value = `Hola, soy ${name}. Soy un programa de inteligencia artificial, no soy el abogado.`;
       phraseWrap.appendChild(phraseLabel);
       phraseWrap.appendChild(phraseInput);
@@ -99,11 +105,11 @@
 
       const langWrap = document.createElement("div");
       const langLabel = document.createElement("label");
-      langLabel.textContent = "Idioma";
+      langLabel.textContent = "Voice language";
       const langSelect = document.createElement("select");
-      langSelect.setAttribute("aria-label", "Idioma");
-      const optEs = document.createElement("option"); optEs.value = "es"; optEs.textContent = "es";
-      const optEn = document.createElement("option"); optEn.value = "en"; optEn.textContent = "en";
+      langSelect.setAttribute("aria-label", "Voice language");
+      const optEs = document.createElement("option"); optEs.value = "es"; optEs.textContent = "Spanish";
+      const optEn = document.createElement("option"); optEn.value = "en"; optEn.textContent = "English";
       langSelect.appendChild(optEs);
       langSelect.appendChild(optEn);
       langWrap.appendChild(langLabel);
@@ -113,7 +119,7 @@
       const previewBtn = document.createElement("button");
       previewBtn.type = "button";
       previewBtn.className = "btn secondary sm";
-      previewBtn.textContent = "Escuchar voz";
+      previewBtn.textContent = "Play voice";
       previewBtn.addEventListener("click", () => {
         const line = phraseInput.value;
         const lang = langSelect.value === "en" ? "en" : "es";
@@ -130,7 +136,7 @@
       const saveBtn = document.createElement("button");
       saveBtn.type = "button";
       saveBtn.className = "btn sm";
-      saveBtn.textContent = "Guardar";
+      saveBtn.textContent = "Save";
       saveBtn.addEventListener("click", async () => {
         const enabled = activeCb.checked;
         const units = [];
@@ -139,9 +145,9 @@
         }
         try {
           await call(`/characters/${c.id}`, "PATCH", { enabled, units });
-          status("Guardado.");
+          status(`${name} saved.`);
         } catch (e) {
-          status(e.status && e.status < 500 ? "No se guardó: " + e.message : "No se guardó. El servidor tuvo un problema; intente de nuevo.");
+          status(e.status && e.status < 500 ? `${name} was not saved. Check the choices and try again.` : `${name} was not saved. The server had a problem; try again.`);
         }
       });
       art.appendChild(saveBtn);
