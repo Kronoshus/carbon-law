@@ -2,7 +2,8 @@
  * floor: fixed 26a, 34, 39a, 40 (night values for the default theme), 48, 49a, 63, 67, 69 (the consent heading is visually hidden), 7a, 44b, 44d, F15, F19
  * reworded: the map and plan meta lines, middle dots to commas, and "15 min" to "unos 15 minutos" (63; listed in the PR);
  *   the office's English document names shown in Spanish (doc.pourover and friends)
- * structural: the desktop rail became links in the top bar (42) · open: the welcome page (APP-01)
+ * structural: the desktop rail became links in the top bar (42) · the welcome page redesigned in full (APP-01, 2026-11-25):
+ *   the theme's host on its stage beside one promise and the two ways in (screens/bienvenida.css)
  * built: the project · redesign: polish · v2.0.0 */
 /* Memento Mori (the Aprende y Planea app) — design tokens and core components (Phase 1 mockups; the seed of aprende/src/styles in Phase 2).
    Every text pair here was checked for WCAG 2.1 AA contrast (see docs/aprende-design.md, "Colour"). */
