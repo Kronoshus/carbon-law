@@ -28,9 +28,11 @@ jobs:
         working-directory: aprende
         env:
           VITE_BASE: /aprende/
+          VITE_API_ORIGIN: https://carbon-law.onrender.com   # the API is not on Pages: without this, sign-in posts to Pages (405)
         run: |
           npm ci
           npm run build:web
+          grep -rq "$VITE_API_ORIGIN" dist/web/assets || { echo "the build has no API origin"; exit 1; }
       - name: assemble artifact
         run: |
           rm -rf _site
