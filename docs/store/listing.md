@@ -9,7 +9,7 @@ attorney's approval (#52). Written by the Opus test writer (p8-tests), 2026-11-2
 - Language: Spanish (primary), English
 - Privacy policy URL: https://carbon.bailment.tech/aprende/#/privacidad
 - Homepage URL: https://carbon.bailment.tech/aprende/
-- Support email: info@carbonlaw.com
+- Support email: kevin@carbonlg.com
 
 ## Spanish (es)
 Short description (es): Aprenda sobre testamentos y fideicomisos en California, a su ritmo, con Carbon Law Group.

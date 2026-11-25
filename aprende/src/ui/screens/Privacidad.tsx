@@ -1,5 +1,5 @@
 import { t } from '../../core/i18n';
-const EMAIL = 'info@carbonlaw.com';
+const EMAIL = 'kevin@carbonlg.com';
 
 export function Privacidad() {
   return (
@@ -33,7 +33,7 @@ export function Privacidad() {
       </section>
       <section>
         <h2>{t('privacy.rights.title')}</h2>
-        <p>{t('privacy.rights.body')} <a href="mailto:info@carbonlaw.com">{EMAIL}</a>{'.'}</p>
+        <p>{t('privacy.rights.body')} <a href="mailto:kevin@carbonlg.com">{EMAIL}</a>{'.'}</p>
       </section>
       <p class="note">{t('privacy.version')}</p>
     </main>

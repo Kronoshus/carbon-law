@@ -1,4 +1,9 @@
 (() => {
+  const LESSON_TITLES = {
+    will: "El testamento", trust: "El fideicomiso", ahcd: "La directiva de salud", poa: "El poder notarial",
+    final: "Cuide sus documentos", bonus: "Lecciones extra", games: "Juegos", sensitive: "Temas difíciles", intake: "Tus datos",
+  };
+  const lessonName = (id) => (LESSON_TITLES[id] ? `${LESSON_TITLES[id]} (${id})` : id);
   async function loadAnalytics() {
     const section = document.getElementById("analitica");
     if (!section) return;
@@ -18,6 +23,9 @@
     }
 
     const wrap = document.createElement("div");
+    const totals = document.createElement("div");
+    totals.className = "analytics-totals";
+    wrap.appendChild(totals);
 
     const lessonCard = document.createElement("div");
     lessonCard.className = "card table-wrap";
@@ -34,7 +42,7 @@
     const lb = document.createElement("tbody");
     for (const l of data.lessons || []) {
       const tr = document.createElement("tr");
-      const cells = [l.lesson_id, l.started, l.completed,
+      const cells = [lessonName(l.lesson_id), l.started, l.completed,
         l.completion_rate == null ? "—" : Math.round(l.completion_rate * 100) + "%",
         l.dropped_before_first_item];
       for (const c of cells) {
@@ -63,7 +71,7 @@
     const ib = document.createElement("tbody");
     for (const it of data.items || []) {
       const tr = document.createElement("tr");
-      const cells = [it.item_id, it.answered, it.first_try_correct,
+      const cells = [LESSON_TITLES[it.lesson_id] ? `${LESSON_TITLES[it.lesson_id]} · ${it.item_id}` : it.item_id, it.answered, it.first_try_correct,
         it.accuracy == null ? "—" : Math.round(it.accuracy * 100) + "%",
         it.drop_off];
       for (const c of cells) {
@@ -82,11 +90,11 @@
     const p1 = document.createElement("p");
     const r1 = conv.rate == null ? "—" : Math.round(conv.rate * 100);
     p1.textContent = `Pagaron: ${conv.paid} de ${conv.journeys} (${r1} %)`;
-    wrap.appendChild(p1);
+    totals.appendChild(p1);
     const p2 = document.createElement("p");
     const r2 = ot.rate == null ? "—" : Math.round(ot.rate * 100);
     p2.textContent = `Terminaron a tiempo: ${ot.on_time} de ${ot.finished} (${r2} %)`;
-    wrap.appendChild(p2);
+    totals.appendChild(p2);
 
     const heading = section.querySelector("h2");
     const note = section.querySelector("p.analitica-note");

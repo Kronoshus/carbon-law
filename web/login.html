@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Login - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Sign in to your Carbon Law Group account to continue your estate-planning request."><title>Sign in | Carbon Law Group</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="img/carbon-law-group-mark.png"></head>
 <body>
 <div class="auth-shell">
-  <a class="auth-home" href="index.html">← Back to Carbon Law</a>
+  <a class="auth-home" href="index.html">Back to Carbon Law Group</a>
   <div class="auth-wrap">
   <form class="auth-card" id="authForm">
-    <img src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group" style="height:40px;margin-bottom:16px;">
+    <img class="auth-logo" src="img/carbon-law-group-logo.png" srcset="img/carbon-law-group-logo.png 1x, img/carbon-law-group-logo@2x.png 2x" width="126" height="35" alt="Carbon Law Group">
     <h2>Welcome back</h2>
     <p>Sign in to continue your estate-planning request.</p>
-    <div class="form-group"><label>Email (your username)</label><input id="email" type="email" placeholder="you@example.com" autocomplete="username" required></div>
-    <div class="form-group"><label>Password</label><input id="password" type="password" placeholder="Password" autocomplete="current-password" required></div>
-    <button class="btn" style="width:100%;" id="loginBtn" type="submit">Sign in</button>
-    <pre id="out" style="margin-top:12px;font-size:13px;"></pre>
-    <p style="margin-top:16px;font-size:13px;">Don’t have an account? <a href="signup.html">Create an account</a></p>
+    <div class="form-group"><label for="email">Email (your username)</label><input id="email" type="email" placeholder="you@example.com" autocomplete="username" required></div>
+    <div class="form-group"><label for="password">Password</label><input id="password" type="password" placeholder="Password" autocomplete="current-password" required></div>
+    <button class="btn block" id="loginBtn" type="submit">Sign in</button>
+    <p id="out" role="status" aria-live="polite"></p>
+    <p class="auth-alt">Don’t have an account? <a href="signup.html">Create an account</a></p>
   </form>
   </div>
 </div>
@@ -43,4 +43,3 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
 </script>
 </body>
 </html>
-CSS

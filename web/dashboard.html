@@ -1,62 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Matter Dashboard - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Carbon Law Group matter dashboard for staff."><meta name="robots" content="noindex"><title>Matter dashboard | Carbon Law Group</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="img/carbon-law-group-mark.png"></head>
 <body>
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">C</div>
-      <span class="brand-name">Carbon Law</span>
-    </div>
+    <a class="brand" href="index.html"><img src="img/carbon-law-group-logo-white.png" srcset="img/carbon-law-group-logo-white.png 1x, img/carbon-law-group-logo-white@2x.png 2x" width="116" height="32" alt="Carbon Law Group"></a>
     <nav>
       <a href="index.html">Home</a>
-      <a href="dashboard.html" class="active">Matter Dashboard</a>
-      <a href="admin.html">Staff Dashboard</a>
-      <a href="portal.html">Client Portal</a>
-      <a href="prompts.html">Prompt Library</a>
+      <a href="dashboard.html" class="active" aria-current="page">Matter dashboard</a>
+      <a href="admin.html">Staff dashboard</a>
+      <a href="portal.html">Client portal</a>
+      <a href="prompts.html">Prompt library</a>
     </nav>
     <div class="user-box" id="userBox"></div>
   </aside>
   <main class="main-content" hidden>
     <div class="topbar">
-      <h1>Matter Dashboard</h1>
+      <h1>Matter dashboard</h1>
       <div class="actions">
         <button class="btn sm" id="refreshBtn">Refresh</button>
       </div>
     </div>
     <div class="stats">
-      <div class="stat"><h2 id="total">0</h2><p>Active Matters</p></div>
-      <div class="stat"><h2 id="highRisk">0</h2><p>High Risk</p></div>
-      <div class="stat"><h2 id="review">0</h2><p>Attorney Review</p></div>
-      <div class="stat"><h2 id="urgent">0</h2><p>Urgent</p></div>
-      <div class="stat"><h2 id="overdue">0</h2><p>Overdue</p></div>
+      <div class="stat"><h2 id="total">—</h2><p>Active matters</p></div>
+      <div class="stat"><h2 id="highRisk">—</h2><p>High risk</p></div>
+      <div class="stat"><h2 id="review">—</h2><p>Attorney review</p></div>
+      <div class="stat"><h2 id="urgent">—</h2><p>Urgent</p></div>
+      <div class="stat"><h2 id="overdue">—</h2><p>Overdue</p></div>
     </div>
     <div class="filters">
-      <input id="search" placeholder="Search client or matter ID">
-      <select id="stageFilter"><option value="">All stages</option></select>
-      <select id="riskFilter"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select>
-      <select id="ownerFilter"><option value="">All owners</option></select>
+      <input id="search" placeholder="Search client or matter ID" aria-label="Search client or matter ID">
+      <select id="stageFilter" aria-label="Stage"><option value="">All stages</option></select>
+      <select id="riskFilter" aria-label="Risk"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select>
+      <select id="ownerFilter" aria-label="Owner"><option value="">All owners</option></select>
     </div>
-    <div class="card" style="padding:0;">
+    <div class="card flush">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Due</th><th>Risk</th><th>Priority</th><th>Next Action</th></tr></thead>
+          <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Owner</th><th>Due</th><th>Risk</th><th>Priority</th><th>Next action</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
       <div id="emptyState" class="empty" style="display:none;">No matters found.</div>
     </div>
-    <div class="section">
-      <h3>Friday Report</h3>
-      <button class="btn sm" id="genReport">Generate Friday Report</button>
-      <div id="report" style="margin-top:12px;"></div>
+    <div class="section report-section">
+      <h2>Friday report</h2>
+      <p><button class="btn secondary sm" id="genReport">Generate Friday report</button></p>
+      <div id="report"></div>
     </div>
   </main>
 </div>
 <script src="auth.js"></script>
 <script src="app.js"></script>
-<script>
-</script>
 </body>
 </html>
-CSS

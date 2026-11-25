@@ -1,25 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PromptLaw - Carbon Law</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Carbon Law Group staff library of California estate-planning prompts and templates."><meta name="robots" content="noindex"><title>Prompt library | Carbon Law Group</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="img/carbon-law-group-mark.png"></head>
 <body>
-<header class="site">
-  <a href="index.html"><img class="logo" src="https://carbonlg.com/wp-content/uploads/2023/08/Carbon-Law-Group-LOGO.png" alt="Carbon Law Group"></a>
-  <nav class="main">
-    <a href="index.html#services">Services</a>
-    <a href="login.html">Staff sign in</a>
-    <a href="index.html#contact">Contact</a>
-  </nav>
+<header class="home-nav">
+  <a class="home-brand" href="index.html"><img src="img/carbon-law-group-logo.png" srcset="img/carbon-law-group-logo.png 1x, img/carbon-law-group-logo@2x.png 2x" width="126" height="35" alt="Carbon Law Group"></a>
+  <a class="home-nav-cta" href="admin.html">Staff dashboard</a>
 </header>
-<section class="section" hidden>
-<h2>PromptLaw California Prompt Library</h2>
+<main class="library" hidden>
+<h1>PromptLaw California prompt library</h1>
 <p>Browse the California estate planning prompt files and templates used for document drafting.</p>
 <div class="grid">
-  <div class="card"><h3>Prompts</h3><ul id="promptList"></ul></div>
-  <div class="card"><h3>Templates</h3><ul id="templateList"></ul></div>
-  <div class="card"><h3>Selected Content</h3><pre id="contentView"></pre></div>
+  <div class="card"><h2>Prompts</h2><ul id="promptList"></ul></div>
+  <div class="card"><h2>Templates</h2><ul id="templateList"></ul></div>
+  <div class="card"><h2>Selected content</h2><pre id="contentView"></pre></div>
 </div>
-</section>
-<footer><p>Carbon Law Group | (323) 543-4453 | <a href="https://carbonlg.com">carbonlg.com</a></p></footer>
+</main>
+<footer class="home-footer"><a class="home-brand" href="index.html"><img src="img/carbon-law-group-logo.png" srcset="img/carbon-law-group-logo.png 1x, img/carbon-law-group-logo@2x.png 2x" width="126" height="35" alt="Carbon Law Group"></a><span>Carbon Law Group · <a href="tel:+13235434453">(323) 543-4453</a></span><a href="https://carbonlg.com">carbonlg.com</a></footer>
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script>
@@ -30,7 +26,7 @@ async function loadLists() {
   try {
     const user=await CarbonAuth.requireServerAuth(["paralegal","attorney","admin"]);
     if(!user)return;
-    document.querySelector(".section").hidden=false;
+    document.querySelector(".library").hidden=false;
     const prompts = await request("/prompts");
     const pl = document.getElementById("promptList");
     pl.innerHTML = prompts.map(p=>`<li><a href="#" data-type="prompt" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)}</a></li>`).join("");
@@ -47,7 +43,7 @@ async function loadLists() {
         catch(error) { view.textContent = error.message; }
       });
     });
-  } catch(e) { document.querySelector(".section").hidden=false; document.getElementById("contentView").textContent = e.message; }
+  } catch(e) { document.querySelector(".library").hidden=false; document.getElementById("contentView").textContent = e.message; }
 }
 loadLists();
 </script>

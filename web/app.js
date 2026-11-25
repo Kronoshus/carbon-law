@@ -3,8 +3,12 @@ function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&"
 function renderReportSummary(report, targetId="report") {
   const el = document.getElementById(targetId);
   if (!el || !report) return;
-  const stages = Object.entries(report.by_stage||{}).map(([k,v])=>`<span>${esc(k)}: ${v}</span>`).join(" | ");
-  el.innerHTML = `<div class="card"><strong>Total:</strong> ${report.total||0} &nbsp; <strong>High Risk:</strong> ${(report.high_risk||[]).length} &nbsp; <strong>Urgent:</strong> ${(report.urgent||[]).length} &nbsp; <strong>Review Queue:</strong> ${(report.attorney_review_queue||[]).length}</div><p>${stages}</p>`;
+  el.innerHTML = reportCard([["Total",report.total||0],["High risk",(report.high_risk||[]).length],["Urgent",(report.urgent||[]).length],["Attorney review",(report.attorney_review_queue||[]).length]], report.by_stage);
+}
+
+function reportCard(figures, byStage) {
+  const stages = Object.entries(byStage||{});
+  return `<div class="card"><dl class="report-figures">${figures.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>${stages.length?`<table class="report-stages"><caption>Matters by stage</caption><tbody>${stages.map(([stage,count])=>`<tr><td>${esc(stage)}</td><td>${esc(count)}</td></tr>`).join("")}</tbody></table>`:""}</div>`;
 }
 
 const DASHBOARD_API = "https://carbon-law.onrender.com";
@@ -18,7 +22,8 @@ async function request(path, method="GET", body=null) {
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) throw new Error("Your session has expired. Sign in again to continue.");
     if (res.status === 403) throw new Error("Your account does not have staff access to this report.");
-    throw new Error(data.detail || `Backend request failed (${res.status}).`);
+    if (res.status >= 500) throw new Error("The server had a problem.");
+    throw new Error(typeof data.detail === "string" ? data.detail : `Request failed (${res.status}).`);
   }
   return res.json();
 }
@@ -30,20 +35,27 @@ async function load() {
     if(!user)return;
     staffVerified=true;
     document.querySelector(".main-content").hidden=false;
-    const box=document.getElementById("userBox"),name=document.createElement("p"),role=document.createElement("p"),link=document.createElement("a");name.textContent=user.name;role.textContent=user.role;link.href="#";link.textContent="Logout";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
+    const box=document.getElementById("userBox"),name=document.createElement("p"),role=document.createElement("p"),link=document.createElement("a");name.textContent=user.name;role.textContent=user.role;link.href="#";link.textContent="Sign out";link.onclick=()=>{logout();return false};box.replaceChildren(name,role,link);
     matters = await request("/matters");
     document.getElementById("backendError")?.remove();
   } catch (e) {
+    // no numbers rather than zeros that look real
     matters = [];
     let error = document.getElementById("backendError");
-    if (!error) { error = document.createElement("p"); error.id = "backendError"; error.className = "intake-error"; document.querySelector(".main-content").prepend(error); }
-    document.querySelector(".main-content").hidden=false; error.textContent = e.message;
+    if (!error) { error = document.createElement("p"); error.id = "backendError"; error.className = "notice"; document.querySelector(".main-content").prepend(error); }
+    const retry = document.createElement("button"); retry.type = "button"; retry.className = "btn secondary sm"; retry.textContent = "Try again"; retry.onclick = load;
+    document.querySelector(".main-content").hidden=false; error.replaceChildren(`Matters did not load. ${e.message} `, retry);
+    for (const id of ["total","highRisk","review","urgent","overdue"]) document.getElementById(id).textContent = "—";
+    document.getElementById("rows").innerHTML = "";
+    document.getElementById("emptyState").style.display = "none";
+    return;
   }
   if(!staffVerified)return;
   populateFilters();
   render();
   await loadReport();
 }
+function formatDue(value) { if (!value) return "—"; const date = new Date(`${String(value).slice(0,10)}T00:00:00`); return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, {dateStyle:"long"}); }
 function populateFilters() {
   const stages = [...new Set(matters.map(m=>m.stage))].sort();
   const owners = [...new Set(matters.map(m=>m.owner))].sort();
@@ -69,13 +81,12 @@ function render() {
   if (!rows) return;
   const data = filtered();
   rows.innerHTML = "";
-  if (data.length === 0) { document.getElementById("emptyState").style.display = "block"; return; }
-  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("emptyState").style.display = data.length ? "none" : "block";
   data.forEach(m => {
     const tr = document.createElement("tr");
     const riskCls = "badge-" + (m.risk_level||"Low").toLowerCase();
     const prioCls = m.priority === "Urgent" ? "badge-urgent" : "badge-normal";
-    tr.innerHTML = `<td><strong>${esc(m.id)}</strong></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td>${esc(m.due_date||"—")}</td><td><span class="badge ${riskCls}">${esc(m.risk_level)}</span></td><td><span class="badge ${prioCls}">${esc(m.priority)}</span></td><td>${esc(m.next_action||"")}</td>`;
+    tr.innerHTML = `<td><strong>${esc(m.id)}</strong></td><td>${esc(m.client_name)}</td><td>${esc(m.stage)}</td><td>${esc(m.owner)}</td><td>${esc(formatDue(m.due_date))}</td><td><span class="badge ${riskCls}">${esc(m.risk_level)}</span></td><td><span class="badge ${prioCls}">${esc(m.priority)}</span></td><td>${esc(m.next_action||"")}</td>`;
     rows.appendChild(tr);
   });
   document.getElementById("total").textContent = matters.length;
@@ -90,7 +101,7 @@ async function loadReport() {
     const report = await request("/reports/friday");
     renderReportSummary(report);
   } catch (e) {
-    document.getElementById("report").textContent = e.message;
+    document.getElementById("report").textContent = "The report did not load. " + e.message;
   }
 }
 document.addEventListener("DOMContentLoaded", () => {

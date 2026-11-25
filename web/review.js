@@ -4,9 +4,28 @@ function reviewAuthHeaders() { const t = (window.CarbonAuth && window.CarbonAuth
 async function reviewFetch(path, method="GET", body=null) {
   const opts = { method, headers: reviewAuthHeaders() };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(REVIEW_API + path, opts);
-  if (!res.ok) throw new Error(await res.text());
+  let res;
+  try { res = await fetch(REVIEW_API + path, opts); }
+  catch (_) { throw new Error("No se pudo conectar con el servidor. Intente de nuevo."); }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (res.status < 500 && typeof data.detail === "string") throw new Error(data.detail);
+    throw new Error("El servidor tuvo un problema. Intente de nuevo en un minuto.");
+  }
   return res;
+}
+function formatReviewDate(value) {
+  const date = new Date(String(value || "").slice(0, 10) + "T00:00:00");
+  return Number.isNaN(date.getTime()) ? String(value || "") : date.toLocaleDateString("es-US", { dateStyle: "long" });
+}
+function appendInline(el, text) {
+  // **bold** is the only inline markup a draft uses
+  for (const piece of text.split(/(\*\*[^*]+\*\*)/g)) {
+    if (!piece) continue;
+    const bold = piece.match(/^\*\*([^*]+)\*\*$/);
+    if (bold) { const strong = document.createElement("strong"); strong.textContent = bold[1]; el.appendChild(strong); }
+    else el.appendChild(document.createTextNode(piece));
+  }
 }
 
 function renderDraftContent(container, content) {
@@ -32,7 +51,7 @@ function renderDraftContent(container, content) {
         mark.textContent = part;
         el.appendChild(mark);
       } else if (part) {
-        el.appendChild(document.createTextNode(part));
+        appendInline(el, part);
       }
     }
     draft.appendChild(el);
@@ -48,30 +67,35 @@ async function loadReviewQueue() {
   try {
     const res = await reviewFetch("/staff/review-queue");
     const data = await res.json();
+    if (!data.length) {
+      const tr = document.createElement("tr"); tr.className = "empty-row";
+      const td = document.createElement("td"); td.colSpan = 2; td.textContent = "No hay borradores esperando revisión.";
+      tr.appendChild(td); rows.appendChild(tr);
+    }
     for (const item of data) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "btn sm";
+      btn.className = "btn secondary sm";
       btn.textContent = item.client_name;
       btn.addEventListener("click", () => openReview(item));
       td.appendChild(btn);
       if (item.late) {
         const span = document.createElement("span");
-        span.style.color = "red";
-        span.textContent = " ⚠";
+        span.className = "late-label";
+        span.textContent = "Atrasado";
         td.appendChild(span);
       }
       tr.appendChild(td);
       const td2 = document.createElement("td");
-      td2.textContent = item.due || "";
+      td2.textContent = item.due ? formatReviewDate(item.due) : "";
       tr.appendChild(td2);
       rows.appendChild(tr);
     }
   } catch (e) {
     const msg = document.getElementById("reviewMessage");
-    if (msg) msg.textContent = String(e);
+    if (msg) { msg.className = "error-message"; msg.textContent = "No se pudo cargar la cola de revisión. " + e.message; }
   }
 }
 
@@ -97,7 +121,9 @@ async function openReview(item) {
       const res = await reviewFetch("/staff/drafts/" + doc.id);
       const d = await res.json();
       const draft = renderDraftContent(draftWrap, d.content);
-      // download
+      // download, on its own row under the draft
+      const tools = document.createElement("div");
+      tools.className = "draft-tools";
       const dl = document.createElement("button");
       dl.type = "button"; dl.className = "btn secondary sm"; dl.textContent = "Descargar .docx";
       dl.addEventListener("click", async () => {
@@ -108,7 +134,8 @@ async function openReview(item) {
         a.href = url; a.download = doc.name + ".docx"; a.click();
         URL.revokeObjectURL(url);
       });
-      card.appendChild(dl);
+      tools.appendChild(dl);
+      card.appendChild(tools);
       // upload
       const taLabel = document.createElement("label");
       taLabel.htmlFor = "draft-" + doc.id; taLabel.textContent = "Texto corregido";
@@ -124,11 +151,14 @@ async function openReview(item) {
         await openReview(item);
       });
       card.appendChild(saveBtn);
-    } catch (e) { draftWrap.textContent = String(e); }
+    } catch (e) { draftWrap.className = "error-message"; draftWrap.textContent = "No se pudo abrir este borrador. " + e.message; }
     detail.appendChild(card);
   }
   // approve / changes controls
   const controls = document.createElement("div");
+  controls.className = "card";
+  const actions = document.createElement("div");
+  actions.className = "review-actions";
   const noteLabel = document.createElement("label");
   noteLabel.htmlFor = "reviewDraftNote"; noteLabel.textContent = "Nota para pedir cambios";
   const note = document.createElement("textarea");
@@ -156,12 +186,18 @@ async function openReview(item) {
   });
   controls.appendChild(noteLabel);
   controls.appendChild(note);
-  controls.appendChild(reqBtn);
-  controls.appendChild(apprBtn);
+  actions.appendChild(reqBtn);
+  actions.appendChild(apprBtn);
+  // approval waits for every [ATTORNEY TO COMPLETE] item in these drafts; say why when it is blocked
+  const open = detail.querySelectorAll(".draft mark.complete").length;
+  apprBtn.disabled = open > 0;
+  if (open) {
+    const why = document.createElement("p");
+    why.textContent = `Complete ${open === 1 ? "el punto amarillo" : `los ${open} puntos amarillos`} [ATTORNEY TO COMPLETE] para aprobar.`;
+    actions.appendChild(why);
+  }
+  controls.appendChild(actions);
   detail.appendChild(controls);
-  // disable approve based on current DOM
-  const hasComplete = !!document.querySelector(".draft mark.complete");
-  apprBtn.disabled = hasComplete;
 }
 
 function initReview() {

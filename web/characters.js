@@ -27,7 +27,8 @@
     if (!box) return;
     box.replaceChildren();
     let data;
-    try { data = await call("/staff/characters"); } catch (e) { status(String(e.message || e)); return; }
+    try { data = await call("/staff/characters"); } catch (e) { status("No se pudieron cargar los personajes. Intente de nuevo más tarde."); return; }
+    if (!data.length) { status("No hay personajes configurados."); return; }
     for (const c of data) {
       const art = document.createElement("article");
       const h = document.createElement("h2");
@@ -117,7 +118,7 @@
           await call(`/characters/${c.id}`, "PATCH", { enabled, units });
           status("Guardado.");
         } catch (e) {
-          status(String(e.message || e));
+          status(e.status && e.status < 500 ? "No se guardó: " + e.message : "No se guardó. El servidor tuvo un problema; intente de nuevo.");
         }
       });
       art.appendChild(saveBtn);

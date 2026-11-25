@@ -61,7 +61,7 @@ test('a late attorney review raises the staff alert once, and the client only re
       .toEqual(['attorney_review']);
     await expect.poll(() => dbCounts(jid).timeline_alerts, { timeout: 30_000 }).toBe(1);   // the worker's hourly check wrote it
     const admin = await openAdminReview(context);
-    await expect(admin.locator('#reviewQueueRows tr').filter({ has: admin.getByRole('button', { name: 'Mateo Torres', exact: true }) })).toContainText('⚠');
+    await expect(admin.locator('#reviewQueueRows tr').filter({ has: admin.getByRole('button', { name: 'Mateo Torres', exact: true }) })).toContainText('Atrasado');
     await admin.close();
   });
   await test.step('An hour later the check runs again, and the alert is not sent twice', async () => {
