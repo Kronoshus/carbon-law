@@ -83,6 +83,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       include: ['tests/**/*.test.{ts,tsx}'],
+      globalSetup: ['tests/build-once.ts'],
     },
   };
 });

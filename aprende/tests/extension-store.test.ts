@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
@@ -60,11 +60,10 @@ const editManifest = (dir: string, edit: (m: Record<string, unknown>) => void) =
 describe('T8-02 the Store package', () => {
   let files: Map<string, Buffer>;
   let manifest: Record<string, any>;            // eslint-disable-line @typescript-eslint/no-explicit-any
-  beforeAll(() => {
-    execSync('npm run pack:ext', { stdio: 'ignore', env: { ...process.env, API_ORIGIN: '' } });
+  beforeAll(() => {                             // the zip is packed once for all test files in tests/build-once.ts
     files = unzip(ZIP);
     manifest = JSON.parse(files.get('manifest.json')!.toString('utf8'));
-  }, 180000);
+  });
 
   it('is a zip with the manifest at its root and no build leftovers', () => {
     expect(files.has('manifest.json')).toBe(true);
