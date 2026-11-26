@@ -6,8 +6,9 @@
 .slot { min-block-size: var(--tap); border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--card);
         color: var(--text); font: var(--w-bold) var(--step-0)/1 var(--font-body); box-shadow: var(--ledge); cursor: pointer; }
 .slot:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-.week-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); gap: var(--s2); }
+.week-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr)); gap: var(--s2); }   /* stacked on phones, so a label never wraps */
 dialog.confirm { border: var(--stroke) solid var(--outline); border-radius: var(--radius); background: var(--paper); color: var(--text);
                  padding: var(--s4); max-inline-size: min(26rem, 92vw); display: grid; gap: var(--s3); }
 dialog.confirm:not([open]) { display: none; }
+dialog.confirm p::first-letter { text-transform: uppercase; }
 dialog.confirm::backdrop { background: var(--scrim); }

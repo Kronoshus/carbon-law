@@ -91,6 +91,7 @@
          transition: translate .08s, box-shadow .08s; }
   @media (max-width: 22rem) { .btn { padding-inline: var(--s3); letter-spacing: 0; } }
   .btn:active { translate: 0 3px; box-shadow: var(--ledge-pressed); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; translate: none; box-shadow: var(--ledge); }
   .btn.secondary { background: var(--card); color: var(--text); }
   .btn.quiet { background: transparent; box-shadow: none; border-color: transparent; color: var(--link); inline-size: auto; }
 

@@ -22,7 +22,7 @@ export function CuentaNueva() {
         json: { name, email, password, source: 'aprende', adult: true },
       });
       if (!res.ok) {
-        let msg = t(res.status >= 500 ? 'error.network' : 'error.invalid');
+        let msg = t(res.status >= 500 ? 'error.server' : 'error.invalid');
         try {
           const body = await res.json();
           if (typeof body?.detail === 'string') msg = body.detail;
