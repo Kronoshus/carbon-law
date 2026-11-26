@@ -35,7 +35,7 @@ def _auth(authorization, roles=None):
 
 def _current_drafts(jid):
     out = []
-    for d in backend_app.documents.values():
+    for d in list(backend_app.documents.values()):
         if d.get("journey_id") != jid:
             continue
         if d.get("attorney_only") is not True:
@@ -49,7 +49,7 @@ def _current_drafts(jid):
 def _change_requested(jid):
     """Approved documents whose client's latest decision is a change request: the attorney revises them."""
     out = []
-    for d in backend_app.documents.values():
+    for d in list(backend_app.documents.values()):
         if d.get("journey_id") != jid or d.get("status") != "Attorney Approved":
             continue
         last = db.query("SELECT decision FROM client_reviews WHERE document_id = ? AND journey_id = ? ORDER BY at DESC, id DESC LIMIT 1",
@@ -164,7 +164,7 @@ def review_journey(jid: str, body: Decision, user: dict = Depends(auth.staff("at
             backend_app.documents[d["id"]]["status"] = "Attorney Approved"
             backend_app.documents[d["id"]]["attorney_only"] = False
         for d in drafts:
-            for other in backend_app.documents.values():
+            for other in list(backend_app.documents.values()):
                 if other.get("journey_id") == jid and other.get("name") == d["name"] \
                         and other["id"] != d["id"] and other.get("status") == "Attorney Approved":
                     other["status"] = "Superseded"

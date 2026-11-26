@@ -1,19 +1,15 @@
 import type { CharacterId } from './cast';
+import hostVoices from '../../../../web/voices.json';
 
 /** How a host sounds through the device's own speech (speechSynthesis): the device voices to look for, best first, and
  *  the pitch and rate that give the persona its character. A name matches any device voice whose name contains it
  *  (Apple "Paulina", Microsoft Edge "Microsoft Dalia Online (Natural) - Spanish (Mexico)", and so on). When none of the
  *  named voices is on the device, the best voice for the language is used, with the same pitch and rate.
- *  Characters without an entry keep the device's default voice. The staff Personajes page (web/characters.js) mirrors
- *  this table for its "Escuchar voz" preview. */
+ *  Characters without an entry keep the device's default voice. The table is web/voices.json, which the staff
+ *  Personajes page (web/characters.js) also loads for its "Escuchar voz" preview, so the two always sound the same. */
 export interface Voice { es: string[]; en: string[]; pitch: number; rate: number }
 
-export const VOICES: Partial<Record<CharacterId, Voice>> = {
-  girasol: { es: ['Dalia', 'Paulina', 'Paloma', 'Google español de Estados Unidos'], en: ['Jenny', 'Samantha', 'Aria', 'Google US English'], pitch: 1.1, rate: 1.03 },
-  colibri: { es: ['Alonso', 'Juan', 'Jorge', 'Raul'], en: ['Guy', 'Aaron', 'Alex', 'David'], pitch: 1.2, rate: 1.12 },
-  velita: { es: ['Paloma', 'Paulina', 'Sabina', 'Dalia'], en: ['Aria', 'Samantha', 'Zira'], pitch: 1, rate: 0.9 },
-  tortuga: { es: ['Dalia', 'Paulina', 'Sabina', 'Paloma'], en: ['Michelle', 'Samantha', 'Zira'], pitch: 0.85, rate: 0.84 },
-};
+export const VOICES: Partial<Record<CharacterId, Voice>> = hostVoices;
 
 /** es-US first, then es-MX, then any other Spanish (en-US, then any English). */
 const LOCALES = { es: ['es-US', 'es-MX'], en: ['en-US'] };

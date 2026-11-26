@@ -3,13 +3,9 @@
     calavera: "La Calavera", oso: "El Oso", pinata: "Piñata",
     girasol: "Girasol", colibri: "Colibrí", velita: "Velita", tortuga: "Doña Tortuga",
   };
-  // The theme hosts' device voices, the same table as aprende/src/core/character/voice.ts (keep the two in step).
-  const VOICES = {
-    girasol: { es: ["Dalia", "Paulina", "Paloma", "Google español de Estados Unidos"], en: ["Jenny", "Samantha", "Aria", "Google US English"], pitch: 1.1, rate: 1.03 },
-    colibri: { es: ["Alonso", "Juan", "Jorge", "Raul"], en: ["Guy", "Aaron", "Alex", "David"], pitch: 1.2, rate: 1.12 },
-    velita: { es: ["Paloma", "Paulina", "Sabina", "Dalia"], en: ["Aria", "Samantha", "Zira"], pitch: 1, rate: 0.9 },
-    tortuga: { es: ["Dalia", "Paulina", "Sabina", "Paloma"], en: ["Michelle", "Samantha", "Zira"], pitch: 0.85, rate: 0.84 },
-  };
+  // The theme hosts' device voices: voices.json next to this page, the same file the app imports
+  // (aprende/src/core/character/voice.ts). Loaded with the characters in loadCharacters().
+  let VOICES = {};
   const LOCALES = { es: ["es-US", "es-MX"], en: ["en-US"] };
 
   function hostVoice(id, lang) {
@@ -47,7 +43,9 @@
     if (!box) return;
     box.replaceChildren();
     let data;
-    try { data = await call("/staff/characters"); } catch (e) { status("Could not load the characters. Try again later."); return; }
+    try {
+      [data, VOICES] = await Promise.all([call("/staff/characters"), fetch("voices.json").then((r) => r.json())]);
+    } catch (e) { status("Could not load the characters. Try again later."); return; }
     if (!data.length) { status("No characters are set up."); return; }
     for (const c of data) {
       const art = document.createElement("article");

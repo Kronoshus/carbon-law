@@ -39,8 +39,7 @@ function Screens() {
   const leccionMatch = r.match(/^\/leccion\/(.+)$/);
   const datosMatch = r.match(/^\/datos\/(.+)$/);
   const pagoListo = r.startsWith('/pago/listo');
-  const [ready, setReady] = useState(true);
-  const [authed, setAuthed] = useState(false);
+  const [authed, setAuthed] = useState<boolean | null>(null);   // null: the token is not read yet
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +47,6 @@ function Screens() {
       const tok = await getToken();
       if (cancelled) return;
       setAuthed(!!tok);
-      setReady(true);
       const isPublic = PUBLIC.has(r);
       const isOpen = OPEN.has(r);
       if (!tok && !isPublic && !isOpen) {
@@ -79,13 +77,14 @@ function Screens() {
     return () => { cancelled = true; };
   }, [r]);
 
-  if (ready && import.meta.env?.DEV && r === '/dev/personaje') {
+  if (import.meta.env?.DEV && r === '/dev/personaje') {
     return h(DevCharacter, null);
   }
 
   if (extensionOff.value) return h(NoDisponible, null);
 
-  if (!ready) return null;
+  // until the token is read, a signed-in screen shows nothing rather than a flash of the welcome page (its large host still)
+  if (authed === null && !PUBLIC.has(r) && !OPEN.has(r)) return null;
 
   let screen;
   if (r === '/bienvenida') screen = h(Bienvenida, null);
