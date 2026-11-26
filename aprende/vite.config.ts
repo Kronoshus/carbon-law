@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import preact from '@preact/preset-vite';
 import { resolve } from 'node:path';
 import { makeManifest } from './src/targets/extension/manifest';
@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => {
     base,
     server: {
       host: '127.0.0.1',
+      // the hosts' voice table lives in web/ (the staff site loads it too), outside this project
+      fs: { allow: [searchForWorkspaceRoot(process.cwd()), resolve(__dirname, '../web/voices.json')] },
       // dev and e2e: the API is same-origin through this proxy (production uses VITE_API_ORIGIN)
       // ('/characters' is also the folder of the character files, so only the API paths are forwarded)
       proxy: Object.fromEntries(['/auth', '/journey', '/health', '/payments', '^/characters(/[a-z_]+)?$', '/learn', '/content', '/progress', '/datos', '/chat', '/engagement', '/staff', '/conflicts', '/booking', '/signed-documents', '/funding-checklist', '/review', '/settings', '/e2e']

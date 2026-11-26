@@ -1,0 +1,6 @@
+{
+  "girasol": {"es": ["Dalia", "Paulina", "Paloma", "Google español de Estados Unidos"], "en": ["Jenny", "Samantha", "Aria", "Google US English"], "pitch": 1.1, "rate": 1.03},
+  "colibri": {"es": ["Alonso", "Juan", "Jorge", "Raul"], "en": ["Guy", "Aaron", "Alex", "David"], "pitch": 1.2, "rate": 1.12},
+  "velita": {"es": ["Paloma", "Paulina", "Sabina", "Dalia"], "en": ["Aria", "Samantha", "Zira"], "pitch": 1, "rate": 0.9},
+  "tortuga": {"es": ["Dalia", "Paulina", "Sabina", "Paloma"], "en": ["Michelle", "Samantha", "Zira"], "pitch": 0.85, "rate": 0.84}
+}
