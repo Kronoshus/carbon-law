@@ -107,8 +107,17 @@ test('a push message shows the notification with the app icon and opens the app 
   });
   await cdp.send('ServiceWorker.enable');
   await expect.poll(() => registrationId).not.toBe('');
+  // Chromium drops a notification that getNotifications() reads while showNotification() is still running: it is
+  // in the database but not on screen yet, so it counts as closed and is deleted, and no later read finds it.
+  // Read only after the push event has finished (showNotification has put it on screen by then).
+  const pushDone = new Promise<string>((resolve) => cdp.on('BackgroundService.backgroundServiceEventReceived', ({ backgroundServiceEvent: e }) => {
+    if (e.eventName === 'Push event completed') resolve(e.eventMetadata.find((m) => m.key === 'Status')?.value ?? '');
+  }));
+  await cdp.send('BackgroundService.startObserving', { service: 'pushMessaging' });
+  await cdp.send('BackgroundService.setRecording', { service: 'pushMessaging', shouldRecord: true });
   await cdp.send('ServiceWorker.deliverPushMessage', { origin: new URL(baseURL!).origin, registrationId,
     data: JSON.stringify({ title: 'La Calavera', body: 'Su lección de hoy le espera.', url: '#/aprender' }) });
+  expect(await pushDone).toBe('Success');
   await expect.poll(() => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications())
     .map((n) => `${n.title}|${n.body}|${(n.data as { url?: string } | null)?.url}|${n.icon}`))).toContain(`La Calavera|Su lección de hoy le espera.|#/aprender|${baseURL}/icons/app-192.png`);
 });
