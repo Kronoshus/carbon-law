@@ -11,6 +11,18 @@ async function signUp(page: Page) {
   await expect(page).toHaveURL(/#\/inicio\/ia/);
 }
 
+test('a signed-in client opening the map never sees the welcome page first', async ({ page }) => {
+  await signUp(page);
+  await page.addInitScript(() => {
+    new MutationObserver(() => { if (document.querySelector('.welcome-shell')) (window as unknown as { sawWelcome: boolean }).sawWelcome = true; })
+      .observe(document, { childList: true, subtree: true });
+  });
+  await page.goto('/#/aprender');
+  await page.reload();
+  await expect(page.locator('.bubble')).toContainText('El testamento');
+  expect(await page.evaluate(() => (window as unknown as { sawWelcome?: boolean }).sawWelcome ?? false)).toBe(false);
+});
+
 test('the course map: today\'s lesson, the price, locked days and their reason', async ({ page }) => {
   await signUp(page);
   await page.goto('/#/aprender');
