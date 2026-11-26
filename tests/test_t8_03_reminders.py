@@ -235,6 +235,7 @@ def test_an_appointment_reminder_goes_out_24_hours_before_by_email_and_push(out)
     assert to == email and subject == "Recordatorio de su cita / Appointment reminder"
     assert "2:00 p. m." in body and "2:00 p.m." in body and "16 de marzo" in body and "March 16" in body
     assert "hora de California" in body and "California time" in body
+    assert body.count("llame a la oficina: 845-587-4420") == 1 and "call the office: 845-587-4420" in body
     assert [e for e, _ in out["push"]] == [SUB["endpoint"]] and out["push"][0][1]["url"] == "#/cita"
     assert all("Ana" not in s and "Torres" not in s for s in out["staff"])
 

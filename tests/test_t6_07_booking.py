@@ -229,6 +229,14 @@ def test_confirmations_go_out_once_and_staff_alerts_carry_no_name(sent):
     assert len(sent["staff"]) == 1 and "Ana" not in sent["staff"][0]
 
 
+def test_a_signing_confirmation_says_where_the_office_is_and_a_consultation_says_no_place():
+    start = datetime.datetime(2027, 3, 23, 17, tzinfo=datetime.timezone.utc)
+    signing = booking.confirmation("signing", start)
+    assert signing.count("13925 City Center Drive, Suite 200, Chino Hills, CA 91709") == 2          # Spanish and English
+    assert "https://maps.google.com/?q=13925+City+Center+Drive+Suite+200+Chino+Hills+CA+91709" in signing
+    assert "City Center" not in booking.confirmation("consultation", start)
+
+
 def test_staff_see_every_booking():
     setup()
     h, _ = lessons_done()

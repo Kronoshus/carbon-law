@@ -142,6 +142,11 @@ const STATES: State[] = [
     await btn(page, 'Cancelar la cita', 'Cancel the appointment', lang).click();
     await expect(page.getByRole('dialog')).toBeVisible();
   } },
+  { name: 'appointment: signing booked, less than a day ahead', path: '/cita?kind=signing', prep: async (page) => {
+    await cleared(page);
+    await page.route('**/booking/slots**', (r) => r.fulfill({ json: { slots: SLOTS } }));
+    await page.route(/\/booking$/, (r) => r.fulfill({ json: [{ id: 'b1', kind: 'signing', start: new Date(Date.now() + 3_600_000).toISOString() }] }));
+  } },
   { name: 'client review: change request', path: '/revisar', prep: async (page) => {
     await cleared(page);
     await page.route('**/review/documents?*', (r) => r.fulfill({ json: { documents: [REVIEW_DOC('d1', 'Last will and testament')] } }));
