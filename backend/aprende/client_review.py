@@ -56,7 +56,7 @@ def _latest_decision(document_id, journey_id):
 def _current_approved_docs(j):
     mid = j.get("matter_id")
     out = []
-    for d in backend_app.documents.values():
+    for d in list(backend_app.documents.values()):
         if d.get("matter_id") != mid:
             continue
         if d.get("status") != "Attorney Approved":

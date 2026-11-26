@@ -73,7 +73,7 @@ def handle(job):
     for kind in codes:
         title = name(kind, codes)
         if any(d.get("matter_id") == j["matter_id"] and d.get("name") == title and d.get("status") != "Superseded"
-               for d in backend_app.documents.values()):
+               for d in list(backend_app.documents.values())):
             continue                                                  # already drafted (the job ran before)
         for strict in (True, False):
             try:

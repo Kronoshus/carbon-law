@@ -707,7 +707,7 @@ def create_document(doc: PortalDocument, authorization: Optional[str]=Header(Non
     user,_ = require_auth(authorization, {"paralegal","attorney","admin"})
     if doc.matter_id not in matters: raise HTTPException(404,"matter not found")
     # auto-version: if same name exists, increment
-    existing = [d for d in documents.values() if d["matter_id"]==doc.matter_id and d["name"]==doc.name]
+    existing = [d for d in list(documents.values()) if d["matter_id"]==doc.matter_id and d["name"]==doc.name]
     if existing:
         doc.version = max(d["version"] for d in existing)+1
     rec = doc.model_dump(); rec["id"]=str(uuid.uuid4()); rec["created_at"]=now_iso()
@@ -719,7 +719,7 @@ def create_document(doc: PortalDocument, authorization: Optional[str]=Header(Non
 @app.get("/documents")
 def list_documents(matter_id: Optional[str]=None, status: Optional[str]=None, authorization: Optional[str]=Header(None)):
     u,_ = require_auth(authorization)
-    out = [d for d in documents.values() if u["role"] in {"attorney", "admin"} or not d.get("attorney_only")] if u["role"] in ("paralegal","attorney","admin") else [d for d in documents.values() if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") in {"Client Review", "Attorney Approved"} and not d.get("attorney_only")]
+    out = [d for d in list(documents.values()) if u["role"] in {"attorney", "admin"} or not d.get("attorney_only")] if u["role"] in ("paralegal","attorney","admin") else [d for d in list(documents.values()) if matters.get(d["matter_id"],{}).get("client_user_id")==u["id"] and d.get("status") in {"Client Review", "Attorney Approved"} and not d.get("attorney_only")]
     if matter_id: out=[d for d in out if d["matter_id"]==matter_id]
     if status: out=[d for d in out if d["status"]==status]
     return out
@@ -828,7 +828,7 @@ def my_workflow(authorization: Optional[str]=Header(None)):
         if user["role"] in {"attorney", "admin"}:
             return [{**workflow, "attorney_demo_drafts": {
                 doc["name"]: {"content": doc["content"], "document_id": doc["id"], "version": doc["version"], "status": doc["status"]}
-                for doc in documents.values() if doc.get("workflow_id") == workflow.get("id") and doc.get("attorney_only") and doc.get("status") != "Superseded"
+                for doc in list(documents.values()) if doc.get("workflow_id") == workflow.get("id") and doc.get("attorney_only") and doc.get("status") != "Superseded"
             }} for workflow in workflows.values()]
         return list(workflows.values())
     workflow = client_workflow(user)
@@ -1097,7 +1097,7 @@ def generate_attorney_demo_drafts(workflow_id: str, authorization: Optional[str]
     # Prepare all records before changing shared state so rendering errors are atomic.
     generated, records = {}, []
     for name, content in rendered.items():
-        existing = [d for d in documents.values() if d.get("matter_id") == matter["id"] and d.get("name") == name]
+        existing = [d for d in list(documents.values()) if d.get("matter_id") == matter["id"] and d.get("name") == name]
         version = max((d.get("version", 0) for d in existing), default=0) + 1
         record = {"id": str(uuid.uuid4()), "matter_id": matter["id"], "workflow_id": workflow_id,
                   "name": name, "version": version, "status": "Attorney Review", "content": content,
@@ -1126,7 +1126,7 @@ def generate_workflow_drafts(workflow_id: str, authorization: Optional[str]=Head
     matter = ensure_workflow_matter(workflow)
     generated = {}
     for name, content in rendered.items():
-        existing = [d for d in documents.values() if d.get("matter_id") == matter["id"] and d.get("name") == name]
+        existing = [d for d in list(documents.values()) if d.get("matter_id") == matter["id"] and d.get("name") == name]
         record = {"id": str(uuid.uuid4()), "matter_id": matter["id"], "workflow_id": workflow_id,
                   "name": name, "version": max((d.get("version", 0) for d in existing), default=0) + 1,
                   "status": "Client Review", "content": content, "created_at": now_iso()}
