@@ -38,6 +38,11 @@ WEEKDAYS = {"es": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábad
             "en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
 MONTHS = {"es": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
           "en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]}
+with open(os.path.join(os.path.dirname(__file__), "..", "..", "aprende", "src", "core", "office.json"), encoding="utf-8") as _f:
+    OFFICE = json.load(_f)       # the app reads the same file
+OFFICE_MAP = "https://maps.google.com/?q=" + "+".join(f"{OFFICE['street']} {OFFICE['city']}".replace(",", "").split())
+PLACE = {"es": "La firma es en la oficina: {name}, {street}, {city}".format(**OFFICE),
+         "en": "The signing is at the office: {name}, {street}, {city}".format(**OFFICE)}
 KIND = {"signing": ("la firma de sus documentos", "your document signing"), "consultation": ("su consulta con el abogado Raval", "your consultation with attorney Raval")}
 
 
@@ -51,9 +56,12 @@ def when(start_utc, lang):
 
 
 def confirmation(kind, start_utc):
-    """The confirmation email, in Spanish then English, with the Los Angeles date and time."""
+    """The confirmation email, in Spanish then English, with the Los Angeles date and time (and the place, for a signing)."""
     es = f"Su cita para {KIND[kind][0]}: {when(start_utc, 'es')} (hora de California)."
     en = f"Your appointment for {KIND[kind][1]}: {when(start_utc, 'en')} (California time)."
+    if kind == "signing":
+        es += f"\n{PLACE['es']}\n{OFFICE_MAP}"
+        en += f"\n{PLACE['en']}\n{OFFICE_MAP}"
     return es + "\nPuede cambiarla o cancelarla en la aplicación hasta 24 horas antes.\n\n" + en + "\nYou can change or cancel it in the app up to 24 hours before.\n\nCarbon Law Group"
 
 

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { t, lang } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
+import { OFFICE, officeAddress, officeMap, officeTel } from '../../core/office';
 import { LoadFailed, problemOf, type LoadProblem } from '../LoadFailed';
 import './datos.css';
 import './cita.css';
@@ -74,8 +75,10 @@ export function Cita() {
   if (booking && !changing) {
     return h('section', { class: 'screen datos-page' }, head,
       h('p', { class: 'confirmed', role: 'status' }, t('cita.booked', { when: `${day(booking.start)}, ${time(booking.start)}` })),
+      kind === 'signing' ? h('p', { class: 'place' }, t('cita.place.signing'), ' ',
+        h('a', { href: officeMap, target: '_blank', rel: 'noopener noreferrer' }, officeAddress)) : null,
       errors,
-      late ? h('p', null, t('cita.late')) : [
+      late ? h('p', null, t('cita.late'), ' ', h('a', { href: officeTel }, OFFICE.phone)) : [
         h('p', { key: 'n' }, t('cita.booked.note')),
         h('div', { key: 'a', class: 'resumen-actions' },
           h('button', { class: 'btn secondary', type: 'button', onClick: () => setChanging(true) }, t('cita.reschedule')),

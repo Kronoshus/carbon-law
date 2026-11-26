@@ -13,8 +13,8 @@ TEXT = {
         "en": {"title": "La Calavera", "body": "Today's lesson is waiting for you. About 15 minutes."},
     },
     "appointment": {
-        "es": {"title": "Carbon Law Group", "body": "Le recordamos su cita para {kind}: {when} (hora de California). Si necesita cambiarla, llame a la oficina."},
-        "en": {"title": "Carbon Law Group", "body": "A reminder of your appointment for {kind}: {when} (California time). If you need to change it, please call the office."},
+        "es": {"title": "Carbon Law Group", "body": "Le recordamos su cita para {kind}: {when} (hora de California). Si necesita cambiarla, llame a la oficina: {phone}."},
+        "en": {"title": "Carbon Law Group", "body": "A reminder of your appointment for {kind}: {when} (California time). If you need to change it, please call the office: {phone}."},
     },
     "annual": {
         "es": {"title": "Carbon Law Group", "body": "Hace un año que completó su plan. Es un buen momento para revisarlo: un cambio en su familia, sus bienes o su domicilio puede requerir una actualización. Puede reservar una consulta en la aplicación."},
@@ -78,8 +78,8 @@ def _appointment_handler(job):
         return
     jid, kind, start, _ = rows[0]
     start = _aware(start)
-    body = {lang: TEXT["appointment"][lang]["body"].format(kind=booking.KIND[kind][i], when=booking.when(start, lang))
-            for i, lang in enumerate(("es", "en"))}
+    body = {lang: TEXT["appointment"][lang]["body"].format(kind=booking.KIND[kind][i], when=booking.when(start, lang), phone=booking.OFFICE["phone"])
+            + (f" {booking.PLACE[lang]}." if kind == "signing" else "") for i, lang in enumerate(("es", "en"))}
     email = _user_email(jid)
     if email:
         send_email(email, "Recordatorio de su cita / Appointment reminder", body["es"] + "\n\n" + body["en"] + "\nCarbon Law Group")

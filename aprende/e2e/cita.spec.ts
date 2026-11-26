@@ -57,3 +57,31 @@ test('signing stays locked until the documents are approved', async ({ page }) =
   await page.goto('/#/cita?kind=signing');
   await expect(page.getByText('Podrá reservar la firma cuando apruebe sus documentos.')).toBeVisible();
 });
+
+test('a booked signing shows the office with a map link, and inside 24 hours the phone to call', async ({ page }) => {
+  await signUp(page);
+  const soon = new Date(Date.now() + 3 * 3_600_000).toISOString();
+  await page.route('**/booking/slots**', (r) => r.fulfill({ json: { slots: SLOTS } }));
+  await page.route(/\/booking$/, (r) => r.fulfill({ json: [{ id: 'b1', kind: 'signing', start: soon }] }));
+  await page.goto('/#/cita?kind=signing');
+  await expect(page.getByText('La firma es en la oficina:')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Carbon Law Group, 13925 City Center Drive, Suite 200, Chino Hills, CA 91709' }))
+    .toHaveAttribute('href', 'https://maps.google.com/?q=13925+City+Center+Drive+Suite+200+Chino+Hills+CA+91709');
+  await expect(page.getByText('Faltan menos de 24 horas: para cambiarla, llame a la oficina:')).toBeVisible();
+  await expect(page.getByRole('link', { name: '845-587-4420' })).toHaveAttribute('href', 'tel:+18455874420');
+
+  await page.evaluate(() => localStorage.setItem('aprende_lang', 'en'));
+  await page.reload();
+  await expect(page.getByText('The signing is at the office:')).toBeVisible();
+  await expect(page.getByText('Less than 24 hours left: to change it, call the office:')).toBeVisible();
+  await expect(page.getByRole('link', { name: '845-587-4420' })).toHaveAttribute('href', 'tel:+18455874420');
+});
+
+test('a booked consultation names no place', async ({ page }) => {
+  await signUp(page);
+  await page.route('**/booking/slots**', (r) => r.fulfill({ json: { slots: SLOTS } }));
+  await page.route(/\/booking$/, (r) => r.fulfill({ json: [{ id: 'b1', kind: 'consultation', start: '2099-03-16T17:00:00Z' }] }));
+  await page.goto('/#/cita?kind=consultation');
+  await expect(page.getByRole('button', { name: 'Cancelar la cita' })).toBeVisible();
+  await expect(page.getByText('City Center Drive')).toHaveCount(0);
+});
