@@ -22,7 +22,7 @@ const MAP = { units: [
 const GATES_AFTER_DAY1 = { may_disclose: true, may_consent: true, may_name: true, may_collect_details: true, may_chat: true,
   may_sign_engagement: false, may_pay: false, may_see_documents: false, may_book_signing: false, may_take_final_lesson: false };
 const JOURNEY = { id: 'j1', user_id: 'u1', day: 1, facts: { ai_disclosed: 'x', consent: 'x', names_submitted: 'x' }, gates: GATES_AFTER_DAY1,
-  conflict: 'clear', documents: { tentative: [], confirmed: [] }, timeline: [] };
+  conflict: 'clear', documents: { tentative: [], confirmed: [] }, timeline: [{ step: 'lesson_will', day: 1 }, { step: 'final_lesson', day: 14 }] };
 const PROGRESS = { petals: 120, level: { name_key: 'level.aprendiz', next_at: 300 }, streak: { count: 5, rested_this_week: false },
   seals: [], reminders: { enabled: false, local_time: null } };
 const QUOTE = { items: [{ code: 'will', base: 300000, discounts: [], price: 300000, placeholder: true }], total: 300000, currency: 'usd', test_mode: true };
@@ -130,7 +130,7 @@ test('signed out, the popup asks her to sign in from the panel and shows no made
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extId}/popup.html`);
   await expect(page.getByText('Inicie sesión en el panel lateral para ver su día.')).toBeVisible();
-  await expect(page.getByText(/Día \d+ de 14/)).toHaveCount(0);
+  await expect(page.getByText(/Día \d+/)).toHaveCount(0);
   await expect(page.getByText(/Racha/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Abrir' })).toBeVisible();      // "Abrir" opens the panel to sign in
   await context.close();
