@@ -497,6 +497,8 @@ export async function releaseJourney(c: ClientApp, start: string, name = 'Ana To
     await moveTo(c, day(plan.final_lesson.day));
     await takeLesson(c, 'final');
     await landsOnItsDay(c, 'final_lesson', plan);
+    await c.go('/aprender');                                               // the change made her plan longer than 14 days
+    await expect(page.getByRole('heading', { name: `Día ${plan.final_lesson.day} de ${plan.final_lesson.day}` })).toBeVisible();
   });
 
   await test.step('Every step landed on the day the plan showed, and no staff alert was raised', async () => {
