@@ -39,7 +39,8 @@ test('popup reads journey and opens side panel', async () => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ id: 'j1', user_id: 'u1', day: 3, gates: { may_disclose: true, may_consent: false }, conflict: 'clear' }),
+      body: JSON.stringify({ id: 'j1', user_id: 'u1', day: 3, gates: { may_disclose: true, may_consent: false }, conflict: 'clear',
+        timeline: [{ step: 'lesson_will', day: 1 }, { step: 'final_lesson', day: 14 }] }),
     });
   });
 

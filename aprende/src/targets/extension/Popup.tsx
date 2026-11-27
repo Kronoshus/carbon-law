@@ -3,10 +3,11 @@ import { useEffect, useState } from 'preact/hooks';
 import { t, lang } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch, extensionOff, getToken } from '../../core/api';
+import { dayLabel } from '../../core/plan';
 import { NoDisponible } from '../../ui/screens/NoDisponible';
 import { host } from '../../core/character/cast';
 
-type Journey = { day: number; gates: Record<string, boolean>; };
+type Journey = { day: number; gates: Record<string, boolean>; timeline?: { day: number }[] };
 type Lesson = { id: string; day: number | null; unit: string; title: { es: string; en: string }; status: string };
 type MapUnit = { id: string; lessons: Lesson[] };
 
@@ -51,6 +52,7 @@ export function Popup() {
   const [signedOut, setSignedOut] = useState(false);
   const [off, setOff] = useState(false);
   const [day, setDay] = useState<number>(1);
+  const [timeline, setTimeline] = useState<{ day: number }[] | undefined>(undefined);
   const [streak, setStreak] = useState<number>(0);
   const [lessonTitle, setLessonTitle] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate | 'complete'>('may_disclose');
@@ -71,6 +73,7 @@ export function Popup() {
       if (cancelled) return;
       if (journey) {
         setDay(journey.day ?? 1);
+        setTimeline(journey.timeline);
         const gates = journey.gates;
         const allThree = gates?.may_disclose === true && gates?.may_consent === true && gates?.may_name === true;
         let title: string | null = null;
@@ -142,7 +145,7 @@ export function Popup() {
           {t('popup.streak', { count: streak })}
         </span>
       </div>
-      <p class="popup-day">{t('popup.today', { day })}</p>
+      <p class="popup-day">{dayLabel(day, timeline, 'popup.today')}</p>
       <p class="popup-step">{stepLabel}</p>
       <button class="btn" onClick={openSidePanel} disabled={opening} type="button">
         {t('popup.open')}

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { t, lang, formatDate } from '../../core/i18n';
 import type { I18nKey } from '../../core/i18n-keys';
 import { apiFetch } from '../../core/api';
+import { dayLabel } from '../../core/plan';
 import { Icon, type IconName } from '../Icons';
 import { PriceCard } from '../PriceCard';
 import { LoadFailed, problemOf, type LoadProblem } from '../LoadFailed';
@@ -36,6 +37,7 @@ export function Aprender() {
   const [map, setMap] = useState<MapData | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [day, setDay] = useState<number | null>(null);
+  const [timeline, setTimeline] = useState<{ day: number }[] | undefined>(undefined);
   const [tentative, setTentative] = useState<string[] | null>(null);
   const [facts, setFacts] = useState<Record<string, unknown>>({});
   const [problem, setProblem] = useState<LoadProblem | null>(null);
@@ -46,9 +48,9 @@ export function Aprender() {
     const [m, p, j] = await Promise.all(['/learn/map', '/progress', '/journey'].map((path) => apiFetch(path).catch(() => null)));
     if (!m?.ok) { setProblem(problemOf(m)); return; }
     const [md, pd, jd] = await Promise.all([m.json(), p?.ok ? p.json() : null, j?.ok ? j.json() : null]) as
-      [MapData, Progress | null, { day: number; documents?: { tentative?: string[] }; facts?: Record<string, unknown> } | null];
+      [MapData, Progress | null, { day: number; timeline?: { day: number }[]; documents?: { tentative?: string[] }; facts?: Record<string, unknown> } | null];
     if (pd) setProgress(pd);
-    if (jd) { setDay(jd.day); setTentative(jd.documents?.tentative ?? []); setFacts(jd.facts ?? {}); }
+    if (jd) { setDay(jd.day); setTimeline(jd.timeline); setTentative(jd.documents?.tentative ?? []); setFacts(jd.facts ?? {}); }
     setMap(md);
   };
   useEffect(() => { void load(); }, []);
@@ -93,7 +95,7 @@ export function Aprender() {
     h('div', { class: 'map-chips' },
       h('span', { class: 'chip', title: t('map.streak') }, h(Icon, { name: 'vela' }), String(progress?.streak.count ?? 0),
         h('span', { class: 'visually-hidden' }, t('map.streakSr'))),
-      h('h1', { class: 'map-day' }, day ? t('map.dayOf', { day }) : t('nav.aprender')),
+      h('h1', { class: 'map-day' }, day ? dayLabel(day, timeline, 'map.dayOf') : t('nav.aprender')),
       h('span', { class: 'chip', title: t('map.petals') }, h(Icon, { name: 'petalo' }), String(progress?.petals ?? 0),
         h('span', { class: 'visually-hidden' }, t('map.petalsSr')))),
     host ? h('section', { class: 'host', 'aria-label': t(nameKey(hostId())) },
